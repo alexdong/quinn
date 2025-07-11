@@ -170,6 +170,8 @@ sqlite_path = "./quinn_sessions.db"
 
 All conversations are confidential. Quinn does not store or share your information beyond what's necessary to maintain conversation context within a session.
 
+If privacy is a concern, self-hosting is encouraged - you have full control over your data. Or shoot me an email at me@alexdong.com if you'd like a hosted version. If enough people ask for it, I might set one up.
+
 ---
 
 Quinn: Because sometimes the best consultant asks questions instead of giving answers.
