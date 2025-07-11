@@ -165,42 +165,6 @@ backend = "sqlite"  # options: sqlite, redis, none
 sqlite_path = "./quinn_sessions.db"
 ```
 
-### Environment Variables
-
-Set required API keys via environment variables:
-
-```bash
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export POSTMARK_API_KEY="your-postmark-key"
-```
-
-Optional overrides for config.toml values:
-
-```bash
-export QUINN_INBOUND_EMAIL="quinn@yourdomain.com"
-export QUINN_LLM_MODEL="claude-3-5-sonnet-20241022"
-```
-
-### Deployment Options
-
-1. **Cloud Functions**: Deploy to AWS Lambda, Google Cloud Functions, or Azure Functions with webhook endpoint
-
-2. **Self-Hosted**: Run on any server with Python 3.12+ and public webhook endpoint
-
-3. **Serverless**: Use Vercel, Netlify Functions, or similar platforms with webhook support
-
-### Customizing Quinn's Behavior
-
-Beyond configuration, you can modify Quinn's core behavior by editing the system prompts:
-
-```python
-# prompts/quinn_system.py
-QUINN_SYSTEM_PROMPT = """
-You are Quinn, an AI mentor who helps through questions, not answers.
-{custom_instructions}
-Never provide direct solutions - always guide users to discover their own.
-"""
-```
 
 ## Privacy
 
