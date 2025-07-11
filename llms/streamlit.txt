@@ -1,0 +1,18 @@
+# Streamlit llms.txt
+
+## Status: Not Found
+
+Attempted to fetch llms.txt from:
+- https://docs.streamlit.io/llms.txt (not directly searched)
+- Streamlit documentation sites
+
+Streamlit is an open-source app framework for Machine Learning and Data Science teams.
+
+Expected documentation at:
+- https://docs.streamlit.io/
+
+No llms.txt file search results found for Streamlit as of the search date.
+
+---
+Retrieved: 2025-07-09
+Method: Limited search performed, no llms.txt references found

@@ -1,0 +1,18 @@
+# Plotly llms.txt
+
+## Status: Not Found
+
+Attempted to fetch llms.txt from:
+- https://plotly.com/python/llms.txt (not directly searched)
+- Plotly documentation sites
+
+Plotly is an interactive, open-source graphing library for Python.
+
+Expected documentation at:
+- https://plotly.com/python/
+
+No llms.txt file search results found for Plotly as of the search date.
+
+---
+Retrieved: 2025-07-09
+Method: Limited search performed, no llms.txt references found

@@ -1,0 +1,6 @@
+htmlq is not installed on this system.
+
+
+=== Documentation Retrieved ===
+Generated using: htmlq --help (if available)
+Date: Thu Jul 10 09:18:39 AM NZST 2025

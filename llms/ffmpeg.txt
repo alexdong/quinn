@@ -1,0 +1,84 @@
+ffmpeg version 7.1.1-1ubuntu1.1 Copyright (c) 2000-2025 the FFmpeg developers
+  built with gcc 14 (Ubuntu 14.2.0-19ubuntu2)
+  configuration: --prefix=/usr --extra-version=1ubuntu1.1 --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --arch=amd64 --enable-gpl --disable-stripping --disable-libmfx --disable-omx --enable-gnutls --enable-libaom --enable-libass --enable-libbs2b --enable-libcdio --enable-libcodec2 --enable-libdav1d --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libglslang --enable-libgme --enable-libgsm --enable-libharfbuzz --enable-libmp3lame --enable-libmysofa --enable-libopenjpeg --enable-libopenmpt --enable-libopus --enable-librubberband --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libtheora --enable-libtwolame --enable-libvidstab --enable-libvorbis --enable-libvpx --enable-libwebp --enable-libx265 --enable-libxml2 --enable-libxvid --enable-libzimg --enable-openal --enable-opencl --enable-opengl --disable-sndio --enable-libvpl --enable-libdc1394 --enable-libdrm --enable-libiec61883 --enable-chromaprint --enable-frei0r --enable-ladspa --enable-libbluray --enable-libcaca --enable-libdvdnav --enable-libdvdread --enable-libjack --enable-libpulse --enable-librabbitmq --enable-librist --enable-libsrt --enable-libssh --enable-libsvtav1 --enable-libx264 --enable-libzmq --enable-libzvbi --enable-lv2 --enable-sdl2 --enable-libplacebo --enable-librav1e --enable-pocketsphinx --enable-librsvg --enable-libjxl --enable-shared
+  libavutil      59. 39.100 / 59. 39.100
+  libavcodec     61. 19.101 / 61. 19.101
+  libavformat    61.  7.100 / 61.  7.100
+  libavdevice    61.  3.100 / 61.  3.100
+  libavfilter    10.  4.100 / 10.  4.100
+  libswscale      8.  3.100 /  8.  3.100
+  libswresample   5.  3.100 /  5.  3.100
+  libpostproc    58.  3.100 / 58.  3.100
+Universal media converter
+usage: ffmpeg [options] [[infile options] -i infile]... {[outfile options] outfile}...
+
+Getting help:
+    -h      -- print basic options
+    -h long -- print more options
+    -h full -- print all options (including all format and codec specific options, very long)
+    -h type=name -- print all options for the named decoder/encoder/demuxer/muxer/filter/bsf/protocol
+    See man ffmpeg for detailed description of the options.
+
+Per-stream options can be followed by :<stream_spec> to apply that option to specific streams only. <stream_spec> can be a stream index, or v/a/s for video/audio/subtitle (see manual for full syntax).
+
+Print help / information / capabilities:
+-L                  show license
+-h <topic>          show help
+-version            show version
+-muxers             show available muxers
+-demuxers           show available demuxers
+-devices            show available devices
+-decoders           show available decoders
+-encoders           show available encoders
+-filters            show available filters
+-pix_fmts           show available pixel formats
+-layouts            show standard channel layouts
+-sample_fmts        show available audio sample formats
+
+Global options (affect whole program instead of just one file):
+-v <loglevel>       set logging level
+-y                  overwrite output files
+-n                  never overwrite output files
+-stats              print progress report during encoding
+
+Per-file options (input and output):
+-f <fmt>            force container format (auto-detected otherwise)
+-t <duration>       stop transcoding after specified duration
+-to <time_stop>     stop transcoding after specified time is reached
+-ss <time_off>      start transcoding at specified time
+
+
+Per-file options (output-only):
+-metadata[:<spec>] <key=value>  add metadata
+
+Per-stream options:
+-c[:<stream_spec>] <codec>  select encoder/decoder ('copy' to copy stream without reencoding)
+-filter[:<stream_spec>] <filter_graph>  apply specified filters to audio/video
+
+Video options:
+-r[:<stream_spec>] <rate>  override input framerate/convert to given output framerate (Hz value, fraction or abbreviation)
+-aspect[:<stream_spec>] <aspect>  set aspect ratio (4:3, 16:9 or 1.3333, 1.7777)
+-vn                 disable video
+-vcodec <codec>     alias for -c:v (select encoder/decoder for video streams)
+-vf <filter_graph>  alias for -filter:v (apply filters to video streams)
+-b <bitrate>        video bitrate (please use -b:v)
+
+Audio options:
+-aq <quality>       set audio quality (codec-specific)
+-ar[:<stream_spec>] <rate>  set audio sampling rate (in Hz)
+-ac[:<stream_spec>] <channels>  set number of audio channels
+-an                 disable audio
+-acodec <codec>     alias for -c:a (select encoder/decoder for audio streams)
+-ab <bitrate>       alias for -b:a (select bitrate for audio streams)
+-af <filter_graph>  alias for -filter:a (apply filters to audio streams)
+
+Subtitle options:
+-sn                 disable subtitle
+-scodec <codec>     alias for -c:s (select encoder/decoder for subtitle streams)
+
+
+
+
+=== Documentation Retrieved ===
+Generated using: ffmpeg -help (if available)
+Date: Thu Jul 10 09:19:15 AM NZST 2025

@@ -1,0 +1,355 @@
+# PydanticAI
+
+> Agent Framework / shim to use Pydantic with LLMs
+
+PydanticAI is a Python agent framework designed to make it less painful to build production grade
+applications with Generative AI.
+
+# Concepts documentation
+
+## Introduction
+
+Agents are PydanticAI's primary interface for interacting with LLMs.
+
+In some use cases a single Agent will control an entire application or component, but multiple agents can also interact to embody more complex workflows.
+
+The Agent class has full API documentation, but conceptually you can think of an agent as a container for:
+
+| **Component** | **Description** | | --- | --- | | [System prompt(s)](#system-prompts) | A set of instructions for the LLM written by the developer. | | [Function tool(s)](../tools/) | Functions that the LLM may call to get information while generating a response. | | [Structured output type](../output/) | The structured datatype the LLM must return at the end of a run, if specified. | | [Dependency type constraint](../dependencies/) | System prompt functions, tools, and output validators may all use dependencies when they're run. | | [LLM model](../api/models/base/) | Optional default LLM model associated with the agent. Can also be specified when running the agent. | | [Model Settings](#additional-configuration) | Optional default model settings to help fine tune requests. Can also be specified when running the agent. |
+
+In typing terms, agents are generic in their dependency and output types, e.g., an agent which required dependencies of type `Foobar` and produced outputs of type `list[str]` would have type `Agent[Foobar, list[str]]`. In practice, you shouldn't need to care about this, it should just mean your IDE can tell you when you have the right type, and if you choose to use [static type checking](#static-type-checking) it should work well with PydanticAI.
+
+Here's a toy example of an agent that simulates a roulette wheel:
+
+roulette_wheel.py
+
+```python
+from pydantic_ai import Agent, RunContext
+
+roulette_agent = Agent(  # (1)!
+    'openai:gpt-4o',
+    deps_type=int,
+    output_type=bool,
+    system_prompt=(
+        'Use the `roulette_wheel` function to see if the '
+        'customer has won based on the number they provide.'
+    ),
+)
+
+
+@roulette_agent.tool
+async def roulette_wheel(ctx: RunContext[int], square: int) -> str:  # (2)!
+    """check if the square is a winner"""
+    return 'winner' if square == ctx.deps else 'loser'
+
+
+# Run the agent
+success_number = 18  # (3)!
+result = roulette_agent.run_sync('Put my money on square eighteen', deps=success_number)
+print(result.output)  # (4)!
+#> True
+
+result = roulette_agent.run_sync('I bet five is the winner', deps=success_number)
+print(result.output)
+#> False
+```
+
+1. Create an agent, which expects an integer dependency and produces a boolean output. This agent will have type `Agent[int, bool]`.
+1. Define a tool that checks if the square is a winner. Here RunContext is parameterized with the dependency type `int`; if you got the dependency type wrong you'd get a typing error.
+1. In reality, you might want to use a random number here e.g. `random.randint(0, 36)`.
+1. `result.output` will be a boolean indicating if the square is a winner. Pydantic performs the output validation, and it'll be typed as a `bool` since its type is derived from the `output_type` generic parameter of the agent.
+
+Agents are designed for reuse, like FastAPI Apps
+
+Agents are intended to be instantiated once (frequently as module globals) and reused throughout your application, similar to a small FastAPI app or an APIRouter.
+
+## Running Agents
+
+There are four ways to run an agent:
+
+1. agent.run() — a coroutine which returns a RunResult containing a completed response.
+1. agent.run_sync() — a plain, synchronous function which returns a RunResult containing a completed response (internally, this just calls `loop.run_until_complete(self.run())`).
+1. agent.run_stream() — a coroutine which returns a StreamedRunResult, which contains methods to stream a response as an async iterable.
+1. agent.iter() — a context manager which returns an AgentRun, an async-iterable over the nodes of the agent's underlying Graph.
+
+Here's a simple example demonstrating the first three:
+
+run_agent.py
+
+```python
+from pydantic_ai import Agent
+
+agent = Agent('openai:gpt-4o')
+
+result_sync = agent.run_sync('What is the capital of Italy?')
+print(result_sync.output)
+#> Rome
+
+
+async def main():
+    result = await agent.run('What is the capital of France?')
+    print(result.output)
+    #> Paris
+
+    async with agent.run_stream('What is the capital of the UK?') as response:
+        print(await response.get_output())
+        #> London
+```
+
+*(This example is complete, it can be run "as is" — you'll need to add `asyncio.run(main())` to run `main`)*
+
+You can also pass messages from previous runs to continue a conversation or provide context, as described in [Messages and Chat History](../message-history/).
+
+## Basic Usage Examples
+
+### Simple Agent
+```python
+from pydantic_ai import Agent
+
+agent = Agent('openai:gpt-4o')
+result = agent.run_sync('What is the capital of Italy?')
+print(result.output)  # Rome
+```
+
+### Agent with Tools
+```python
+from pydantic_ai import Agent, RunContext
+
+agent = Agent('openai:gpt-4o')
+
+@agent.tool
+def get_weather(location: str) -> str:
+    """Get weather for a location"""
+    return f"Weather in {location}: 22°C, sunny"
+
+result = agent.run_sync('What is the weather in London?')
+print(result.output)
+```
+
+### Agent with Structured Output
+```python
+from pydantic_ai import Agent
+from pydantic import BaseModel
+
+class WeatherResponse(BaseModel):
+    location: str
+    temperature: int
+    condition: str
+
+agent = Agent('openai:gpt-4o', output_type=WeatherResponse)
+result = agent.run_sync('What is the weather in Paris?')
+print(result.output.location)  # Paris
+print(result.output.temperature)  # 22
+```
+
+### Agent with Dependencies
+```python
+from pydantic_ai import Agent, RunContext
+from dataclasses import dataclass
+
+@dataclass
+class Database:
+    users: dict[str, str]
+
+agent = Agent('openai:gpt-4o', deps_type=Database)
+
+@agent.tool
+def get_user(ctx: RunContext[Database], user_id: str) -> str:
+    """Get user by ID"""
+    return ctx.deps.users.get(user_id, "User not found")
+
+db = Database(users={"1": "Alice", "2": "Bob"})
+result = agent.run_sync('Who is user 1?', deps=db)
+print(result.output)
+```
+
+### Streaming Agent
+```python
+from pydantic_ai import Agent
+
+agent = Agent('openai:gpt-4o')
+
+async def main():
+    async with agent.run_stream('Tell me a story') as response:
+        async for chunk in response:
+            print(chunk, end='')
+```
+
+## System Prompts and Instructions
+
+### Static System Prompts
+```python
+agent = Agent(
+    'openai:gpt-4o',
+    system_prompt="You are a helpful assistant that speaks like a pirate."
+)
+```
+
+### Dynamic System Prompts
+```python
+from datetime import date
+
+@agent.system_prompt
+def add_date() -> str:
+    return f'Today is {date.today()}'
+```
+
+### Instructions (Preferred)
+```python
+agent = Agent(
+    'openai:gpt-4o',
+    instructions="Use the customer's name while replying to them."
+)
+
+@agent.instructions
+def add_user_name(ctx: RunContext[str]) -> str:
+    return f"The user's name is {ctx.deps}."
+```
+
+## Tool Registration
+
+### Function Tools
+```python
+@agent.tool
+def calculator(operation: str, a: float, b: float) -> float:
+    """Perform basic math operations"""
+    if operation == "add":
+        return a + b
+    elif operation == "multiply":
+        return a * b
+    # ... more operations
+```
+
+### Plain Tools (no RunContext)
+```python
+@agent.tool_plain
+def get_random_number() -> int:
+    """Get a random number"""
+    import random
+    return random.randint(1, 100)
+```
+
+## Model Settings and Configuration
+
+### Basic Model Settings
+```python
+result = agent.run_sync(
+    'What is the capital of Italy?',
+    model_settings={'temperature': 0.0}
+)
+```
+
+### Usage Limits
+```python
+from pydantic_ai.usage import UsageLimits
+
+result = agent.run_sync(
+    'Short answer please',
+    usage_limits=UsageLimits(response_tokens_limit=50)
+)
+```
+
+## Error Handling
+
+### Validation Errors
+```python
+from pydantic_ai.exceptions import ModelRetry
+
+@agent.tool
+def validate_input(value: str) -> str:
+    if not value.strip():
+        raise ModelRetry("Input cannot be empty")
+    return value
+```
+
+### Usage Limit Exceeded
+```python
+from pydantic_ai.exceptions import UsageLimitExceeded
+
+try:
+    result = agent.run_sync(
+        'Long response please',
+        usage_limits=UsageLimits(response_tokens_limit=10)
+    )
+except UsageLimitExceeded as e:
+    print(f"Usage limit exceeded: {e}")
+```
+
+## Message History and Conversations
+
+### Continuing Conversations
+```python
+# First run
+result1 = agent.run_sync('Who was Albert Einstein?')
+
+# Second run with history
+result2 = agent.run_sync(
+    'What was his most famous equation?',
+    message_history=result1.new_messages()
+)
+```
+
+### Custom Message History
+```python
+from pydantic_ai.messages import UserMessage, AssistantMessage
+
+messages = [
+    UserMessage(content="Hello"),
+    AssistantMessage(content="Hi there!"),
+    UserMessage(content="How are you?")
+]
+
+result = agent.run_sync(
+    'What did we talk about?',
+    message_history=messages
+)
+```
+
+## Advanced Features
+
+### Reflection and Self-Correction
+```python
+from pydantic import BaseModel, field_validator
+
+class ValidatedOutput(BaseModel):
+    number: int
+    
+    @field_validator('number')
+    def validate_number(cls, v):
+        if v < 0:
+            raise ValueError('Number must be positive')
+        return v
+
+agent = Agent('openai:gpt-4o', output_type=ValidatedOutput)
+# Agent will retry if validation fails
+```
+
+### Multi-Agent Workflows
+```python
+researcher = Agent('openai:gpt-4o', system_prompt="You research topics")
+writer = Agent('openai:gpt-4o', system_prompt="You write articles")
+
+# Research phase
+research_result = researcher.run_sync('Research climate change')
+
+# Writing phase  
+article = writer.run_sync(
+    'Write an article based on this research',
+    message_history=[AssistantMessage(content=research_result.output)]
+)
+```
+
+## Best Practices
+
+1. **Use Instructions over System Prompts**: Instructions are not preserved in message history
+2. **Type Your Dependencies**: Use proper type hints for better IDE support
+3. **Handle Validation Errors**: Use ModelRetry for recoverable errors
+4. **Set Usage Limits**: Prevent excessive token usage
+5. **Use Structured Output**: Define Pydantic models for consistent responses
+6. **Reuse Agents**: Create agents once and reuse them across your application
+
+---
+
+**Source**: https://ai.pydantic.dev/llms-full.txt
+**Retrieved**: 2025-07-10  
+**Method**: curl download

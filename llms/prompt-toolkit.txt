@@ -1,0 +1,20 @@
+# prompt-toolkit llms.txt
+
+## Status: Not Found
+
+Attempted to fetch llms.txt from:
+- python-prompt-toolkit.readthedocs.io (no llms.txt support found)
+- GitHub repository at prompt-toolkit/python-prompt-toolkit
+
+prompt_toolkit is a library for building powerful interactive command line applications in Python.
+
+Official documentation:
+- ReadTheDocs: https://python-prompt-toolkit.readthedocs.io/en/master/
+- GitHub: https://github.com/prompt-toolkit/python-prompt-toolkit
+- PDF: https://media.readthedocs.org/pdf/python-prompt-toolkit/stable/python-prompt-toolkit.pdf
+
+No llms.txt file appears to be available for prompt-toolkit as of the search date.
+
+---
+Retrieved: 2025-07-09
+Method: WebSearch confirmed no llms.txt available

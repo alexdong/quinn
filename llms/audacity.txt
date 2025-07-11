@@ -1,0 +1,18 @@
+Audacity is a GUI-based audio editing application and does not have a command-line interface.
+
+For audio manipulation from the command line, consider using:
+- sox: Sound eXchange - the Swiss Army knife of audio manipulation
+- ffmpeg: For audio conversion and processing
+
+Audacity features include:
+- Multi-track audio recording and editing
+- Support for various audio formats
+- Audio effects and filters
+- Spectrum analysis
+- Noise reduction
+
+Website: https://www.audacityteam.org/
+
+=== Documentation Retrieved ===
+Note: Audacity is a GUI application without CLI help
+Date: Thu Jul 10 09:20:00 AM NZST 2025

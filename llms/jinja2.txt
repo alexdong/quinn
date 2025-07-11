@@ -1,0 +1,18 @@
+# Jinja2 llms.txt
+
+## Status: Not Found
+
+Attempted to fetch llms.txt from:
+- https://jinja.palletsprojects.com/llms.txt (not checked due to no search results)
+- Pallets Project documentation sites
+
+Jinja2 is a modern and designer-friendly templating language for Python.
+
+Official documentation expected at:
+- https://jinja.palletsprojects.com/
+
+No llms.txt file search results found for Jinja2 as of the search date.
+
+---
+Retrieved: 2025-07-09
+Method: Limited search performed, no llms.txt references found

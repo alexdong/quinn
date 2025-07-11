@@ -1,0 +1,25 @@
+# FastHTML llms.txt
+
+## Status: Available
+
+FastHTML provides comprehensive LLM-friendly documentation:
+- llms-ctx-full.txt: https://fastht.ml/docs/llms-ctx-full.txt
+- llms-ctx.txt: Referenced in documentation
+- llms.txt: Source file from which context files are generated
+
+FastHTML implemented the llms.txt proposal with:
+1. An llms.txt index file
+2. Markdown versions of pages (append .md to URLs)
+3. Auto-generated XML context files for LLMs
+
+The context files include:
+- FastHTML quick start
+- HTMX reference
+- Todo list application walkthrough
+- Starlette documentation subset
+
+Note: Could not fetch directly due to domain restrictions, but documentation confirms availability.
+
+---
+Retrieved: 2025-07-09
+Method: WebSearch confirmed availability at fastht.ml/docs/llms-ctx-full.txt

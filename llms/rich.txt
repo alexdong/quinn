@@ -1,0 +1,691 @@
+# Rich - Rich Text and Beautiful Formatting for the Terminal
+
+Rich is a Python library for enhancing terminal output with rich text, color, and advanced content display. It makes command-line applications more visually appealing and data presentation more readable.
+
+## Installation
+
+```bash
+pip install rich
+```
+
+## Requirements
+
+- Python 3.7.0 and above
+- Works on macOS, Linux, and Windows
+- Supports both cmd.exe and Windows Terminal
+
+## Basic Usage
+
+### Simple Print
+```python
+from rich import print
+
+# Enhanced print with markup
+print("[italic red]Hello[/italic red] World!")
+
+# Pretty print data structures
+print({"name": "John", "age": 30})
+
+# Print with syntax highlighting
+print(locals())
+```
+
+### Console Object
+```python
+from rich.console import Console
+
+console = Console()
+console.print("Hello, [bold red]World[/]!")
+```
+
+## Console API
+
+### Basic Printing
+```python
+from rich.console import Console
+
+console = Console()
+
+# Simple text
+console.print("Hello World")
+
+# Styled text
+console.print("Hello", style="bold red")
+
+# Multiple styles
+console.print("Hello World", style="bold red on white")
+
+# Markup
+console.print("[bold red]Alert![/bold red] Something happened")
+```
+
+### Advanced Printing
+```python
+# Justify text
+console.print("Hello", justify="center")
+console.print("Hello", justify="right")
+
+# Overflow handling
+console.print("Very long text that might overflow", overflow="ellipsis")
+
+# Highlighting
+console.print("Visit https://example.com", highlight=True)
+```
+
+### Logging
+```python
+import logging
+from rich.console import Console
+from rich.logging import RichHandler
+
+console = Console()
+
+# Simple log
+console.log("Hello, World!")
+
+# Log with timestamp
+console.log("Debug message", log_locals=True)
+
+# Configure logging
+logging.basicConfig(
+    level="NOTSET",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler()]
+)
+
+log = logging.getLogger("rich")
+log.info("Hello, World!")
+```
+
+### Input
+```python
+# Enhanced input with markup
+name = console.input("What is your [bold red]name[/]? ")
+
+# Input with password hiding
+password = console.input("Password: ", password=True)
+```
+
+## Text Styling
+
+### Markup
+```python
+from rich import print
+
+# Basic markup
+print("[bold]This is bold[/bold]")
+print("[italic]This is italic[/italic]")
+print("[underline]This is underlined[/underline]")
+print("[strikethrough]This is strikethrough[/strikethrough]")
+
+# Color markup
+print("[red]This is red[/red]")
+print("[green]This is green[/green]")
+print("[blue]This is blue[/blue]")
+
+# Background colors
+print("[black on yellow]Black text on yellow background[/]")
+
+# Combined styles
+print("[bold red on white]Bold red text on white background[/]")
+```
+
+### Style Objects
+```python
+from rich.style import Style
+from rich.console import Console
+
+console = Console()
+
+# Create style object
+danger_style = Style(color="red", bold=True)
+console.print("Danger!", style=danger_style)
+
+# Parse style from string
+style = Style.parse("bold red on white")
+console.print("Styled text", style=style)
+```
+
+## Text Objects
+
+### Text Class
+```python
+from rich.text import Text
+from rich.console import Console
+
+console = Console()
+
+# Create text object
+text = Text("Hello, World!")
+text.stylize("bold red", 0, 6)  # Style "Hello,"
+console.print(text)
+
+# Append text
+text = Text("Hello ")
+text.append("World", style="bold red")
+text.append("!")
+console.print(text)
+```
+
+### Text Measurements
+```python
+from rich.text import Text
+
+text = Text("Hello, World!")
+console.print(f"Length: {len(text)}")
+console.print(f"Cell length: {text.cell_len}")
+```
+
+## Progress Bars
+
+### Basic Progress Bar
+```python
+import time
+from rich.progress import track
+
+for i in track(range(20), description="Processing..."):
+    time.sleep(0.1)
+```
+
+### Advanced Progress
+```python
+import time
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+with Progress(
+    SpinnerColumn(),
+    TextColumn("[progress.description]{task.description}"),
+    transient=True,
+) as progress:
+    task = progress.add_task("Processing...", total=20)
+    for i in range(20):
+        time.sleep(0.1)
+        progress.update(task, advance=1)
+```
+
+### Multiple Progress Bars
+```python
+import time
+from rich.progress import Progress
+
+with Progress() as progress:
+    task1 = progress.add_task("Downloading...", total=100)
+    task2 = progress.add_task("Processing...", total=100)
+    
+    for i in range(100):
+        time.sleep(0.01)
+        progress.update(task1, advance=1)
+        progress.update(task2, advance=0.5)
+```
+
+## Tables
+
+### Basic Table
+```python
+from rich.table import Table
+from rich.console import Console
+
+console = Console()
+
+table = Table(title="Star Wars Movies")
+table.add_column("Released", justify="right", style="cyan")
+table.add_column("Title", style="magenta")
+table.add_column("Box Office", justify="right", style="green")
+
+table.add_row("Dec 20, 2019", "Star Wars: The Rise of Skywalker", "$952,110,690")
+table.add_row("May 25, 2018", "Solo: A Star Wars Story", "$393,151,347")
+table.add_row("Dec 15, 2017", "Star Wars: The Last Jedi", "$1,332,539,889")
+
+console.print(table)
+```
+
+### Table with Styling
+```python
+from rich.table import Table
+
+table = Table(show_header=True, header_style="bold blue")
+table.add_column("Name", style="cyan")
+table.add_column("Age", style="magenta", justify="right")
+table.add_column("City", style="green")
+
+table.add_row("John", "30", "New York")
+table.add_row("Jane", "25", "Los Angeles")
+table.add_row("Bob", "35", "Chicago")
+
+console.print(table)
+```
+
+## Panels
+
+### Basic Panel
+```python
+from rich.panel import Panel
+from rich.console import Console
+
+console = Console()
+
+console.print(Panel("Hello, World!"))
+console.print(Panel("Hello, World!", title="Greeting"))
+console.print(Panel("Hello, World!", title="Greeting", subtitle="From Rich"))
+```
+
+### Panel with Styling
+```python
+from rich.panel import Panel
+
+panel = Panel(
+    "Hello, World!",
+    title="Greeting",
+    border_style="red",
+    padding=(1, 2),
+)
+console.print(panel)
+```
+
+## Syntax Highlighting
+
+### Code Highlighting
+```python
+from rich.syntax import Syntax
+from rich.console import Console
+
+console = Console()
+
+code = '''
+def hello(name):
+    print(f"Hello, {name}!")
+'''
+
+syntax = Syntax(code, "python", theme="monokai", line_numbers=True)
+console.print(syntax)
+```
+
+### File Highlighting
+```python
+from rich.syntax import Syntax
+
+syntax = Syntax.from_path("example.py", theme="monokai", line_numbers=True)
+console.print(syntax)
+```
+
+## Live Display
+
+### Live Updates
+```python
+import time
+from rich.live import Live
+from rich.table import Table
+
+def generate_table():
+    table = Table()
+    table.add_column("Name")
+    table.add_column("Value")
+    table.add_row("CPU", "45%")
+    table.add_row("Memory", "62%")
+    return table
+
+with Live(generate_table(), refresh_per_second=4) as live:
+    for _ in range(40):
+        time.sleep(0.4)
+        live.update(generate_table())
+```
+
+## Trees
+
+### File Tree
+```python
+from rich.tree import Tree
+from rich.console import Console
+
+console = Console()
+
+tree = Tree("📁 Project")
+tree.add("📄 README.md")
+tree.add("📄 setup.py")
+src = tree.add("📁 src")
+src.add("📄 __init__.py")
+src.add("📄 main.py")
+
+console.print(tree)
+```
+
+## Markdown
+
+### Markdown Rendering
+```python
+from rich.markdown import Markdown
+from rich.console import Console
+
+console = Console()
+
+markdown = Markdown("""
+# Hello World
+
+This is **bold** and this is *italic*.
+
+- Item 1
+- Item 2
+- Item 3
+
+```python
+print("Hello, World!")
+```
+""")
+
+console.print(markdown)
+```
+
+## Columns
+
+### Multi-Column Layout
+```python
+from rich.columns import Columns
+from rich.panel import Panel
+from rich.console import Console
+
+console = Console()
+
+user_renderables = [
+    Panel("Panel 1", style="red"),
+    Panel("Panel 2", style="green"),
+    Panel("Panel 3", style="blue"),
+]
+
+console.print(Columns(user_renderables))
+```
+
+## Align
+
+### Text Alignment
+```python
+from rich.align import Align
+from rich.console import Console
+
+console = Console()
+
+console.print(Align.center("This is centered"))
+console.print(Align.right("This is right-aligned"))
+console.print(Align.left("This is left-aligned"))
+```
+
+## Prompt
+
+### Interactive Prompts
+```python
+from rich.prompt import Prompt, Confirm, IntPrompt
+
+# Basic prompt
+name = Prompt.ask("Enter your name")
+
+# Prompt with default
+name = Prompt.ask("Enter your name", default="John")
+
+# Choices
+color = Prompt.ask("Choose a color", choices=["red", "green", "blue"])
+
+# Integer prompt
+age = IntPrompt.ask("Enter your age")
+
+# Confirmation
+if Confirm.ask("Do you want to continue?"):
+    print("Continuing...")
+```
+
+## Pretty Printing
+
+### Pretty Print
+```python
+from rich.pretty import pprint
+
+data = {
+    "name": "John",
+    "age": 30,
+    "hobbies": ["reading", "coding", "gaming"],
+    "address": {
+        "street": "123 Main St",
+        "city": "New York",
+        "zip": "10001"
+    }
+}
+
+pprint(data)
+```
+
+### Pretty Print with Console
+```python
+from rich.pretty import Pretty
+
+console.print(Pretty(data))
+```
+
+## Inspect
+
+### Object Inspection
+```python
+from rich import inspect
+
+def greet(name):
+    """A simple greeting function."""
+    return f"Hello, {name}!"
+
+inspect(greet)
+inspect(greet, methods=True)
+```
+
+## Layout
+
+### Layout System
+```python
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.console import Console
+
+console = Console()
+
+layout = Layout()
+
+layout.split_column(
+    Layout(name="header", size=3),
+    Layout(name="body"),
+    Layout(name="footer", size=3),
+)
+
+layout.split_row(
+    Layout(name="left"),
+    Layout(name="right"),
+)
+
+layout["header"].update(Panel("Header", style="bold blue"))
+layout["left"].update(Panel("Left Panel", style="red"))
+layout["right"].update(Panel("Right Panel", style="green"))
+layout["footer"].update(Panel("Footer", style="bold blue"))
+
+console.print(layout)
+```
+
+## Logging
+
+### Rich Logging Handler
+```python
+import logging
+from rich.logging import RichHandler
+
+# Configure logging
+logging.basicConfig(
+    level="NOTSET",
+    format="%(message)s",
+    datefmt="[%X]",
+    handlers=[RichHandler(rich_tracebacks=True)]
+)
+
+log = logging.getLogger("rich")
+log.info("Hello, World!")
+log.warning("This is a warning")
+log.error("This is an error")
+```
+
+## Exception Handling
+
+### Rich Tracebacks
+```python
+from rich.traceback import install
+
+# Install rich traceback handler
+install(show_locals=True)
+
+def divide(a, b):
+    return a / b
+
+# This will show a rich traceback
+result = divide(10, 0)
+```
+
+## File Export
+
+### Export to HTML
+```python
+from rich.console import Console
+
+console = Console(record=True)
+console.print("Hello, World!", style="bold red")
+
+# Export to HTML
+console.save_html("output.html")
+```
+
+### Export to Text
+```python
+# Export to text
+console.save_text("output.txt")
+```
+
+### Export to SVG
+```python
+# Export to SVG
+console.save_svg("output.svg", title="My Output")
+```
+
+## Configuration
+
+### Console Configuration
+```python
+from rich.console import Console
+
+# Configure console
+console = Console(
+    color_system="truecolor",  # or "256", "standard", "windows"
+    width=120,
+    height=40,
+    force_terminal=True,
+    force_jupyter=False,
+    highlight=True,
+    log_time=True,
+    log_path=True,
+)
+```
+
+## Best Practices
+
+1. **Use Console Objects**: Create console objects for better control
+2. **Use Markup Carefully**: Don't overuse markup; it can make text hard to read
+3. **Test Different Terminals**: Rich works differently on various terminals
+4. **Use Live Updates**: For dynamic content, use Live display
+5. **Handle Terminal Detection**: Rich auto-detects terminal capabilities
+6. **Use Appropriate Color Systems**: Choose the right color system for your target environment
+7. **Export for Sharing**: Use export features to save formatted output
+8. **Use Rich Logging**: Replace standard logging with RichHandler for better output
+9. **Style Consistently**: Use consistent styling throughout your application
+10. **Test Without Rich**: Ensure your app works if Rich isn't available
+
+## Common Use Cases
+
+### CLI Applications
+```python
+from rich.console import Console
+from rich.table import Table
+from rich.progress import track
+import time
+
+console = Console()
+
+def display_data():
+    table = Table(title="System Information")
+    table.add_column("Component", style="cyan")
+    table.add_column("Usage", style="magenta")
+    table.add_row("CPU", "45%")
+    table.add_row("Memory", "62%")
+    table.add_row("Disk", "78%")
+    console.print(table)
+
+def process_files():
+    files = ["file1.txt", "file2.txt", "file3.txt"]
+    for file in track(files, description="Processing files..."):
+        time.sleep(1)  # Simulate processing
+        console.log(f"Processed {file}")
+
+if __name__ == "__main__":
+    console.print("🚀 System Monitor", style="bold green")
+    display_data()
+    process_files()
+```
+
+### Data Visualization
+```python
+from rich.console import Console
+from rich.table import Table
+from rich.bar import Bar
+
+console = Console()
+
+def show_survey_results():
+    table = Table(title="Survey Results")
+    table.add_column("Option", style="cyan")
+    table.add_column("Votes", style="magenta")
+    table.add_column("Percentage", style="green")
+    
+    data = [
+        ("Option A", 45, 45),
+        ("Option B", 30, 30),
+        ("Option C", 25, 25),
+    ]
+    
+    for option, votes, percentage in data:
+        bar = "█" * (percentage // 2)
+        table.add_row(option, str(votes), f"{bar} {percentage}%")
+    
+    console.print(table)
+
+show_survey_results()
+```
+
+### Debug and Development
+```python
+from rich import inspect
+from rich.console import Console
+from rich.traceback import install
+
+# Install rich tracebacks
+install(show_locals=True)
+
+console = Console()
+
+def debug_function():
+    data = {"users": [{"name": "John", "age": 30}]}
+    
+    # Debug with inspect
+    inspect(data, methods=True)
+    
+    # Debug with console.log
+    console.log("Processing user data", log_locals=True)
+    
+    return data
+
+debug_function()
+```
+
+---
+
+**Source**: https://rich.readthedocs.io/en/stable/
+**Retrieved**: 2025-07-10  
+**Method**: Web crawling and documentation synthesis

@@ -1,0 +1,20 @@
+# pytest llms.txt
+
+## Status: Not Found
+
+Attempted to fetch llms.txt from:
+- https://docs.pytest.org/llms.txt (not directly searched)
+- pytest documentation sites
+
+pytest is a testing framework for Python.
+
+Search results found information about:
+- Testing LLMs with pytest
+- DeepEval framework for LLM evaluation using pytest-like syntax
+- llm_test tool for LLM safety testing
+
+However, no llms.txt documentation file for pytest itself was found.
+
+---
+Retrieved: 2025-07-09
+Method: WebSearch found LLM testing tools but no pytest llms.txt

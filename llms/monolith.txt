@@ -1,0 +1,6 @@
+monolith is not installed on this system.
+
+
+=== Documentation Retrieved ===
+Generated using: monolith --help (if available)
+Date: Thu Jul 10 09:18:55 AM NZST 2025

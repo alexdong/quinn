@@ -1,0 +1,511 @@
+# NumPy - Numerical Python
+
+NumPy (Numerical Python) is an open source Python library widely used in science and engineering. It provides multidimensional array data structures and efficiently processes homogeneous data.
+
+## Installation
+
+```bash
+pip install numpy
+```
+
+## Basic Usage
+
+### Import Convention
+```python
+import numpy as np  # Standard convention
+```
+
+### Array Creation
+
+#### From Lists
+```python
+# 1D array
+a = np.array([1, 2, 3, 4, 5, 6])
+print(a)  # [1 2 3 4 5 6]
+
+# 2D array
+b = np.array([[1, 2, 3], [4, 5, 6]])
+print(b)
+# [[1 2 3]
+#  [4 5 6]]
+```
+
+#### Creating Arrays with Functions
+```python
+# Array of zeros
+zeros = np.zeros(5)
+print(zeros)  # [0. 0. 0. 0. 0.]
+
+# Array of ones
+ones = np.ones(3)
+print(ones)  # [1. 1. 1.]
+
+# Array with range
+range_array = np.arange(5)
+print(range_array)  # [0 1 2 3 4]
+
+# Array with range and step
+step_array = np.arange(0, 10, 2)
+print(step_array)  # [0 2 4 6 8]
+
+# Linear space
+linear = np.linspace(0, 10, 5)
+print(linear)  # [0.0 2.5 5.0 7.5 10.0]
+```
+
+#### 2D Array Creation
+```python
+# 2D zeros
+zeros_2d = np.zeros((3, 4))
+print(zeros_2d)
+# [[0. 0. 0. 0.]
+#  [0. 0. 0. 0.]
+#  [0. 0. 0. 0.]]
+
+# 2D ones
+ones_2d = np.ones((2, 3))
+print(ones_2d)
+# [[1. 1. 1.]
+#  [1. 1. 1.]]
+
+# Identity matrix
+identity = np.eye(3)
+print(identity)
+# [[1. 0. 0.]
+#  [0. 1. 0.]
+#  [0. 0. 1.]]
+```
+
+### Array Attributes
+```python
+a = np.array([[1, 2, 3], [4, 5, 6]])
+
+print(a.ndim)    # Number of dimensions: 2
+print(a.shape)   # Dimensions: (2, 3)
+print(a.size)    # Total elements: 6
+print(a.dtype)   # Data type: int64
+print(a.itemsize) # Size of each element in bytes
+```
+
+### Data Types
+```python
+# Specify data type
+int_array = np.array([1, 2, 3], dtype=np.int32)
+float_array = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+bool_array = np.array([True, False, True], dtype=np.bool_)
+
+# Convert data type
+a = np.array([1.5, 2.3, 3.7])
+int_a = a.astype(np.int32)
+print(int_a)  # [1 2 3]
+```
+
+## Array Operations
+
+### Basic Arithmetic
+```python
+a = np.array([1, 2, 3, 4])
+b = np.array([5, 6, 7, 8])
+
+# Element-wise operations
+print(a + b)  # [6 8 10 12]
+print(a - b)  # [-4 -4 -4 -4]
+print(a * b)  # [5 12 21 32]
+print(a / b)  # [0.2 0.33333333 0.42857143 0.5]
+print(a ** 2) # [1 4 9 16]
+```
+
+### Mathematical Functions
+```python
+a = np.array([1, 4, 9, 16])
+
+# Square root
+print(np.sqrt(a))  # [1. 2. 3. 4.]
+
+# Logarithm
+print(np.log(a))   # [0. 1.38629436 2.19722458 2.77258872]
+
+# Exponential
+print(np.exp(a))   # [2.71828183e+00 5.45981500e+01 8.10308393e+03 8.88611052e+06]
+
+# Trigonometric
+angles = np.array([0, np.pi/2, np.pi])
+print(np.sin(angles))  # [0. 1. 0.]
+print(np.cos(angles))  # [1. 0. -1.]
+```
+
+### Array Comparison
+```python
+a = np.array([1, 2, 3, 4])
+b = np.array([1, 3, 2, 4])
+
+print(a == b)  # [True False False True]
+print(a > 2)   # [False False True True]
+print(a < b)   # [False True False False]
+```
+
+## Indexing and Slicing
+
+### Basic Indexing
+```python
+a = np.array([1, 2, 3, 4, 5, 6])
+
+# Single element
+print(a[0])   # 1
+print(a[-1])  # 6
+
+# Slicing
+print(a[1:4])  # [2 3 4]
+print(a[:3])   # [1 2 3]
+print(a[3:])   # [4 5 6]
+print(a[::2])  # [1 3 5]
+```
+
+### 2D Array Indexing
+```python
+a = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+
+# Single element
+print(a[0, 1])  # 2
+print(a[1, 2])  # 6
+
+# Row
+print(a[0])     # [1 2 3]
+print(a[0, :])  # [1 2 3]
+
+# Column
+print(a[:, 1])  # [2 5 8]
+
+# Subarray
+print(a[0:2, 1:3])
+# [[2 3]
+#  [5 6]]
+```
+
+### Boolean Indexing
+```python
+a = np.array([1, 2, 3, 4, 5, 6])
+
+# Boolean mask
+mask = a > 3
+print(mask)      # [False False False True True True]
+print(a[mask])   # [4 5 6]
+
+# Direct boolean indexing
+print(a[a > 3])  # [4 5 6]
+print(a[a % 2 == 0])  # [2 4 6]
+```
+
+## Shape Manipulation
+
+### Reshaping
+```python
+a = np.array([1, 2, 3, 4, 5, 6])
+
+# Reshape to 2D
+b = a.reshape(2, 3)
+print(b)
+# [[1 2 3]
+#  [4 5 6]]
+
+# Reshape to 3D
+c = a.reshape(2, 3, 1)
+print(c.shape)  # (2, 3, 1)
+
+# Flatten
+d = b.flatten()
+print(d)  # [1 2 3 4 5 6]
+```
+
+### Joining Arrays
+```python
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+# Concatenate
+c = np.concatenate([a, b])
+print(c)  # [1 2 3 4 5 6]
+
+# Vertical stack
+d = np.vstack([a, b])
+print(d)
+# [[1 2 3]
+#  [4 5 6]]
+
+# Horizontal stack
+e = np.hstack([a, b])
+print(e)  # [1 2 3 4 5 6]
+```
+
+### Splitting Arrays
+```python
+a = np.array([1, 2, 3, 4, 5, 6])
+
+# Split into 3 parts
+parts = np.split(a, 3)
+print(parts)  # [array([1, 2]), array([3, 4]), array([5, 6])]
+
+# Split 2D array
+b = np.array([[1, 2, 3], [4, 5, 6]])
+h_parts = np.hsplit(b, 3)
+print(h_parts)  # [array([[1], [4]]), array([[2], [5]]), array([[3], [6]])]
+```
+
+## Broadcasting
+
+### Basic Broadcasting
+```python
+a = np.array([1, 2, 3])
+b = np.array([[1], [2], [3]])
+
+# Broadcasting addition
+result = a + b
+print(result)
+# [[2 3 4]
+#  [3 4 5]
+#  [4 5 6]]
+
+# Scalar broadcasting
+c = a * 2
+print(c)  # [2 4 6]
+```
+
+## Linear Algebra
+
+### Matrix Operations
+```python
+a = np.array([[1, 2], [3, 4]])
+b = np.array([[5, 6], [7, 8]])
+
+# Matrix multiplication
+c = np.dot(a, b)
+print(c)
+# [[19 22]
+#  [43 50]]
+
+# Using @ operator
+d = a @ b
+print(d)
+# [[19 22]
+#  [43 50]]
+
+# Transpose
+print(a.T)
+# [[1 3]
+#  [2 4]]
+```
+
+### Linear Algebra Functions
+```python
+a = np.array([[1, 2], [3, 4]])
+
+# Determinant
+det = np.linalg.det(a)
+print(det)  # -2.0
+
+# Inverse
+inv = np.linalg.inv(a)
+print(inv)
+# [[-2.   1. ]
+#  [ 1.5 -0.5]]
+
+# Eigenvalues and eigenvectors
+eigenvalues, eigenvectors = np.linalg.eig(a)
+print(eigenvalues)   # [-0.37228132  5.37228132]
+print(eigenvectors)
+# [[-0.82456484 -0.41597356]
+#  [ 0.56576746 -0.90937671]]
+```
+
+## Statistics
+
+### Basic Statistics
+```python
+a = np.array([1, 2, 3, 4, 5, 6])
+
+print(np.mean(a))     # 3.5
+print(np.median(a))   # 3.5
+print(np.std(a))      # 1.707825127659933
+print(np.var(a))      # 2.9166666666666665
+print(np.min(a))      # 1
+print(np.max(a))      # 6
+print(np.sum(a))      # 21
+```
+
+### Statistics along Axis
+```python
+a = np.array([[1, 2, 3], [4, 5, 6]])
+
+# Along rows (axis=0)
+print(np.mean(a, axis=0))  # [2.5 3.5 4.5]
+
+# Along columns (axis=1)
+print(np.mean(a, axis=1))  # [2. 5.]
+
+# Cumulative sum
+print(np.cumsum(a))        # [1 3 6 10 15 21]
+print(np.cumsum(a, axis=0))
+# [[1 2 3]
+#  [5 7 9]]
+```
+
+## Random Numbers
+
+### Random Array Generation
+```python
+# Random floats between 0 and 1
+rand_array = np.random.random(5)
+print(rand_array)  # [0.374 0.950 0.731 0.598 0.156]
+
+# Random integers
+rand_int = np.random.randint(0, 10, 5)
+print(rand_int)  # [3 7 9 3 5]
+
+# Random normal distribution
+rand_normal = np.random.normal(0, 1, 5)
+print(rand_normal)  # [-0.34 1.67 0.41 -0.85 0.27]
+
+# Random choice
+choices = np.random.choice([1, 2, 3, 4, 5], 3)
+print(choices)  # [2 4 1]
+```
+
+### Random Seed
+```python
+# Set seed for reproducibility
+np.random.seed(42)
+print(np.random.random(3))  # [0.374 0.950 0.731]
+
+np.random.seed(42)
+print(np.random.random(3))  # [0.374 0.950 0.731] (same as above)
+```
+
+## File I/O
+
+### Save and Load Arrays
+```python
+a = np.array([1, 2, 3, 4, 5])
+
+# Save to file
+np.save('array.npy', a)
+
+# Load from file
+b = np.load('array.npy')
+print(b)  # [1 2 3 4 5]
+
+# Save multiple arrays
+np.savez('arrays.npz', x=a, y=a*2)
+
+# Load multiple arrays
+data = np.load('arrays.npz')
+print(data['x'])  # [1 2 3 4 5]
+print(data['y'])  # [2 4 6 8 10]
+```
+
+### CSV Files
+```python
+# Save to CSV
+a = np.array([[1, 2, 3], [4, 5, 6]])
+np.savetxt('array.csv', a, delimiter=',')
+
+# Load from CSV
+b = np.loadtxt('array.csv', delimiter=',')
+print(b)
+# [[1. 2. 3.]
+#  [4. 5. 6.]]
+```
+
+## Performance Tips
+
+### Vectorization
+```python
+# Slow: Python loop
+a = [1, 2, 3, 4, 5]
+result = []
+for x in a:
+    result.append(x ** 2)
+
+# Fast: NumPy vectorized
+a = np.array([1, 2, 3, 4, 5])
+result = a ** 2
+```
+
+### Memory Efficiency
+```python
+# Create large array
+large_array = np.zeros((1000, 1000))
+
+# Use views instead of copies when possible
+view = large_array[::2, ::2]  # View (no copy)
+copy = large_array[::2, ::2].copy()  # Copy (uses more memory)
+```
+
+## Common Use Cases
+
+### Data Analysis
+```python
+# Sample data
+data = np.random.normal(100, 15, 1000)
+
+# Basic statistics
+print(f"Mean: {np.mean(data):.2f}")
+print(f"Std: {np.std(data):.2f}")
+print(f"Min: {np.min(data):.2f}")
+print(f"Max: {np.max(data):.2f}")
+
+# Percentiles
+print(f"25th percentile: {np.percentile(data, 25):.2f}")
+print(f"75th percentile: {np.percentile(data, 75):.2f}")
+```
+
+### Image Processing
+```python
+# Simulate RGB image (height, width, channels)
+image = np.random.randint(0, 256, (100, 100, 3), dtype=np.uint8)
+
+# Convert to grayscale
+gray = np.mean(image, axis=2).astype(np.uint8)
+
+# Apply threshold
+binary = (gray > 128).astype(np.uint8) * 255
+```
+
+### Signal Processing
+```python
+# Generate signal
+t = np.linspace(0, 1, 1000)
+signal = np.sin(2 * np.pi * 5 * t) + 0.5 * np.sin(2 * np.pi * 10 * t)
+
+# Add noise
+noise = np.random.normal(0, 0.1, len(signal))
+noisy_signal = signal + noise
+
+# Simple moving average filter
+window_size = 10
+filtered = np.convolve(noisy_signal, np.ones(window_size)/window_size, mode='same')
+```
+
+## Best Practices
+
+1. **Use vectorized operations** instead of Python loops
+2. **Specify data types** explicitly when creating arrays
+3. **Use views instead of copies** when possible to save memory
+4. **Leverage broadcasting** for efficient operations
+5. **Use appropriate axis** for multi-dimensional operations
+6. **Set random seeds** for reproducible results
+7. **Profile your code** to identify bottlenecks
+8. **Use NumPy's built-in functions** instead of implementing your own
+
+## Common Pitfalls
+
+1. **Mixing data types** can lead to unexpected results
+2. **Modifying arrays in-place** can affect other variables
+3. **Broadcasting** can create unexpected shapes
+4. **Memory usage** can be high for large arrays
+5. **Integer division** behaves differently in NumPy vs Python
+
+---
+
+**Source**: https://numpy.org/doc/stable/
+**Retrieved**: 2025-07-10  
+**Method**: Web crawling and documentation synthesis

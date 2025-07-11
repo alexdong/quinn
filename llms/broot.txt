@@ -1,0 +1,6 @@
+broot is not installed on this system.
+
+
+=== Documentation Retrieved ===
+Generated using: broot --help (if available)
+Date: Thu Jul 10 09:18:34 AM NZST 2025

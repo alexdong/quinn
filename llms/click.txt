@@ -1,0 +1,410 @@
+# Click - Python Command Line Interface Creation Kit
+
+Click is a Python package for creating command line interfaces (CLIs) with minimal code requirements, composable design, and automatic help page generation.
+
+## Installation
+
+```bash
+pip install click
+```
+
+## Basic Usage
+
+### Simple Command
+```python
+import click
+
+@click.command()
+def hello():
+    """Simple program that greets."""
+    click.echo('Hello World!')
+
+if __name__ == '__main__':
+    hello()
+```
+
+### Command with Options
+```python
+import click
+
+@click.command()
+@click.option('--count', default=1, help='Number of greetings.')
+@click.option('--name', prompt='Your name', help='The person to greet.')
+def hello(count, name):
+    """Simple program that greets NAME for a total of COUNT times."""
+    for x in range(count):
+        click.echo(f"Hello {name}!")
+
+if __name__ == '__main__':
+    hello()
+```
+
+### Command with Arguments
+```python
+import click
+
+@click.command()
+@click.argument('name')
+@click.argument('output', type=click.File('w'))
+def hello(name, output):
+    """Simple program that greets NAME and writes to OUTPUT file."""
+    click.echo(f"Hello {name}!", file=output)
+
+if __name__ == '__main__':
+    hello()
+```
+
+## Options
+
+### Basic Options
+```python
+@click.command()
+@click.option('--verbose', '-v', is_flag=True, help='Enable verbose output.')
+@click.option('--count', default=1, help='Number of greetings.')
+@click.option('--name', prompt='Your name', help='The person to greet.')
+def hello(verbose, count, name):
+    """Simple program demonstrating options."""
+    if verbose:
+        click.echo('Verbose mode is on')
+    for x in range(count):
+        click.echo(f"Hello {name}!")
+```
+
+### Multi-Value Options
+```python
+@click.command()
+@click.option('--pos', nargs=2, type=float)
+def find_position(pos):
+    """Find position with coordinates."""
+    a, b = pos
+    click.echo(f"Position: {a}, {b}")
+
+# Usage: command --pos 2.0 3.0
+```
+
+### Boolean Flags
+```python
+@click.command()
+@click.option('--shout/--no-shout', default=False)
+def info(shout):
+    """Handle boolean flags."""
+    text = 'Hello World'
+    if shout:
+        text = text.upper()
+    click.echo(text)
+```
+
+### Required Options
+```python
+@click.command()
+@click.option('--name', required=True, help='Your name.')
+def hello(name):
+    """Command with required option."""
+    click.echo(f"Hello {name}!")
+```
+
+### Environment Variables
+```python
+@click.command()
+@click.option('--username', envvar='USER')
+def whoami(username):
+    """Get username from environment or option."""
+    click.echo(f"You are {username}")
+```
+
+## Arguments
+
+### Basic Arguments
+```python
+@click.command()
+@click.argument('filename')
+def process_file(filename):
+    """Process a file."""
+    click.echo(f"Processing {filename}")
+```
+
+### Variable Arguments
+```python
+@click.command()
+@click.argument('filenames', nargs=-1)
+def process_files(filenames):
+    """Process multiple files."""
+    for filename in filenames:
+        click.echo(f"Processing {filename}")
+```
+
+### File Arguments
+```python
+@click.command()
+@click.argument('input', type=click.File('r'))
+@click.argument('output', type=click.File('w'))
+def copy_file(input, output):
+    """Copy content from input to output."""
+    output.write(input.read())
+```
+
+## Command Groups
+
+### Basic Groups
+```python
+@click.group()
+def cli():
+    """A simple CLI tool."""
+    pass
+
+@cli.command()
+def initdb():
+    """Initialize the database."""
+    click.echo('Initialized the database')
+
+@cli.command()
+def dropdb():
+    """Drop the database."""
+    click.echo('Dropped the database')
+
+if __name__ == '__main__':
+    cli()
+```
+
+### Nested Groups
+```python
+@click.group()
+def cli():
+    """Main CLI."""
+    pass
+
+@cli.group()
+def database():
+    """Database operations."""
+    pass
+
+@database.command()
+def init():
+    """Initialize database."""
+    click.echo('Database initialized')
+
+@database.command()
+def drop():
+    """Drop database."""
+    click.echo('Database dropped')
+
+# Usage: cli database init
+```
+
+## Types
+
+### Built-in Types
+```python
+@click.command()
+@click.option('--count', type=int)
+@click.option('--rate', type=float)
+@click.option('--enabled', type=bool)
+def process(count, rate, enabled):
+    """Command with typed options."""
+    click.echo(f"Count: {count}, Rate: {rate}, Enabled: {enabled}")
+```
+
+### Choice Type
+```python
+@click.command()
+@click.option('--format', type=click.Choice(['json', 'xml', 'csv']))
+def export(format):
+    """Export data in specified format."""
+    click.echo(f"Exporting in {format} format")
+```
+
+### Path Type
+```python
+@click.command()
+@click.option('--config', type=click.Path(exists=True))
+def load_config(config):
+    """Load configuration from file."""
+    click.echo(f"Loading config from {config}")
+```
+
+## Prompts
+
+### Basic Prompts
+```python
+@click.command()
+@click.option('--name', prompt='Your name')
+def hello(name):
+    """Greet user with prompted name."""
+    click.echo(f"Hello {name}!")
+```
+
+### Password Prompts
+```python
+@click.command()
+@click.option('--password', prompt=True, hide_input=True)
+def login(password):
+    """Login with password."""
+    click.echo('Logging in...')
+```
+
+### Confirmation Prompts
+```python
+@click.command()
+@click.option('--delete', is_flag=True)
+def cleanup(delete):
+    """Clean up files."""
+    if delete:
+        if click.confirm('Are you sure you want to delete all files?'):
+            click.echo('Deleting files...')
+        else:
+            click.echo('Aborted')
+```
+
+## Advanced Features
+
+### Callbacks
+```python
+def validate_email(ctx, param, value):
+    """Validate email format."""
+    if value and '@' not in value:
+        raise click.BadParameter('Invalid email format')
+    return value
+
+@click.command()
+@click.option('--email', callback=validate_email)
+def register(email):
+    """Register with email."""
+    click.echo(f"Registered with {email}")
+```
+
+### Context
+```python
+@click.group()
+@click.option('--verbose', is_flag=True)
+@click.pass_context
+def cli(ctx, verbose):
+    """Main CLI with context."""
+    ctx.ensure_object(dict)
+    ctx.obj['verbose'] = verbose
+
+@cli.command()
+@click.pass_context
+def process(ctx):
+    """Process with context."""
+    if ctx.obj['verbose']:
+        click.echo('Verbose mode enabled')
+```
+
+### Colors and Styling
+```python
+@click.command()
+def colorful():
+    """Command with colored output."""
+    click.echo(click.style('Hello World!', fg='green'))
+    click.echo(click.style('Error message', fg='red', bold=True))
+    click.echo(click.style('Warning', fg='yellow'))
+```
+
+### Progress Bars
+```python
+import time
+
+@click.command()
+def progress():
+    """Command with progress bar."""
+    items = range(100)
+    with click.progressbar(items, label='Processing') as bar:
+        for item in bar:
+            time.sleep(0.01)  # Simulate work
+```
+
+## Testing
+
+### Basic Testing
+```python
+from click.testing import CliRunner
+
+def test_hello():
+    """Test hello command."""
+    runner = CliRunner()
+    result = runner.invoke(hello, ['--name', 'Test'])
+    assert result.exit_code == 0
+    assert 'Hello Test!' in result.output
+```
+
+### Testing with Input
+```python
+def test_prompt():
+    """Test command with prompt."""
+    runner = CliRunner()
+    result = runner.invoke(hello, input='Test\n')
+    assert result.exit_code == 0
+    assert 'Hello Test!' in result.output
+```
+
+## Best Practices
+
+1. **Use `click.echo()` instead of `print()`** for better compatibility
+2. **Add help text** to all commands and options
+3. **Use type hints** for better IDE support
+4. **Group related commands** using command groups
+5. **Validate input** using callbacks or custom types
+6. **Use environment variables** for configuration
+7. **Test your CLI** using Click's testing utilities
+8. **Handle errors gracefully** with try/except blocks
+9. **Use progress bars** for long-running operations
+10. **Provide clear error messages** to users
+
+## Common Patterns
+
+### Configuration File
+```python
+import json
+import click
+
+@click.command()
+@click.option('--config', type=click.Path(exists=True), help='Configuration file path')
+def process(config):
+    """Process with configuration."""
+    if config:
+        with open(config, 'r') as f:
+            config_data = json.load(f)
+        click.echo(f"Loaded config: {config_data}")
+    else:
+        click.echo('No config file provided')
+```
+
+### Output Formatting
+```python
+@click.command()
+@click.option('--format', type=click.Choice(['json', 'table', 'csv']), default='table')
+def report(format):
+    """Generate report in specified format."""
+    data = {'name': 'John', 'age': 30}
+    
+    if format == 'json':
+        click.echo(json.dumps(data, indent=2))
+    elif format == 'table':
+        click.echo(f"Name: {data['name']}, Age: {data['age']}")
+    elif format == 'csv':
+        click.echo(f"{data['name']},{data['age']}")
+```
+
+### Error Handling
+```python
+@click.command()
+@click.argument('filename')
+def process_file(filename):
+    """Process a file with error handling."""
+    try:
+        with open(filename, 'r') as f:
+            content = f.read()
+        click.echo(f"Processed {len(content)} characters")
+    except FileNotFoundError:
+        click.echo(f"Error: File '{filename}' not found", err=True)
+        raise click.Abort()
+    except Exception as e:
+        click.echo(f"Error processing file: {e}", err=True)
+        raise click.Abort()
+```
+
+---
+
+**Source**: https://click.palletsprojects.com/
+**Retrieved**: 2025-07-10  
+**Method**: Web crawling and documentation synthesis

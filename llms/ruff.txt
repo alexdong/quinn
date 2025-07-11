@@ -1,0 +1,554 @@
+# Ruff - An Extremely Fast Python Linter and Code Formatter
+
+Ruff is an extremely fast Python linter and code formatter written in Rust. It's 10-100x faster than existing tools like Flake8 and Black, while providing over 800 built-in rules with automatic error correction.
+
+## Installation
+
+### Using uv (Recommended)
+```bash
+# Global install
+uv tool install ruff@latest
+
+# Project development dependency  
+uv add --dev ruff
+```
+
+### Using pip
+```bash
+pip install ruff
+```
+
+### Using pipx
+```bash
+pipx install ruff
+```
+
+### Standalone Installers
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/ruff/install.sh | sh
+
+# Windows PowerShell
+powershell -c "irm https://astral.sh/ruff/install.ps1 | iex"
+```
+
+### Other Package Managers
+```bash
+# Homebrew
+brew install ruff
+
+# Conda
+conda install -c conda-forge ruff
+
+# Arch Linux
+pacman -S ruff
+
+# Alpine
+apk add ruff
+```
+
+### Docker
+```bash
+docker run -v .:/io --rm ghcr.io/astral-sh/ruff check
+```
+
+## Basic Usage
+
+### Linting
+```bash
+# Lint current directory
+ruff check
+
+# Lint specific files
+ruff check file.py
+
+# Lint with automatic fixes
+ruff check --fix
+
+# Lint with unsafe fixes
+ruff check --fix --unsafe-fixes
+
+# Watch mode for continuous linting
+ruff check --watch
+```
+
+### Formatting
+```bash
+# Format current directory
+ruff format
+
+# Format specific files
+ruff format file.py
+
+# Check formatting without changes
+ruff format --check
+
+# Format with diff preview
+ruff format --diff
+```
+
+## Configuration
+
+### pyproject.toml
+```toml
+[tool.ruff]
+# Exclude a variety of commonly ignored directories
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+# Same as Black
+line-length = 88
+indent-width = 4
+
+# Assume Python 3.8+
+target-version = "py38"
+
+[tool.ruff.lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default
+# Unlike Flake8, Ruff doesn't enable pycodestyle (`W`) warnings by default
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix`) is provided
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs
+indent-style = "space"
+
+# Like Black, respect magic trailing commas
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending
+line-ending = "auto"
+
+# Enable auto-formatting of code examples in docstrings
+docstring-code-format = false
+
+# Set the line length limit used when formatting code snippets in docstrings
+docstring-code-line-length = "dynamic"
+```
+
+### ruff.toml
+```toml
+# Exclude a variety of commonly ignored directories
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+]
+
+line-length = 88
+indent-width = 4
+target-version = "py38"
+
+[lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = []
+fixable = ["ALL"]
+unfixable = []
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+```
+
+## Linting Rules
+
+### Common Rule Categories
+```bash
+# Pyflakes (F)
+# - F401: Unused imports
+# - F841: Unused variables
+# - F811: Redefined unused name
+
+# pycodestyle (E, W)
+# - E302: Expected 2 blank lines
+# - E501: Line too long
+# - W291: Trailing whitespace
+
+# flake8-bugbear (B)
+# - B902: Invalid first argument name for method
+# - B006: Do not use mutable default arguments
+
+# isort (I)
+# - I001: Import block is un-sorted or un-formatted
+
+# pydocstyle (D)
+# - D100: Missing docstring in public module
+# - D103: Missing docstring in public function
+
+# pyupgrade (UP)
+# - UP001: Use `{}` instead of `{}.format()`
+# - UP006: Use `list` instead of `List` for type annotations
+```
+
+### Selecting Rules
+```toml
+[tool.ruff.lint]
+# Enable specific rules
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # Pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+]
+
+# Ignore specific rules
+ignore = [
+    "E501",  # Line too long
+    "W503",  # Line break before binary operator
+]
+
+# Per-file ignores
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"test_*.py" = ["D100", "D103"]
+```
+
+## Command Line Examples
+
+### Basic Commands
+```bash
+# Check all Python files
+ruff check .
+
+# Check specific files
+ruff check src/main.py tests/
+
+# Format all Python files
+ruff format .
+
+# Format specific files
+ruff format src/main.py
+```
+
+### Advanced Usage
+```bash
+# Check and fix automatically
+ruff check --fix .
+
+# Show diffs for fixes
+ruff check --diff .
+
+# Enable unsafe fixes
+ruff check --fix --unsafe-fixes .
+
+# Check only specific rules
+ruff check --select E,W .
+
+# Ignore specific rules
+ruff check --ignore E501,W503 .
+
+# Output format options
+ruff check --format=json .
+ruff check --format=github .
+ruff check --format=gitlab .
+```
+
+### Continuous Integration
+```bash
+# Check formatting
+ruff format --check .
+
+# Check linting
+ruff check .
+
+# Combined check
+ruff check . && ruff format --check .
+```
+
+## Error Suppression
+
+### Inline Comments
+```python
+# Ignore specific rule on line
+import unused_module  # noqa: F401
+
+# Ignore multiple rules
+x = 1; y = 2  # noqa: E702, E701
+
+# Ignore all rules on line
+bad_code()  # noqa
+
+# Ignore specific rule for next line
+# ruff: noqa: E501
+very_long_line = "This is a very long line that exceeds the line length limit but we want to ignore it"
+```
+
+### File-Level Suppression
+```python
+# Ignore all rules in file
+# ruff: noqa
+
+# Ignore specific rules in file
+# ruff: noqa: F401, E501
+
+# At top of file
+#!/usr/bin/env python3
+# ruff: noqa: D100
+```
+
+## Integration with Other Tools
+
+### Pre-commit
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.6
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+```
+
+### GitHub Actions
+```yaml
+name: Ruff
+on: [push, pull_request]
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: chartboost/ruff-action@v1
+        with:
+          args: 'check --output-format=github'
+```
+
+### VS Code
+```json
+{
+    "python.linting.enabled": true,
+    "python.linting.ruffEnabled": true,
+    "python.formatting.provider": "none",
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": true,
+            "source.organizeImports.ruff": true
+        },
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    }
+}
+```
+
+## Common Use Cases
+
+### Replace Multiple Tools
+```bash
+# Instead of:
+# flake8 .
+# black .
+# isort .
+# pyupgrade --py38-plus **/*.py
+
+# Use:
+ruff check --fix .
+ruff format .
+```
+
+### Gradual Adoption
+```toml
+[tool.ruff.lint]
+# Start with basic rules
+select = ["E", "F"]
+
+# Gradually add more
+# select = ["E", "F", "I", "B", "C4"]
+
+# Eventually enable most rules
+# select = ["ALL"]
+# ignore = ["specific-rules-to-ignore"]
+```
+
+### Project-Specific Configuration
+```toml
+# For Django projects
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "DJ"]
+ignore = ["DJ01"]  # Avoid using null=True on string fields
+
+# For data science projects
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "PD", "NPY"]
+ignore = ["PD901"]  # Avoid using the generic variable name df
+```
+
+## Performance Comparison
+
+### Speed Benchmarks
+```bash
+# Ruff vs other tools (approximate)
+# Linting 10,000 files:
+# - Ruff: 0.2 seconds
+# - Flake8: 20 seconds
+# - Pylint: 200 seconds
+
+# Formatting 10,000 files:
+# - Ruff: 0.1 seconds
+# - Black: 5 seconds
+# - autopep8: 50 seconds
+```
+
+## Rule Categories
+
+### Core Rules
+- **Pyflakes (F)**: Logical errors, unused imports/variables
+- **pycodestyle (E, W)**: Style violations, line length, whitespace
+- **McCabe (C90)**: Cyclomatic complexity
+- **isort (I)**: Import sorting and organization
+- **pydocstyle (D)**: Docstring conventions
+- **pyupgrade (UP)**: Syntax modernization
+
+### Additional Rules
+- **flake8-bugbear (B)**: Bug-prone constructs
+- **flake8-comprehensions (C4)**: List/dict comprehension improvements
+- **flake8-simplify (SIM)**: Code simplification
+- **flake8-bandit (S)**: Security issues
+- **flake8-pytest-style (PT)**: pytest best practices
+
+## Best Practices
+
+1. **Start Small**: Begin with basic rules (E, F) and gradually expand
+2. **Use Configuration Files**: Store settings in `pyproject.toml` or `ruff.toml`
+3. **Enable Auto-Fix**: Use `--fix` flag for automatic corrections
+4. **Integrate with CI/CD**: Add ruff checks to your pipeline
+5. **Use Pre-commit Hooks**: Catch issues before committing
+6. **Per-File Ignores**: Use specific ignores for different file types
+7. **Regular Updates**: Keep ruff updated for new rules and fixes
+8. **Document Exceptions**: Use clear comments when ignoring rules
+
+## Common Patterns
+
+### Django Projects
+```toml
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "DJ"]
+ignore = ["DJ01", "DJ03"]
+
+[tool.ruff.lint.per-file-ignores]
+"*/migrations/*" = ["E501"]
+"*/settings/*" = ["F405"]
+```
+
+### Data Science Projects
+```toml
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "PD", "NPY"]
+ignore = ["PD901", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"*.ipynb" = ["E402", "F841"]
+```
+
+### Library Projects
+```toml
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D100",  # Missing docstring in public module
+    "D104",  # Missing docstring in public package
+    "COM812", # Missing trailing comma
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "S101"]
+```
+
+## Troubleshooting
+
+### Common Issues
+```bash
+# Fix import sorting issues
+ruff check --fix --select I .
+
+# Check for unused imports
+ruff check --select F401 .
+
+# Fix line length issues
+ruff format .
+
+# Check for security issues
+ruff check --select S .
+```
+
+### Debug Configuration
+```bash
+# Show current configuration
+ruff check --show-settings
+
+# Show all available rules
+ruff linter
+
+# Explain specific rule
+ruff rule F401
+```
+
+---
+
+**Source**: https://docs.astral.sh/ruff/
+**Retrieved**: 2025-07-10  
+**Method**: Web crawling and documentation synthesis
