@@ -81,17 +81,6 @@ Unlike traditional chatbots or AI assistants:
 - Context windows maintain session continuity
 - Validation rules prevent direct solution generation
 
-## Use Cases
-
-Quinn excels at helping with:
-- Business partnership decisions
-- Technical architecture choices
-- Project prioritization
-- Career transitions
-- Strategic planning
-- Conflict resolution
-- Risk assessment
-
 ## Getting Started
 
 Simply send an email to `quinn@postmark.alexdong.com` with:
@@ -103,7 +92,9 @@ End your email with: "Start by asking some clarification questions" to begin the
 
 ## Response Time
 
-Quinn typically responds within minutes during business hours. Complex queries may take longer as Quinn analyzes your situation to provide the most helpful questions.
+Quinn is a rubber duck, so he doesn't need as much sleep as you do. If you find yourself awake at 2:30am wrestling with a problem and can't go back to sleep, shoot Quinn an email. He'll be there with thoughtful questions faster than you can count sheep.
+
+During regular hours, expect responses within minutes. Complex existential crises may take slightly longer as Quinn contemplates the perfect questions to unlock your epiphany.
 
 ## Interaction Patterns
 
