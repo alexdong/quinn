@@ -144,8 +144,8 @@ webhook_url = "https://your-app.com/webhook/postmark"
 [llm]
 # AI model configuration
 provider = "anthropic"  # or "openai"
-model = "claude-3-opus-20240229"
-api_key = "your-api-key"
+model = "claude-3-5-sonnet-20241022"
+# API key is read from ANTHROPIC_API_KEY environment variable
 temperature = 0.7
 max_tokens = 4000
 
@@ -153,45 +153,41 @@ max_tokens = 4000
 # Quinn behavior customization
 name = "Quinn"
 tagline = "Your AI-powered rubber duck"
-# Customize Quinn's personality and approach
-style = "consultative"  # options: consultative, socratic, coaching
-max_questions_per_response = 7
-response_delay_seconds = 30  # Prevent instant responses for more thoughtful feel
 
 [security]
 # Optional security settings
-allowed_domains = ["yourdomain.com", "trustedpartner.com"]
-rate_limit_per_hour = 10
+allowed_email_addresses = ["user@example.com", "team@company.com"]
 require_auth_phrase = false  # Set to true to require a phrase in first email
 
 [storage]
 # Session storage (optional)
 backend = "sqlite"  # options: sqlite, redis, none
 sqlite_path = "./quinn_sessions.db"
-session_ttl_hours = 168  # 7 days
 ```
 
 ### Environment Variables
 
-Alternatively, use environment variables (overrides config.toml):
+Set required API keys via environment variables:
 
 ```bash
-export QUINN_POSTMARK_API_KEY="your-key"
-export QUINN_LLM_PROVIDER="anthropic"
-export QUINN_LLM_API_KEY="your-llm-key"
+export ANTHROPIC_API_KEY="your-anthropic-key"
+export POSTMARK_API_KEY="your-postmark-key"
+```
+
+Optional overrides for config.toml values:
+
+```bash
 export QUINN_INBOUND_EMAIL="quinn@yourdomain.com"
+export QUINN_LLM_MODEL="claude-3-5-sonnet-20241022"
 ```
 
 ### Deployment Options
 
-1. **Docker**: 
-   ```bash
-   docker run -v ./config.toml:/app/config.toml quinn:latest
-   ```
+1. **Cloud Functions**: Deploy to AWS Lambda, Google Cloud Functions, or Azure Functions with webhook endpoint
 
-2. **Cloud Functions**: Deploy to AWS Lambda, Google Cloud Functions, or Azure Functions with webhook endpoint
+2. **Self-Hosted**: Run on any server with Python 3.12+ and public webhook endpoint
 
-3. **Self-Hosted**: Run on any server with Python 3.12+ and public webhook endpoint
+3. **Serverless**: Use Vercel, Netlify Functions, or similar platforms with webhook support
 
 ### Customizing Quinn's Behavior
 
