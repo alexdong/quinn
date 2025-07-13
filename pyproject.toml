@@ -1,7 +1,11 @@
 [project]
+name = "quinn"
+version = "0.1.0"
+description = "AI-powered email rubber duck for guided problem-solving"
+requires-python = ">=3.12"
 dependencies = [
     "pydantic-ai[anthropic,openai]>=0.0.14",
-    "fasthtml>=0.7.0",
+    "python-fasthtml>=0.7.0",
     "click>=8.0.0",
     "rich>=13.0.0",
     "prompt-toolkit>=3.0.0",
@@ -9,6 +13,9 @@ dependencies = [
     "jinja2>=3.1.0",
     "toml>=0.10.0",
     "loguru>=0.7.0",
+    "numpy>=1.26.0",
+    "plotly>=5.0.0",
+    "streamlit>=1.0.0",
 ]
 
 [tool.uv]
@@ -16,6 +23,36 @@ dev-dependencies = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.1.0",
-    "ty>=0.9.0",
-    "hyperfine>=1.18.0",
+    "ty>=0.0.1a14",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["src", "tests"]
+python_files = ["*_test.py"]
+addopts = "-vv"
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*_test.py", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+]
+

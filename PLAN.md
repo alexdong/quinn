@@ -17,24 +17,21 @@ By the end of this phase, we will have the initial prompts and follow-up questio
 - Prompts work effectively across technical, business, and personal problem domains
 
 - [ ] Define prompt philosophy and testing approach
-  - [ ] Create PROMPTS.md documenting the rubber duck methodology
-  - [ ] Define example problem scenarios for testing (technical debugging, business decisions, personal challenges)
+  - [ ] Create quinn/prompts/PROMPTS.md documenting the rubber duck methodology
   - [ ] Create checklist for "good" rubber duck behavior
   - [ ] Document anti-patterns to avoid (being directive, solving problems, leading questions)
 
-- [ ] Implement basic AI response generation using pydantic-ai
-  - [ ] Create initial AI agent using pydantic-ai with Claude 3.5 Sonnet
+- [ ] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
+  - [ ] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
   - [ ] Implement basic response generation logic with error handling
   - [ ] Add retry logic for API failures with exponential backoff
   - [ ] Implement cost tracking (tokens, API costs, response time) per interaction
-  - [ ] Create fallback responses for API timeouts/failures
 
 - [ ] Create conversation context management
   - [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
   - [ ] Create tables for: conversation_id, timestamp, prompt_version, tokens_used, cost, response_time, model_used
   - [ ] Implement basic CRUD operations for conversation management
   - [ ] Add in-memory storage backend for testing purposes
-  - [ ] Create simple migration strategy for future schema changes
   - [ ] Implement session management with metadata tracking
 
 - [ ] Create a CLI script that allows us to iterate on the prompts quickly
@@ -44,6 +41,12 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   - [ ] Create prompts/ directory with versioned files (v1_initial.txt, v1_clarification.txt, v1_followup.txt)
   - [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
   - [ ] Add `--log-effectiveness` option to capture manual notes about prompt performance
+
+- [ ] Establish the map-reduce pattern for considering perspectives
+  - [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
+  - [ ] Each perspective will be provided a separate prompt to get further clarification questions.
+  - [ ] Each perspective will be processed independently to generate tailored follow-up questions.
+  - [ ] The final response will be a summary of all perspectives and their follow-up questions.
 
 - [ ] Develop core prompts through iterative testing
   - [ ] Create initial system prompt enforcing rubber duck methodology
@@ -87,11 +90,9 @@ This phase will enable us to interact with Quinn via a single-user web applicati
 
 Note that the web should be as minimum as possible. Think Craigslist-style. 
 
-- [ ] Create FastHTML web application
-  - [ ] Add a chat interface for user interaction
-  - [ ] Display metadata like cost, response time etc as inline information
-  - [ ] Implement message sending and receiving
+- [ ] Create Monitoring web application using Streamlit
   - [ ] Create conversation history view
+  - [ ] Display metadata like cost, response time etc as inline information
   - [ ] Add health check and monitoring endpoints
   - [ ] Create admin interface for session viewing
   - [ ] Implement rate limiting and abuse prevention
@@ -118,7 +119,7 @@ The email thread reconstruction is achieved through the following steps:
 4. Identify new content vs quoted previous messages
 5. Build context for AI agent with conversation flow
 
-- [ ] Implement Postmark integration
+- [ ] Implement Postmark integration (see ./llms/postmark.txt)
   - [ ] Create email receiver webhook endpoint
   - [ ] Parse incoming email structure (headers, body, attachments)
   - [ ] Extract thread context and conversation history
@@ -196,6 +197,8 @@ Following Python.md conventions for one-person army readability:
 │   │   └── prompts/
 │   │       ├── __init__.py
 │   │       ├── initial.j2
+│   │       ├── perspectives.j2
+│   │       ├── summarise.j2
 │   │       └── response.h2
 │   │       └── footer.h2
 │   ├── web/
