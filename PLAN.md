@@ -2,7 +2,13 @@
 
 ## Overview
 
-Quinn is an AI-powered email rubber duck that helps users solve problems through guided reflection and asking clarification questions. This plan outlines the complete implementation from scratch.
+Quinn is an email-native, AI-powered “rubber duck.” It guides technically‑oriented users to solve their own problems by asking clarifying questions, prompting structured self‑explanation, and—when warranted—convening an independent **panel** of perspectives. Quinn is a facilitator, not an oracle.
+
+### Representative Use Cases
+
+* **Technical Architecture Trade‑off:** Choosing an authentication and user account management system for a new web application.
+* **Life Choices & Decision:** How to help a 11-year-old daughter to decide if she should drop ballet next term.
+* **Value‑Based Consulting Quote:** Pricing a 10–20‑hour, expertise‑heavy engagement that requires substantial background preparation, research and thinking.
 
 ## Implementation Plan
 
@@ -16,45 +22,44 @@ By the end of this phase, we will have the initial prompts and follow-up questio
 - Users report feeling like they discovered the solution themselves
 - Prompts work effectively across technical, business, and personal problem domains
 
-- [ ] Define prompt philosophy and testing approach
-  - [ ] Create quinn/prompts/PROMPTS.md documenting the rubber duck methodology
-  - [ ] Create checklist for "good" rubber duck behavior
-  - [ ] Document anti-patterns to avoid (being directive, solving problems, leading questions)
+1. [x] Define prompt philosophy and testing approach
+  1. [x] Create METHODOLOGY.md documenting the rubber duck methodology
+  2. [x] Create checklist for "good" rubber duck behavior
+  3. [x] Document anti-patterns to avoid (being directive, solving problems, leading questions)
 
-- [ ] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
-  - [ ] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
-  - [ ] Implement basic response generation logic with error handling
-  - [ ] Add retry logic for API failures with exponential backoff
-  - [ ] Implement cost tracking (tokens, API costs, response time) per interaction
+2. [ ] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
+  1. [ ] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
+  2. [ ] Implement basic response generation logic with error handling
+  3. [ ] Add retry logic for API failures with exponential backoff
+  4. [ ] Implement cost tracking (tokens, API costs, response time) per interaction
+  5. [ ] Implement prompt versioning to track changes over time
+  6. [ ] Implement prompt caching to avoid repeated API calls
 
-- [ ] Create conversation context management
-  - [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
-  - [ ] Create tables for: conversation_id, timestamp, prompt_version, tokens_used, cost, response_time, model_used
-  - [ ] Implement basic CRUD operations for conversation management
-  - [ ] Add in-memory storage backend for testing purposes
-  - [ ] Implement session management with metadata tracking
+3. [ ] Create conversation context management
+  1. [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
+  2. [ ] Create tables for: conversation_id, timestamp, prompt_version, tokens_used, cost, response_time, model_used
+  3. [ ] Implement basic CRUD operations for conversation management
+  4. [ ] Add in-memory storage backend for testing purposes
+  5. [ ] Implement session management with metadata tracking
 
-- [ ] Create a CLI script that allows us to iterate on the prompts quickly
-  - [ ] Create minimal CLI with two commands: `quinn prompt` (single test) and `quinn chat` (full conversation)
-  - [ ] Add `--prompt-file` option to load prompts from external files
-  - [ ] Add `--debug` flag to show costs/tokens/timing after each interaction
-  - [ ] Create prompts/ directory with versioned files (v1_initial.txt, v1_clarification.txt, v1_followup.txt)
-  - [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
-  - [ ] Add `--log-effectiveness` option to capture manual notes about prompt performance
+4. [ ] Create a CLI script that allows us to iterate on the prompts quickly
+  1. [ ] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
+  2. [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
+  3. [ ] Receive the response and prints output and any metadata
 
-- [ ] Establish the map-reduce pattern for considering perspectives
-  - [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
-  - [ ] Each perspective will be provided a separate prompt to get further clarification questions.
-  - [ ] Each perspective will be processed independently to generate tailored follow-up questions.
-  - [ ] The final response will be a summary of all perspectives and their follow-up questions.
+5. [ ] Establish the map-reduce pattern for considering perspectives
+  1. [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
+  2. [ ] Each perspective will be provided a separate prompt to get further clarification questions.
+  3. [ ] Each perspective will be processed independently to generate tailored follow-up questions.
+  4. [ ] The final response will be a summary of all perspectives and their follow-up questions.
 
-- [ ] Develop core prompts through iterative testing
-  - [ ] Create initial system prompt enforcing rubber duck methodology
-  - [ ] Develop prompt for generating 5-7 clarification questions
-  - [ ] Create follow-up prompt for after user answers questions
-  - [ ] Design email footer with clear instructions and expectations
-  - [ ] Test prompts with at least 10 different problem scenarios
-  - [ ] Document prompt iterations and effectiveness in logs/
+6. [ ] Develop core prompts through iterative testing
+  1. [ ] Create initial system prompt enforcing rubber duck methodology
+  2. [ ] Develop prompt for generating 5-7 clarification questions
+  3. [ ] Create follow-up prompt for after user answers questions
+  4. [ ] Design email footer with clear instructions and expectations
+  5. [ ] Test prompts with at least 10 different problem scenarios
+  6. [ ] Document prompt iterations and effectiveness in logs/
 
 
 ### Phase 1: End-to-End Functioning Agent using CLI
@@ -81,35 +86,12 @@ A few notes on the CLI:
   - [ ] Implement session expiration and cleanup
   - [ ] Response caching for common question patterns
   - [ ] Add privacy-preserving data retention policies
+  - [ ] Tracking cost at both message and session level
 
 - [ ] Implement basic logging and tracing infrastructure
 
-### Phase 2: Web Application
 
-This phase will enable us to interact with Quinn via a single-user web application, allowing users to have conversations with the AI agent through a web interface. The web application will not handle email processing just yet. Basic administration features will be implemented to manage sessions and monitor usage.
-
-Note that the web should be as minimum as possible. Think Craigslist-style. 
-
-- [ ] Create Monitoring web application using Streamlit
-  - [ ] Create conversation history view
-  - [ ] Display metadata like cost, response time etc as inline information
-  - [ ] Add health check and monitoring endpoints
-  - [ ] Create admin interface for session viewing
-  - [ ] Implement rate limiting and abuse prevention
-
-- [ ] Implement Admin Interface
-  - [ ] Create admin dashboard for session management
-  - [ ] Add session statistics and analytics
-  - [ ] Create user management interface for email allowlisting
-  - [ ] Cost control and reporting features
-
-- [ ] Add security features
-  - [ ] Validate Postmark webhook signatures
-  - [ ] Create audit logging for all interactions
-  - [ ] Add an "allowlist" feature for email senders
-
-
-### Phase 3: Email Processing System
+### Phase 2: Email Processing System
 
 The email thread reconstruction is achieved through the following steps:
 
@@ -137,7 +119,47 @@ The email thread reconstruction is achieved through the following steps:
   - [ ] Rate limiting per sender to prevent abuse
   - [ ] Audit logging for all security-relevant events
 
-### Phase 4: Core Infrastructure Setup
+### Phase 3: Introduce Panel of Perspectives
+
+This phase will introduce the concept of a "panel of perspectives" where Quinn can ask for multiple viewpoints on a problem. This will allow users to explore different angles and approaches to their issues, enhancing the problem-solving process.
+
+- [ ] Implement perspective management
+  - [ ] Create a perspective prompt template
+  - [ ] Allow users to add, remove, and modify perspectives
+  - [ ] Implement perspective selection for follow-up questions
+  - [ ] Map-reduce pattern for processing multiple perspectives
+
+- [ ] Implement perspective-based follow-up questions
+  - [ ] Generate tailored follow-up questions for each perspective
+  - [ ] Allow users to select which perspective to explore further
+  - [ ] Store perspective responses in conversation history
+
+### Phase 4: Web Application
+
+This phase will enable us to interact with Quinn via a single-user web application, allowing users to have conversations with the AI agent through a web interface. The web application will not handle email processing just yet. Basic administration features will be implemented to manage sessions and monitor usage.
+
+Note that the web should be as minimum as possible. Think Craigslist-style. 
+
+- [ ] Create Monitoring web application using Streamlit
+  - [ ] Create conversation history view
+  - [ ] Display metadata like cost, response time etc as inline information
+  - [ ] Add health check and monitoring endpoints
+  - [ ] Create admin interface for session viewing
+  - [ ] Implement rate limiting and abuse prevention
+
+- [ ] Implement Admin Interface
+  - [ ] Create admin dashboard for session management
+  - [ ] Add session statistics and analytics
+  - [ ] Create user management interface for email allowlisting
+  - [ ] Cost control and reporting features
+
+- [ ] Add security features
+  - [ ] Validate Postmark webhook signatures
+  - [ ] Create audit logging for all interactions
+  - [ ] Add an "allowlist" feature for email senders
+
+
+### Phase 5: Core Infrastructure Setup
 
 - [ ] Create user configuration system
   - [ ] Each user can have more than one email address
