@@ -2,9 +2,9 @@
 name = "quinn"
 version = "0.1.0"
 description = "AI-powered email rubber duck for guided problem-solving"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "pydantic-ai[anthropic,openai]>=0.0.14",
+    "pydantic-ai[anthropic,openai,gemini]>=0.0.14",
     "python-fasthtml>=0.7.0",
     "click>=8.0.0",
     "rich>=13.0.0",
@@ -13,7 +13,6 @@ dependencies = [
     "jinja2>=3.1.0",
     "toml>=0.10.0",
     "loguru>=0.7.0",
-    "numpy>=1.26.0",
     "plotly>=5.0.0",
     "streamlit>=1.0.0",
 ]
@@ -22,26 +21,68 @@ dependencies = [
 dev-dependencies = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
+    "ruff>=0.11.6",
     "ty>=0.0.1a14",
 ]
 
-[tool.ruff]
-line-length = 120
-target-version = "py312"
 
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"
+[tool.ruff]
+exclude = [".venv", "**/*_test.py"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
-ignore = ["B008"]
+extend-select = [
+  "A",      # flake8-builtins - prevent shadowing of built-in names
+  "ANN",    # flake8-annotations - enforce type annotations
+  "ARG",    # flake8-unused-arguments - detect unused function arguments
+  "B",      # flake8-bugbear - find likely bugs and design problems
+  "COM",    # flake8-commas - enforce trailing commas
+  "C4",     # flake8-comprehensions - improve list/dict/set comprehensions
+  "C90",    # mccabe - cyclomatic complexity checks
+  "DTZ",    # flake8-datetimez - prevent naive datetime usage
+  "E",      # pycodestyle errors - PEP 8 error violations
+  "EM",     # flake8-errmsg - enforce error message best practices
+  "F",      # pyflakes - detect various Python errors
+  "FBT",    # flake8-boolean-trap - prevent boolean trap anti-pattern
+  "FURB",   # refurb - modernize Python code
+  "I",      # isort - import sorting and organization
+  "ISC",    # flake8-implicit-str-concat - prevent implicit string concatenation
+  "LOG",    # flake8-logging - logging best practices
+  "G",      # flake8-logging-format - logging format string issues
+  "N",      # pep8-naming - enforce PEP 8 naming conventions
+  "NPY",    # numpy-specific rules - NumPy best practices
+  "PD",     # pandas-vet - pandas best practices
+  "PERF",   # perflint - performance anti-patterns
+  "PIE",    # flake8-pie - miscellaneous improvements
+  "PL",     # pylint - comprehensive Python linting
+  "PT",     # flake8-pytest-style - pytest best practices
+  "PTH",    # flake8-use-pathlib - prefer pathlib over os.path
+  "Q",      # flake8-quotes - enforce quote style consistency
+  "RET",    # flake8-return - improve return statement usage
+  "RUF",    # ruff-specific rules - ruff's own additional checks
+  "SIM",    # flake8-simplify - simplify code constructs
+  "SLF",    # flake8-self - private member access checks
+  "SLOT",   # flake8-slots - enforce __slots__ usage
+  "TID",    # flake8-tidy-imports - tidy import organization
+  "TC",     # flake8-type-checking - optimize type checking imports
+  "UP",     # pyupgrade - upgrade syntax for newer Python versions
+  "W",      # pycodestyle warnings - PEP 8 warning violations
+]
+extend-ignore = [
+    "EM102",    # flake8-errmsg - allow exception message in f-string
+    "E501",     # pycodestyle - ignore line too long (let formatter handle it)
+    "E501",     # pycodestyle - ignore line too long (duplicate entry)
+    "PLR0913",  # pylint - allow more than 5 function arguments
+    "TRY003",   # tryceratops - allow long exception messages
+    "W293",     # pycodestyle - allow blank line with whitespace
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 5
 
 [tool.pytest.ini_options]
 testpaths = ["src", "tests"]
 python_files = ["*_test.py"]
-addopts = "-vv"
+addopts = "-vv --tb=short"
 
 [tool.coverage.run]
 source = ["src"]
@@ -55,4 +96,3 @@ exclude_lines = [
     "raise AssertionError",
     "raise NotImplementedError",
 ]
-
