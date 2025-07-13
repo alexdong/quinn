@@ -1,18 +1,353 @@
-# Streamlit llms.txt
+# Streamlit Documentation for LLMs
 
-## Status: Not Found
+Streamlit is an open-source Python framework for creating interactive web applications with minimal code. It's particularly popular for data science, machine learning, and AI applications.
 
-Attempted to fetch llms.txt from:
-- https://docs.streamlit.io/llms.txt (not directly searched)
-- Streamlit documentation sites
+## Core Concepts
 
-Streamlit is an open-source app framework for Machine Learning and Data Science teams.
+### Script Execution Model
+- Streamlit apps are Python scripts that run from top to bottom
+- The entire script reruns whenever user interacts with widgets
+- Use `st.cache_data` and `st.cache_resource` to optimize performance
+- Fragments allow partial reruns for specific components
 
-Expected documentation at:
-- https://docs.streamlit.io/
+### Key Principles
+1. **Simple API**: Most functionality accessed through `st.` namespace
+2. **Automatic UI Generation**: Python objects automatically rendered as UI
+3. **Reactive Programming**: UI updates automatically on state changes
+4. **No Callbacks Required**: Linear code flow with implicit reactivity
 
-No llms.txt file search results found for Streamlit as of the search date.
+## Essential Components
+
+### Display and Output
+
+#### st.write() - Universal Display Function
+```python
+st.write(*args, unsafe_allow_html=False)
+```
+- Displays any Python object (text, data, charts, etc.)
+- Automatically chooses appropriate display method
+- Supports Markdown formatting for text
+- Examples:
+  ```python
+  st.write("Hello, *World!* :sunglasses:")
+  st.write("1 + 1 = ", 2)
+  st.write(dataframe)
+  st.write(altair_chart)
+  ```
+
+#### Text Elements
+- `st.title("Main Title")` - Large title text
+- `st.header("Section Header")` - Section headers
+- `st.subheader("Subsection")` - Smaller headers
+- `st.text("Plain text")` - Fixed-width text
+- `st.markdown("**Bold** and *italic*")` - Markdown formatting
+- `st.code("print('Hello')", language="python")` - Syntax highlighted code
+- `st.latex(r"\sum_{i=1}^{n} x_i")` - LaTeX equations
+
+#### Data Display
+- `st.dataframe(df)` - Interactive data table
+  - Supports pandas, Polars, Snowpark dataframes
+  - Features: sorting, searching, copying
+  - Customizable with `column_config` parameter
+- `st.data_editor(df)` - Editable data table
+- `st.table(df)` - Static table display
+- `st.json(dict_object)` - JSON viewer
+- `st.metric("Temperature", "70 °F", "1.2 °F")` - KPI metrics
+
+### Input Widgets
+
+#### Button Widgets
+- `st.button("Click me")` - Basic button
+- `st.download_button("Download", data)` - File download
+- `st.link_button("Visit", url)` - External link
+- `st.page_link("page.py")` - Navigate between pages
+
+#### Selection Widgets
+- `st.selectbox("Choose", options)` - Dropdown selection
+- `st.multiselect("Select multiple", options)` - Multiple choice
+- `st.radio("Pick one", options)` - Radio buttons
+- `st.checkbox("Agree")` - Checkbox
+- `st.toggle("Enable")` - On/off switch
+- `st.select_slider("Value", options)` - Slider with discrete values
+
+#### Input Widgets
+- `st.text_input("Name")` - Single line text
+- `st.text_area("Description")` - Multiline text
+- `st.number_input("Age", min_value=0)` - Numeric input
+- `st.slider("Value", 0, 100)` - Continuous slider
+- `st.date_input("Birthday")` - Date picker
+- `st.time_input("Meeting time")` - Time picker
+- `st.file_uploader("Upload")` - File upload
+- `st.camera_input("Take photo")` - Camera capture
+- `st.color_picker("Choose color")` - Color selector
+
+#### Chat Interface
+- `st.chat_input("Message")` - Chat input box
+- `st.chat_message("user")` - Chat message container
+- `with st.chat_message("assistant"):` - Assistant messages
+
+### Charts and Visualization
+
+#### Simple Charts
+- `st.line_chart(data)` - Line charts
+- `st.area_chart(data)` - Area charts
+- `st.bar_chart(data)` - Bar charts
+- `st.scatter_chart(data)` - Scatter plots
+
+#### Advanced Visualization
+- `st.pyplot(fig)` - Matplotlib figures
+- `st.altair_chart(chart)` - Altair charts
+- `st.plotly_chart(fig)` - Plotly figures
+- `st.bokeh_chart(plot)` - Bokeh plots
+- `st.graphviz_chart(graph)` - Graph visualizations
+- `st.map(df)` - Simple maps with lat/lon data
+
+### Media Elements
+- `st.image(image, caption)` - Display images
+- `st.audio(audio_file)` - Audio player
+- `st.video(video_file)` - Video player
+
+### Layout and Containers
+
+#### Column Layout
+```python
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.header("Column 1")
+with col2:
+    st.header("Column 2")
+with col3:
+    st.header("Column 3")
+```
+
+#### Sidebar
+```python
+with st.sidebar:
+    st.selectbox("Choose", ["A", "B", "C"])
+# Or directly:
+st.sidebar.write("Sidebar content")
+```
+
+#### Other Containers
+- `st.container()` - Logical container for elements
+- `st.expander("Details")` - Collapsible section
+- `st.tabs(["Tab1", "Tab2"])` - Tabbed interface
+- `st.empty()` - Placeholder for dynamic content
+- `st.popover("Open")` - Popup container
+- `@st.dialog("Title")` - Modal dialog decorator
+
+### State Management
+
+#### Session State
+```python
+# Initialize state
+if 'counter' not in st.session_state:
+    st.session_state.counter = 0
+
+# Update state
+if st.button('Increment'):
+    st.session_state.counter += 1
+
+# Display state
+st.write(f"Count: {st.session_state.counter}")
+```
+
+#### Widget State
+```python
+# Widgets with keys automatically sync to session state
+name = st.text_input("Name", key="user_name")
+# Access via st.session_state.user_name
+```
+
+### Performance Optimization
+
+#### Data Caching
+```python
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def load_data(url):
+    return pd.read_csv(url)
+```
+
+#### Resource Caching
+```python
+@st.cache_resource
+def init_model():
+    return load_model("model.pkl")
+```
+
+### Control Flow
+
+#### Forms
+```python
+with st.form("my_form"):
+    name = st.text_input("Name")
+    age = st.number_input("Age")
+    submitted = st.form_submit_button("Submit")
+    
+if submitted:
+    st.write(f"Name: {name}, Age: {age}")
+```
+
+#### Fragments for Partial Reruns
+```python
+@st.fragment
+def update_chart():
+    # This reruns independently
+    st.line_chart(get_latest_data())
+```
+
+#### App Control
+- `st.rerun()` - Manually trigger script rerun
+- `st.stop()` - Stop script execution
+
+### Configuration and Theming
+
+#### Page Configuration
+```python
+st.set_page_config(
+    page_title="My App",
+    page_icon="🎈",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+```
+
+#### Custom Themes
+Create `.streamlit/config.toml`:
+```toml
+[theme]
+primaryColor = "#FF6B6B"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+```
+
+### Multipage Apps
+
+#### Directory Structure
+```
+app/
+├── Home.py          # Main page
+└── pages/
+    ├── 1_📊_Dashboard.py
+    └── 2_📈_Analytics.py
+```
+
+Pages automatically appear in sidebar navigation.
+
+### Common Patterns
+
+#### Loading Data with Progress
+```python
+with st.spinner('Loading data...'):
+    df = load_large_dataset()
+st.success('Data loaded!')
+```
+
+#### Error Handling
+```python
+try:
+    result = risky_operation()
+    st.success(f"Result: {result}")
+except Exception as e:
+    st.error(f"Error: {e}")
+    st.exception(e)  # Shows full traceback
+```
+
+#### Status Messages
+- `st.info("Information message")`
+- `st.warning("Warning message")`
+- `st.error("Error message")`
+- `st.success("Success message")`
+
+#### Progress Indicators
+```python
+progress = st.progress(0)
+for i in range(100):
+    progress.progress(i + 1)
+    time.sleep(0.01)
+```
+
+### Building LLM Applications
+
+#### Streaming Responses
+```python
+def generate_response(prompt):
+    for chunk in llm.stream(prompt):
+        yield chunk
+
+response = st.write_stream(generate_response(prompt))
+```
+
+#### Chat Interface Pattern
+```python
+# Display chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
+# Get user input
+if prompt := st.chat_input("Your message"):
+    # Add to history
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    
+    # Generate response
+    response = generate_response(prompt)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+```
+
+### Database Connections
+
+#### Built-in Connections
+```python
+# SQL Database
+conn = st.connection('mydb', type='sql')
+df = conn.query('SELECT * FROM users')
+
+# Snowflake
+conn = st.connection("snowflake")
+df = conn.query("SELECT * FROM mytable")
+```
+
+#### Secrets Management
+Create `.streamlit/secrets.toml`:
+```toml
+[database]
+host = "localhost"
+port = 3306
+username = "user"
+password = "pass"
+```
+
+Access in code:
+```python
+db_username = st.secrets["database"]["username"]
+```
+
+## Best Practices
+
+1. **Use Caching Aggressively**: Cache expensive operations with `@st.cache_data`
+2. **Minimize Reruns**: Use forms and fragments to control execution
+3. **Organize with Containers**: Use columns, tabs, and expanders for layout
+4. **Handle State Carefully**: Initialize session state variables properly
+5. **Provide Feedback**: Use spinners, progress bars, and status messages
+6. **Test Locally First**: Use `streamlit run app.py` for development
+7. **Keep It Simple**: Streamlit works best with straightforward, linear code
+
+## Common Use Cases
+
+1. **Data Dashboards**: Interactive visualizations with filters
+2. **ML Model Demos**: Upload data, configure parameters, see results
+3. **Chat Applications**: LLM interfaces with conversation history
+4. **Data Exploration Tools**: Load, filter, and analyze datasets
+5. **Internal Tools**: Quick UIs for scripts and automation
+6. **Prototypes**: Rapid development of proof-of-concepts
 
 ---
-Retrieved: 2025-07-09
-Method: Limited search performed, no llms.txt references found
+
+Source: Streamlit Documentation
+- https://docs.streamlit.io/develop/tutorials
+- https://docs.streamlit.io/develop/api-reference
+Retrieved: 2025-07-13
+Method: Web crawling with content extraction

@@ -1,0 +1,117 @@
+# Postmark Email Service Documentation
+
+## Overview
+Postmark is an email service provider specializing in transactional email delivery and processing. It offers both outbound email sending and inbound email processing capabilities.
+
+## Send Email API
+
+### Authentication
+- Header: `X-Postmark-Server-Token: your-server-token`
+- Test mode: Use `POSTMARK_API_TEST` as token for testing
+
+### API Endpoints
+- Single email: `POST https://api.postmarkapp.com/email`
+- Batch emails: `POST https://api.postmarkapp.com/email/batch`
+
+### Required Parameters
+- `From`: Sender email address
+- `To`: Recipient email address
+- `Subject`: Email subject (max 2000 characters)
+- `TextBody` or `HtmlBody`: Email content
+
+### Optional Parameters
+- `MessageStream`: Defaults to "outbound"
+- `Attachments`: Up to 10MB total
+- `TrackOpens`: Enable open tracking
+- `TrackLinks`: Enable link tracking
+- `Cc`, `Bcc`: Carbon copy recipients
+
+### Example Request
+```bash
+curl "https://api.postmarkapp.com/email" \
+  -X POST \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "X-Postmark-Server-Token: server-token" \
+  -d '{
+    "From": "sender@example.com",
+    "To": "receiver@example.com",
+    "Subject": "Postmark test",
+    "TextBody": "Hello dear Postmark user."
+  }'
+```
+
+### Response Structure
+- `ErrorCode`: Success indicator
+- `Message`: Status message
+- `MessageID`: Unique message identifier
+- `SubmittedAt`: Timestamp
+- `To`: Recipient address
+
+### Limits
+- Max 50 recipients per message
+- Batch sending up to 500 messages per request
+- Certain file types forbidden in attachments
+
+## Inbound Email Processing
+
+### Overview
+Inbound processing converts incoming emails to structured JSON and delivers them via webhook. Format: `hash@inbound.postmarkapp.com`
+
+### Setup Steps
+1. Configure an inbound server
+2. Set up inbound domain forwarding
+3. Parse incoming emails
+4. Configure inbound blocking (optional)
+
+### Key Features
+- Converts inbound emails to JSON format
+- Webhook delivery of processed emails
+- Custom routing and processing
+- Spam assessment headers
+- Attachment handling
+
+## Inbound Webhooks
+
+### Webhook Payload Structure
+- `From`, `FromFull`: Sender details
+- `To`, `ToFull`, `Cc`, `Bcc`: Recipient information
+- `TextBody`, `HtmlBody`: Message content
+- `Attachments`: File attachments
+- `MessageID`: Unique identifier
+- `MailboxHash`: For plus addressing
+
+### Configuration
+- Set webhook URL via Postmark website or API
+- Configure per Inbound Message Stream
+- Supports "plus addressing" with MailboxHash
+
+### Retry Logic
+- 10 total retry attempts
+- Increasing time intervals (1 minute to 6 hours)
+- Stops retrying on 403 responses
+
+### Testing
+Use curl to simulate webhook POST requests:
+```bash
+curl -X POST your-webhook-url \
+  -H "Content-Type: application/json" \
+  -d '{webhook-payload}'
+```
+
+## Common Use Cases
+- Processing email replies for tickets/comments
+- Handling user-generated email interactions
+- Converting emails to application data
+- Automated email processing workflows
+
+## Security Considerations
+- Validate webhook signatures
+- Implement proper error handling
+- Use HTTPS for webhook endpoints
+- Consider rate limiting for webhook endpoints
+
+---
+Source: https://postmarkapp.com/developer/user-guide/inbound, https://postmarkapp.com/developer/user-guide/send-email-with-api, https://postmarkapp.com/developer/webhooks/inbound-webhook
+Retrieved: 2025-07-10
+Method: WebFetch from official Postmark documentation
