@@ -1,7 +1,7 @@
 """Integration tests for model interactions."""
 
-from .conversation import Conversation, Message
-from .response import ConversationMetrics, MessageMetrics
+from .conversation import Conversation, ConversationMetrics
+from .message import Message, MessageMetrics
 
 
 def test_conversation_with_metrics() -> None:
@@ -12,9 +12,14 @@ def test_conversation_with_metrics() -> None:
         prompt_version="240715-120000",
     )
     
-    conversation = Conversation(metrics=metrics)
-    assert conversation.metrics == metrics
+    conversation = Conversation()
+    conversation.add_message(Message(user_content="test", metadata=MessageMetrics(model_used=metrics.model_used, prompt_version=metrics.prompt_version, tokens_used=metrics.total_tokens_used, cost_usd=metrics.total_cost_usd, response_time_ms=metrics.average_response_time_ms)))
+    
+    # Check metrics exist first
     assert conversation.metrics is not None
+    assert conversation.metrics.total_tokens_used == metrics.total_tokens_used
+    assert conversation.metrics.model_used == metrics.model_used
+    assert conversation.metrics.prompt_version == metrics.prompt_version
     assert conversation.metrics.total_tokens_used == 500
 
 

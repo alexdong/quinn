@@ -2,6 +2,7 @@
 
 import asyncio
 import time
+from unittest.mock import patch
 
 import pytest
 
@@ -46,9 +47,11 @@ async def test_retry_with_backoff_eventual_success() -> None:
             raise ValueError(f"Attempt {counter.count} failed")
         return "eventually_success"
     
-    result = await retry_with_backoff(flaky_func, max_retries=3, backoff_factor=1.1)
-    assert result == "eventually_success"
-    assert counter.count == 3
+    # Mock asyncio.sleep to avoid actual delays
+    with patch('asyncio.sleep', return_value=None):
+        result = await retry_with_backoff(flaky_func, max_retries=3, backoff_factor=1.1)
+        assert result == "eventually_success"
+        assert counter.count == 3
 
 
 @pytest.mark.asyncio
@@ -65,10 +68,12 @@ async def test_retry_with_backoff_max_retries_exceeded() -> None:
         counter.count += 1
         raise RuntimeError(f"Failure {counter.count}")
     
-    with pytest.raises(RuntimeError, match="Failure 4"):
-        await retry_with_backoff(always_fails, max_retries=3, backoff_factor=1.1)
-    
-    assert counter.count == 4  # Initial attempt + 3 retries
+    # Mock asyncio.sleep to avoid actual delays
+    with patch('asyncio.sleep', return_value=None):
+        with pytest.raises(RuntimeError, match="Failure 4"):
+            await retry_with_backoff(always_fails, max_retries=3, backoff_factor=1.1)
+        
+        assert counter.count == 4  # Initial attempt + 3 retries
 
 
 @pytest.mark.asyncio
@@ -78,6 +83,7 @@ async def test_retry_with_backoff_timing() -> None:
     class TimedCounter:
         def __init__(self) -> None:
             self.call_times: list[float] = []
+            self.sleep_delays: list[float] = []
     
     timed_counter = TimedCounter()
     
@@ -87,15 +93,20 @@ async def test_retry_with_backoff_timing() -> None:
             raise ValueError("Not yet")
         return "success"
     
-    start_time = time.time()
-    result = await retry_with_backoff(timed_func, max_retries=3, backoff_factor=2.0)
-    total_time = time.time() - start_time
+    # Mock asyncio.sleep to capture delays without waiting
+    async def mock_sleep(delay: float) -> None:
+        timed_counter.sleep_delays.append(delay)
     
-    assert result == "success"
-    assert len(timed_counter.call_times) == 3
-    
-    # Should have some delay between calls (at least 0.5s total for 2^0 + 2^1 delays)
-    assert total_time >= 3.0  # 1 + 2 = 3 seconds of backoff
+    with patch('asyncio.sleep', side_effect=mock_sleep):
+        result = await retry_with_backoff(timed_func, max_retries=3, backoff_factor=2.0)
+        
+        assert result == "success"
+        assert len(timed_counter.call_times) == 3
+        
+        # Verify backoff delays: 2^0=1, 2^1=2
+        assert len(timed_counter.sleep_delays) == 2
+        assert timed_counter.sleep_delays[0] == 1.0  # 2^0
+        assert timed_counter.sleep_delays[1] == 2.0  # 2^1
 
 
 @pytest.mark.asyncio

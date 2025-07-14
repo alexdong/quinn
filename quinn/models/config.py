@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 class AgentConfig(BaseModel):
     """Configuration for AI agent behavior."""
 
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini/gemini-2.5-flash-exp"
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=4000, gt=0)
     timeout_seconds: int = Field(default=300, gt=0)
@@ -245,4 +245,3 @@ if __name__ == "__main__":
                 print(f"{name.replace('_', ' ').title()}: {config_instance}")
             except Exception as e:
                 print(f"Error calling {name}: {e}")
-

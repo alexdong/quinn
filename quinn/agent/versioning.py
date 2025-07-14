@@ -7,9 +7,9 @@ from quinn.models.types import PROMPT_VERSION
 
 
 def get_current_prompt_version() -> PROMPT_VERSION:
-    """Get current prompt version identifier in YYMMDD-HHMMSS format."""
+    """Get current prompt version identifier in vYYMMDD-HHMMSS format."""
     now = datetime.now(UTC)
-    return f"{now.strftime('%y%m%d-%H%M%S')}"
+    return f"v{now.strftime('%y%m%d-%H%M%S')}"
 
 
 def load_system_prompt(version: str | PROMPT_VERSION = "latest") -> str:
@@ -46,7 +46,7 @@ Key principles:
 def save_prompt_version(content: str, version: PROMPT_VERSION) -> None:
     """Save a new prompt version."""
     assert content.strip(), "Prompt content cannot be empty"
-    # Version validation is handled by PROMPT_VERSION type
+    assert version.strip(), "Version cannot be empty"
 
     project_root = Path(__file__).parent.parent.parent
     prompts_dir = project_root / "quinn" / "templates" / "prompts"

@@ -111,18 +111,10 @@ def test_get_supported_models() -> None:
 def test_fallback_pricing() -> None:
     """Test fallback pricing for unknown models."""
     unknown_model = "unknown-test-model"
-    cost_info = get_model_cost_info(unknown_model)
     
-    assert isinstance(cost_info, dict)
-    assert "input_cost_per_token" in cost_info
-    assert "output_cost_per_token" in cost_info
-    assert cost_info["input_cost_per_token"] > 0.0
-    assert cost_info["output_cost_per_token"] > 0.0
-    
-    # Should be able to calculate cost with fallback pricing
-    cost = calculate_cost(unknown_model, 100, 50)
-    assert isinstance(cost, float)
-    assert cost > 0.0
+    # Should raise assertion error for unknown model
+    with pytest.raises(AssertionError, match="not found in pricing data"):
+        get_model_cost_info(unknown_model)
 
 
 def test_free_model_pricing() -> None:

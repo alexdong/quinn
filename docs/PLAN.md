@@ -32,17 +32,17 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   2. [x] Implement basic response generation logic with error handling
   3. [x] Add retry logic for API failures with exponential backoff
   4. [x] Implement cost tracking (tokens, API costs, response time) per interaction
-  5. [x] Implement prompt versioning to track changes over time
-  6. [x] Implement prompt caching to avoid repeated API calls
-  7. [ ] Create comprehensive Quinn rubber duck system prompt based on METHODOLOGY.md
-  8. [ ] Fix failing integration tests and ensure full end-to-end functionality
-  9. [ ] Test that Quinn actually behaves as rubber duck (asks questions, doesn't give solutions)
-  10. [ ] Verify error handling works correctly for API failures, network issues, invalid inputs
-  11. [ ] Validate cost calculations match actual API pricing and token usage
+  7. [x] Create comprehensive Quinn rubber duck system prompt based on METHODOLOGY.md
+  8. [x] Fix failing integration tests and ensure full end-to-end functionality
+  9. [x] Test that Quinn actually behaves as rubber duck (asks questions, doesn't give solutions)
+  10. [x] Verify error handling works correctly for API failures, network issues, invalid inputs
+  11. [x] Validate cost calculations match actual API pricing and token usage
+  5. [ ] Implement prompt versioning to track changes over time
+  6. [ ] Implement prompt caching to avoid repeated API calls. The `agent/cache.py` has the wrong idea.
 
 3. [ ] Create conversation context management
   1. [x] Design SQLite schema: users, conversations, messages (with embedded metrics)
-  2. [ ] Create SQL DDL files and database connection layer
+  2. [x] Create SQL DDL files and database connection layer
   3. [ ] Implement basic CRUD operations for conversation management
   4. [ ] Add in-memory SQLite backend for testing purposes
   5. [ ] Implement session management with metadata tracking

@@ -3,9 +3,28 @@
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from .response import MessageMetrics
+from .types import PROMPT_VERSION
+
+
+class MessageMetrics(BaseModel):
+    """Tracking metrics for individual message/LLM API calls."""
+
+    tokens_used: int = Field(default=0, ge=0)
+    cost_usd: float = Field(default=0.0, ge=0.0)
+    response_time_ms: int = Field(default=0, ge=0)
+    model_used: str = ""
+    prompt_version: PROMPT_VERSION = ""
+
+    @field_validator("model_used")
+    @classmethod
+    def validate_not_empty(cls, v: str) -> str:
+        """Validate string fields are not empty."""
+        if not v.strip():
+            msg = "Field cannot be empty"
+            raise ValueError(msg)
+        return v
 
 
 class Message(BaseModel):
@@ -15,12 +34,19 @@ class Message(BaseModel):
     conversation_id: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Message content and role
+    # Message content
     system_prompt: str = ""
     user_content: str = ""
     assistant_content: str = ""
+
+    @field_validator("user_content")
+    @classmethod
+    def validate_user_content(cls, v: str) -> str:
+        """Validate user content is not empty when provided."""
+        if v is not None and v.strip() == "":
+            raise ValueError("Message content cannot be empty")
+        return v
 
     # Assistant response metrics
     metadata: MessageMetrics | None = Field(default=None)

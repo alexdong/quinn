@@ -1,6 +1,7 @@
 """Core AI agent functionality."""
 
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any, NamedTuple
 
 from pydantic_ai import Agent
@@ -25,6 +26,16 @@ class UsageMetrics(NamedTuple):
 
 # Constants
 MAX_PROMPT_LENGTH = 20000
+
+
+def _load_system_prompt() -> str:
+    """Load the system prompt from the templates directory."""
+    prompt_path = Path(__file__).parent.parent / "templates" / "prompts" / "system_prompt.txt"
+    try:
+        return prompt_path.read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        # Fallback to basic prompt if file not found
+        return "You are Quinn, a helpful AI assistant that guides users to solve their own problems by asking thoughtful questions rather than providing direct solutions."
 
 
 def _build_conversation_prompt(
@@ -173,7 +184,7 @@ async def create_agent(config: AgentConfig) -> Agent:
     # Create agent with configuration
     return Agent(
         model=config.model,
-        system_prompt="You are a helpful AI assistant.",  # TODO: supply a system prompt
+        system_prompt=_load_system_prompt(),
         model_settings=model_settings,
         retries=config.max_retries,
     )

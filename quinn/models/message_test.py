@@ -6,20 +6,18 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from .message import Message
-from .response import MessageMetrics
+from .message import Message, MessageMetrics
 
 
 def test_message_default_values() -> None:
     """Test Message model with default values."""
     message = Message(user_content="Hello world")
-    
+
     assert message.user_content == "Hello world"
     assert message.assistant_content == ""
     assert message.conversation_id == ""
     assert message.system_prompt == ""
     assert message.metadata is None
-    assert isinstance(message.timestamp, datetime)
     assert uuid.UUID(message.id)  # Should not raise
 
 
@@ -33,21 +31,20 @@ def test_message_custom_values() -> None:
         model_used="claude-3.5-sonnet",
         prompt_version="240715-120000",
     )
-    
+
     message = Message(
         user_content="What is AI?",
         assistant_content="Custom message content",
         conversation_id="conv-12345",
         system_prompt="You are a helpful assistant",
-        timestamp=custom_time,
         metadata=metadata,
     )
-    
+
     assert message.assistant_content == "Custom message content"
     assert message.user_content == "What is AI?"
     assert message.conversation_id == "conv-12345"
     assert message.system_prompt == "You are a helpful assistant"
-    assert message.timestamp == custom_time
+
     assert message.metadata == metadata
 
 
@@ -55,7 +52,7 @@ def test_message_uuid_generation() -> None:
     """Test Message UUID generation is unique."""
     message1 = Message(user_content="test1")
     message2 = Message(user_content="test2")
-    
+
     assert message1.id != message2.id
     assert uuid.UUID(message1.id)  # Should not raise
     assert uuid.UUID(message2.id)  # Should not raise
@@ -82,7 +79,7 @@ def test_message_with_system_prompt() -> None:
         user_content="What is AI?",
         system_prompt="You are an expert AI researcher",
     )
-    
+
     assert message.user_content == "What is AI?"
     assert message.system_prompt == "You are an expert AI researcher"
 
@@ -96,12 +93,12 @@ def test_message_with_metadata() -> None:
         model_used="claude-3.5-sonnet",
         prompt_version="240715-120000",
     )
-    
+
     message = Message(
         assistant_content="Hello",
         metadata=metadata,
     )
-    
+
     assert message.metadata == metadata
     assert message.metadata is not None
     assert message.metadata.tokens_used == 100
@@ -111,13 +108,13 @@ def test_message_with_metadata() -> None:
 def test_message_conversation_context() -> None:
     """Test Message with conversation context."""
     conv_id = str(uuid.uuid4())
-    
+
     message = Message(
         user_content="Follow-up question",
         conversation_id=conv_id,
         system_prompt="Continue being helpful",
     )
-    
+
     assert message.conversation_id == conv_id
     assert message.system_prompt == "Continue being helpful"
 
@@ -131,16 +128,16 @@ def test_message_serialization() -> None:
         model_used="claude-3.5-sonnet",
         prompt_version="240715-120000",
     )
-    
+
     message = Message(
         user_content="Test message",
         conversation_id="conv-456",
         system_prompt="Be concise",
         metadata=metadata,
     )
-    
+
     data = message.model_dump()
-    
+
     assert data["user_content"] == "Test message"
     assert data["conversation_id"] == "conv-456"
     assert data["system_prompt"] == "Be concise"
@@ -154,9 +151,9 @@ def test_message_from_dict() -> None:
         "conversation_id": "conv-789",
         "system_prompt": "Be helpful",
     }
-    
+
     message = Message(**data)
-    
+
     assert message.assistant_content == "From dict"
     assert message.conversation_id == "conv-789"
     assert message.system_prompt == "Be helpful"
@@ -165,11 +162,13 @@ def test_message_from_dict() -> None:
 if __name__ == "__main__":
     # Demonstrate Message usage
     print("Message demonstration:")
-    
+
     # Basic message
     basic_message = Message(user_content="Hello, Quinn!")
-    print(f"Basic message: {basic_message.user_content} (ID: {basic_message.id[:8]}...)")
-    
+    print(
+        f"Basic message: {basic_message.user_content} (ID: {basic_message.id[:8]}...)"
+    )
+
     # Message with all fields
     full_message = Message(
         user_content="What can you help me with?",
@@ -188,5 +187,5 @@ if __name__ == "__main__":
     print(f"Full message assistant: {full_message.assistant_content}")
     print(f"System prompt: {full_message.system_prompt[:30]}...")
     print(f"Metadata: {full_message.metadata}")
-    
+
     print("Message demonstration completed.")

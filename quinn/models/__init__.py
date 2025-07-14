@@ -1,8 +1,8 @@
 """Data models for Quinn AI agent."""
 
 from .config import AgentConfig
-from .conversation import Conversation, Message
-from .response import ConversationMetrics, MessageMetrics
+from .conversation import Conversation, ConversationMetrics, Message
+from .message import MessageMetrics
 from .types import PROMPT_VERSION
 
 # Rebuild models to resolve forward references

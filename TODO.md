@@ -1,3 +1,5 @@
+- Prompt version should be set to the last commit hash of the prompt file used.
+- `_build_conversation_prompt` should compact the conversation history
 - Summarise the discussion and set `conversations.title`
 - Support Prompt Cache API to lower costs: https://platform.openai.com/docs/guides/cache-api https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching#1-hour-cache-duration 
 - Support OpenAI's Flex Processing API: https://platform.openai.com/docs/guides/flex-processing?api-mode=responses which is half the price but with extended timeouts.
