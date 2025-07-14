@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import UTC, datetime
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -66,10 +65,6 @@ class Conversation(BaseModel):
     def get_latest_message(self) -> Message | None:
         """Get the most recent message."""
         return self.messages[-1] if self.messages else None
-
-    def get_messages_by_role(self, role: Literal["user", "assistant"]) -> list[Message]:
-        """Get all messages by role."""
-        return [msg for msg in self.messages if msg.role == role]
 
 
 if __name__ == "__main__":

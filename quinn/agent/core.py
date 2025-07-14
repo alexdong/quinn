@@ -93,6 +93,8 @@ async def generate_response(
             user_content=user_message.user_content,
             assistant_content=str(result.output),
             conversation_id=user_message.conversation_id,
+            created_at=start_time,  # When sent to LLM
+            last_updated_at=end_time,  # When response received
             system_prompt=user_message.system_prompt
             or (
                 prompt
@@ -110,10 +112,13 @@ async def generate_response(
 
     except Exception as e:
         # Create error response message
+        error_time = datetime.now(UTC)
         return Message(
             user_content=user_message.user_content,
             assistant_content=f"Error generating response: {e!s}",
             conversation_id=user_message.conversation_id,
+            created_at=start_time,  # When sent to LLM
+            last_updated_at=error_time,  # When error occurred
             system_prompt="Error occurred during response generation",
         )
 

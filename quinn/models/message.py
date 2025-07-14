@@ -12,13 +12,14 @@ class Message(BaseModel):
     """Single interaction containing user input and assistant response."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str = ""
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Interaction content
+    system_prompt: str = ""
     user_content: str = ""
     assistant_content: str = ""
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
-
-    # Conversation context
-    conversation_id: str = ""
-    system_prompt: str = ""
 
     # Assistant response metrics
     metadata: MessageMetrics | None = Field(default=None)
@@ -42,13 +43,18 @@ if __name__ == "__main__":
     print(
         f"User input: {user_interaction.user_content} (ID: {user_interaction.id[:8]}...)"
     )
+    print(f"Created at: {user_interaction.created_at}")
 
     # Create complete interaction with response and metrics
+    import time
+    time.sleep(0.1)  # Simulate processing time
+    
     complete_interaction = Message(
         user_content="What is artificial intelligence?",
         assistant_content="AI is the simulation of human intelligence in machines...",
         conversation_id="conv-12345",
         system_prompt="You are a helpful AI assistant",
+        last_updated_at=datetime.now(UTC),  # Simulate response received
         metadata=MessageMetrics(
             tokens_used=75,
             cost_usd=0.002,
@@ -60,6 +66,8 @@ if __name__ == "__main__":
     print("Complete interaction:")
     print(f"  User: {complete_interaction.user_content}")
     print(f"  Assistant: {complete_interaction.assistant_content[:50]}...")
+    print(f"  Created: {complete_interaction.created_at}")
+    print(f"  Updated: {complete_interaction.last_updated_at}")
     print(f"  Conversation ID: {complete_interaction.conversation_id}")
     print(f"  Metadata: {complete_interaction.metadata}")
 
