@@ -46,8 +46,8 @@ def get_model_cost_info(model: str) -> dict[str, float]:
             "output_cost_per_token": model_info["output_price_per_1m_tokens"]
             / 1_000_000,
         }
-        # Add cached input pricing if available
-        if "cached_input_price_per_1m_tokens" in model_info:
+        # Add cached input pricing if available and not null
+        if "cached_input_price_per_1m_tokens" in model_info and model_info["cached_input_price_per_1m_tokens"] is not None:
             result["cached_input_cost_per_token"] = (
                 model_info["cached_input_price_per_1m_tokens"] / 1_000_000
             )
@@ -162,20 +162,31 @@ if __name__ == "__main__":
     print("🧮 Cost Calculation Demo")
     print("=" * 50)
 
-    # Test models from our config
+    # Test models from our pricing files
     test_models = [
         "gpt-4o-mini",
+        "o3",
+        "o4-mini",
+        "gpt-4.1",
+        "gpt-4.1-mini",
+        "gpt-4.1-nano",
         "claude-3-5-sonnet-20241022",
-        "gemini/gemini-2.0-flash",
-        "gemini/gemini-2.5-flash-exp",
+        "claude-opus-4-20250514",
+        "claude-sonnet-4",
+        "claude-haiku-3.5",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-exp",
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
         "unknown-model",  # Test fallback
     ]
 
     test_input_tokens = 1000
     test_output_tokens = 500
+    test_cached_tokens = 2000
 
     print(
-        f"📊 Testing with {test_input_tokens:,} input tokens and {test_output_tokens:,} output tokens:\n"
+        f"📊 Testing with {test_input_tokens:,} input, {test_output_tokens:,} output, and {test_cached_tokens:,} cached tokens:\n"
     )
 
     for model in test_models:
@@ -193,15 +204,27 @@ if __name__ == "__main__":
                     f"   Cached input cost per token: ${cost_info['cached_input_cost_per_token']:.8f}"
                 )
 
-            # Calculate total cost
+            # Calculate total cost without caching
             total_cost = calculate_cost(model, test_input_tokens, test_output_tokens)
-            print(f"   Total cost: ${total_cost:.6f}")
+            print(f"   Total cost (no cache): ${total_cost:.6f}")
+
+            # Calculate total cost with caching
+            total_cost_with_cache = calculate_cost(
+                model, test_input_tokens, test_output_tokens, test_cached_tokens
+            )
+            print(f"   Total cost (with cache): ${total_cost_with_cache:.6f}")
+
+            if total_cost_with_cache < total_cost:
+                savings = total_cost - total_cost_with_cache
+                savings_percent = (savings / total_cost) * 100
+                print(f"   💰 Cache savings: ${savings:.6f} ({savings_percent:.1f}%)")
 
             # Test individual token costs
             input_cost_per_token = get_cost_per_token(model, "input")
             output_cost_per_token = get_cost_per_token(model, "output")
+            cached_cost_per_token = get_cost_per_token(model, "cached_input")
             print(
-                f"   Verified - Input: ${input_cost_per_token:.8f}, Output: ${output_cost_per_token:.8f}"
+                f"   Verified - Input: ${input_cost_per_token:.8f}, Output: ${output_cost_per_token:.8f}, Cached: ${cached_cost_per_token:.8f}"
             )
 
         except Exception as e:

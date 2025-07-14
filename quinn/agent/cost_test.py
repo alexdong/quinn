@@ -100,8 +100,8 @@ def test_get_supported_models() -> None:
     expected_models = [
         "gpt-4o-mini",
         "claude-3-5-sonnet-20241022",
-        "gemini/gemini-2.0-flash",
-        "gemini/gemini-2.5-flash-exp"
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-exp"
     ]
     
     for model in expected_models:
@@ -127,7 +127,7 @@ def test_fallback_pricing() -> None:
 
 def test_free_model_pricing() -> None:
     """Test that free experimental models have zero cost."""
-    free_model = "gemini/gemini-2.5-flash-exp"
+    free_model = "gemini-2.5-flash-exp"
     cost_info = get_model_cost_info(free_model)
     
     assert cost_info["input_cost_per_token"] == 0.0
@@ -169,10 +169,10 @@ def test_calculate_cost_validation() -> None:
         calculate_cost("", 100, 50)
         
     with pytest.raises(AssertionError, match="Input tokens must be non-negative"):
-        calculate_cost("gemini/gemini-2.5-flash-exp", -1, 50)
+        calculate_cost("gemini-2.5-flash-exp", -1, 50)
         
     with pytest.raises(AssertionError, match="Output tokens must be non-negative"):
-        calculate_cost("gemini/gemini-2.5-flash-exp", 100, -1)
+        calculate_cost("gemini-2.5-flash-exp", 100, -1)
     
     with pytest.raises(AssertionError, match="Cached input tokens must be non-negative"):
         calculate_cost("gpt-4o-mini", 100, 50, -1)

@@ -37,7 +37,7 @@ class AgentConfig(BaseModel):
             timeout_seconds=600,
             max_retries=3,
             retry_backoff_factor=2.0,
-            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
         )
 
     @classmethod
@@ -50,7 +50,7 @@ class AgentConfig(BaseModel):
             timeout_seconds=300,
             max_retries=3,
             retry_backoff_factor=2.0,
-            api_key=os.getenv("GEMINI_API_KEY"),
+            api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
     @classmethod
@@ -64,7 +64,7 @@ class AgentConfig(BaseModel):
             max_retries=3,
             retry_backoff_factor=2.0,
             model_settings={"gemini_thinking_config": {"thinking_budget": 4096}},
-            api_key=os.getenv("GEMINI_API_KEY"),
+            api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
     @classmethod
@@ -77,7 +77,150 @@ class AgentConfig(BaseModel):
             timeout_seconds=240,
             max_retries=4,
             retry_backoff_factor=1.8,
-            api_key=os.getenv("OPENAI_API_KEY"),
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def o3(cls) -> "AgentConfig":
+        """OpenAI O3 configuration for advanced reasoning."""
+        return cls(
+            model="o3",
+            temperature=0.6,
+            max_tokens=8000,
+            timeout_seconds=900,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def o4mini_advanced(cls) -> "AgentConfig":
+        """OpenAI O4-Mini configuration for cost-efficient reasoning."""
+        return cls(
+            model="o4-mini",
+            temperature=0.7,
+            max_tokens=4000,
+            timeout_seconds=300,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def gpt41(cls) -> "AgentConfig":
+        """GPT-4.1 configuration for extended context."""
+        return cls(
+            model="gpt-4.1",
+            temperature=0.7,
+            max_tokens=8000,
+            timeout_seconds=600,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def gpt41mini(cls) -> "AgentConfig":
+        """GPT-4.1 Mini configuration for balanced performance."""
+        return cls(
+            model="gpt-4.1-mini",
+            temperature=0.7,
+            max_tokens=4000,
+            timeout_seconds=300,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def gpt41nano(cls) -> "AgentConfig":
+        """GPT-4.1 Nano configuration for ultra-efficient processing."""
+        return cls(
+            model="gpt-4.1-nano",
+            temperature=0.8,
+            max_tokens=2000,
+            timeout_seconds=180,
+            max_retries=4,
+            retry_backoff_factor=1.5,
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+        )
+
+    @classmethod
+    def opus4(cls) -> "AgentConfig":
+        """Claude Opus 4 configuration for most complex tasks."""
+        return cls(
+            model="claude-opus-4-20250514",
+            temperature=0.5,
+            max_tokens=8000,
+            timeout_seconds=900,
+            max_retries=3,
+            retry_backoff_factor=2.5,
+            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+        )
+
+    @classmethod
+    def sonnet4_new(cls) -> "AgentConfig":
+        """Claude Sonnet 4 configuration for balanced reasoning."""
+        return cls(
+            model="claude-sonnet-4",
+            temperature=0.6,
+            max_tokens=6000,
+            timeout_seconds=600,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+        )
+
+    @classmethod
+    def haiku35(cls) -> "AgentConfig":
+        """Claude Haiku 3.5 configuration for fast responses."""
+        return cls(
+            model="claude-haiku-3.5",
+            temperature=0.8,
+            max_tokens=3000,
+            timeout_seconds=180,
+            max_retries=4,
+            retry_backoff_factor=1.5,
+            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
+        )
+
+    @classmethod
+    def gemini20flash(cls) -> "AgentConfig":
+        """Gemini 2.0 Flash configuration for general use."""
+        return cls(
+            model="gemini-2.0-flash",
+            temperature=0.7,
+            max_tokens=4000,
+            timeout_seconds=300,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("GEMINI_API_KEY", ""),
+        )
+
+    @classmethod
+    def gemini25pro(cls) -> "AgentConfig":
+        """Gemini 2.5 Pro configuration for complex tasks."""
+        return cls(
+            model="gemini-2.5-pro",
+            temperature=0.6,
+            max_tokens=8000,
+            timeout_seconds=600,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("GEMINI_API_KEY", ""),
+        )
+
+    @classmethod
+    def gemini25flash(cls) -> "AgentConfig":
+        """Gemini 2.5 Flash configuration for best price/performance."""
+        return cls(
+            model="gemini-2.5-flash",
+            temperature=0.7,
+            max_tokens=4000,
+            timeout_seconds=300,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
 
@@ -92,17 +235,29 @@ if __name__ == "__main__":
     # Prebuilt configurations
     print("\nPrebuilt configurations:")
 
-    sonnet_config = AgentConfig.sonnet4()
-    print(f"Sonnet 4: {sonnet_config}")
+    # OpenAI models
+    print("\n🤖 OpenAI Models:")
+    print(f"O4 Mini: {AgentConfig.o4mini()}")
+    print(f"O3: {AgentConfig.o3()}")
+    print(f"O4-Mini Advanced: {AgentConfig.o4mini_advanced()}")
+    print(f"GPT-4.1: {AgentConfig.gpt41()}")
+    print(f"GPT-4.1 Mini: {AgentConfig.gpt41mini()}")
+    print(f"GPT-4.1 Nano: {AgentConfig.gpt41nano()}")
 
-    flash_config = AgentConfig.flash25()
-    print(f"Flash 2.5: {flash_config}")
+    # Anthropic models
+    print("\n🧠 Anthropic Models:")
+    print(f"Sonnet 4: {AgentConfig.sonnet4()}")
+    print(f"Opus 4: {AgentConfig.opus4()}")
+    print(f"Sonnet 4 (new): {AgentConfig.sonnet4_new()}")
+    print(f"Haiku 3.5: {AgentConfig.haiku35()}")
 
-    flash_thinking_config = AgentConfig.flash25thinking()
-    print(f"Flash 2.5 Thinking: {flash_thinking_config}")
-
-    o4mini_config = AgentConfig.o4mini()
-    print(f"O4 Mini: {o4mini_config}")
+    # Google models
+    print("\n🚀 Google Models:")
+    print(f"Flash 2.5: {AgentConfig.flash25()}")
+    print(f"Flash 2.5 Thinking: {AgentConfig.flash25thinking()}")
+    print(f"Gemini 2.0 Flash: {AgentConfig.gemini20flash()}")
+    print(f"Gemini 2.5 Pro: {AgentConfig.gemini25pro()}")
+    print(f"Gemini 2.5 Flash: {AgentConfig.gemini25flash()}")
 
     # Custom configuration
     custom_config = AgentConfig(
