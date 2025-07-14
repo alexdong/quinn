@@ -72,7 +72,7 @@ async def generate_response(
         conversation_history = []
 
     # Create agent with default config for now
-    config = AgentConfig.flash25()
+    config = AgentConfig.o4mini()
     agent = await create_agent(config)
 
     # Build conversation prompt
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         conversation_id = str(uuid4())
 
         # Create sample configuration
-        config = AgentConfig.flash25()
+        config = AgentConfig.o4mini()
         print(f"📋 Config: {config.model}")
 
         # Create sample message
