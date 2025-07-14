@@ -21,3 +21,36 @@ class AgentConfig(BaseModel):
             msg = "Model name cannot be empty"
             raise ValueError(msg)
         return v
+
+
+if __name__ == "__main__":
+    # Demonstrate AgentConfig usage
+    print("AgentConfig demonstration:")
+    
+    # Default configuration
+    default_config = AgentConfig()
+    print(f"Default config: {default_config}")
+    
+    # Custom configuration
+    custom_config = AgentConfig(
+        model="claude-3.5-sonnet",
+        temperature=0.5,
+        max_tokens=2000,
+        timeout_seconds=600,
+        max_retries=5,
+        retry_backoff_factor=1.5,
+    )
+    print(f"Custom config: {custom_config}")
+    
+    # Validation examples
+    try:
+        invalid_config = AgentConfig(temperature=-0.1)
+    except ValueError as e:
+        print(f"Validation error (temperature): {e}")
+    
+    try:
+        invalid_config = AgentConfig(model="")
+    except ValueError as e:
+        print(f"Validation error (empty model): {e}")
+    
+    print("AgentConfig demonstration completed.")

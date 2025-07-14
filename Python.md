@@ -201,6 +201,7 @@ Writing tests first clarifies requirements and ensures testable design. It preve
 
 - Generate test code before application code
 - Use detailed assert statements to capture intent and contracts
+- Prefer functions over classes for testability
 - Whenever you make a simple change, run the minimum test sets leveraging `pytest. mark`.
 
 

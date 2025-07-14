@@ -56,3 +56,68 @@ def validate_prompt_version(v: str) -> str:
 
 
 PROMPT_VERSION = Annotated[str, AfterValidator(validate_prompt_version)]
+
+
+if __name__ == "__main__":
+    # Demonstrate prompt version validation
+    print("Prompt version validation demonstration:")
+    
+    # Valid formats
+    valid_versions = [
+        "240715-120000",
+        "231201-235959",
+        "250101-000000",
+        "241231-143022"
+    ]
+    
+    print("Valid prompt versions:")
+    for version in valid_versions:
+        try:
+            validated = validate_prompt_version(version)
+            print(f"  ✓ {version} -> {validated}")
+        except ValueError as e:
+            print(f"  ✗ {version} -> {e}")
+    
+    # Invalid formats
+    invalid_versions = [
+        "",
+        "   ",
+        "240715",
+        "24-07-15-12:00:00", 
+        "240715-1200",
+        "240715120000",
+        "241315-120000",  # Invalid month
+        "240732-120000",  # Invalid day
+        "240715-250000",  # Invalid hour
+        "240715-126000",  # Invalid minute
+        "240715-120060",  # Invalid second
+    ]
+    
+    print("\nInvalid prompt versions:")
+    for version in invalid_versions:
+        try:
+            validated = validate_prompt_version(version)
+            print(f"  ✓ {version} -> {validated} (unexpected)")
+        except ValueError as e:
+            print(f"  ✗ {version} -> {e}")
+    
+    # Test with PROMPT_VERSION type
+    from pydantic import BaseModel
+    
+    class TestModel(BaseModel):
+        version: PROMPT_VERSION
+    
+    print("\nTesting with Pydantic model:")
+    try:
+        model = TestModel(version="240715-120000")
+        print(f"  ✓ Valid model: {model.version}")
+    except ValueError as e:
+        print(f"  ✗ Model validation error: {e}")
+    
+    try:
+        model = TestModel(version="invalid-format")
+        print(f"  ✓ Invalid model (unexpected): {model.version}")
+    except ValueError as e:
+        print(f"  ✗ Model validation error: {e}")
+    
+    print("Prompt version validation demonstration completed.")
