@@ -15,49 +15,48 @@ def _load_pricing_data() -> dict[str, dict[str, Any]]:
     """Load all pricing data from JSON files."""
     pricing_data = {}
 
-    pricing_files = ["openai.json", "anthropic.json", "google.json"]
-
+    pricing_files = [f.name for f in PRICING_DIR.glob("*.json")]
     for filename in pricing_files:
         file_path = PRICING_DIR / filename
-        try:
-            if file_path.exists():
-                with file_path.open() as f:
-                    data = json.load(f)
-                    # Merge models from this provider into main pricing data
-                    pricing_data.update(data.get("models", {}))
-            else:
-                logger.warning("Pricing file not found: %s", file_path)
-        except Exception as e:
-            logger.error("Failed to load pricing file %s: %s", file_path, e)
+        assert file_path.exists(), f"Pricing file {filename} does not exist"
+        with file_path.open() as f:
+            data = json.load(f).get("models", {})
+            assert data, f"No valid pricing data found in {filename}"
+
+            # Ensure we only load the key-value pairs with `_price_` in their keys
+            data = {
+                k: v
+                for k, v in data.items()
+                if isinstance(v, dict) and any("_price_" in key for key in v)
+            }
+            pricing_data.update(data)
 
     return pricing_data
+
+
+MODEL_PRICING: dict[str, dict[str, float]] = _load_pricing_data()
 
 
 def get_model_cost_info(model: str) -> dict[str, float]:
     """Get cost information for a model using local pricing data."""
     assert model.strip(), "Model name cannot be empty"
+    assert model in MODEL_PRICING, f"Model {model} not found in pricing data"
 
-    pricing_data = _load_pricing_data()
+    model_info = MODEL_PRICING[model]
+    assert "cached_input_price_per_1m_tokens" in model_info, (
+        f"Model {model} does not have cached input pricing data"
+    )
 
-    if model in pricing_data:
-        model_info = pricing_data[model]
-        result = {
-            "input_cost_per_token": model_info["input_price_per_1m_tokens"] / 1_000_000,
-            "output_cost_per_token": model_info["output_price_per_1m_tokens"]
-            / 1_000_000,
-        }
-        # Add cached input pricing if available and not null
-        if "cached_input_price_per_1m_tokens" in model_info and model_info["cached_input_price_per_1m_tokens"] is not None:
-            result["cached_input_cost_per_token"] = (
-                model_info["cached_input_price_per_1m_tokens"] / 1_000_000
-            )
-        return result
+    # Handle cached pricing (may be None for some models)
+    cached_price = model_info["cached_input_price_per_1m_tokens"]
+    cached_cost_per_token = (
+        cached_price / 1_000_000 if cached_price is not None else None
+    )
 
-    # Fallback pricing for unknown models (based on Gemini 2.0 Flash)
-    logger.warning("Unknown model %s, using fallback pricing", model)
     return {
-        "input_cost_per_token": 0.000000075,  # $0.075 per 1M tokens
-        "output_cost_per_token": 0.0000003,  # $0.30 per 1M tokens
+        "input_cost_per_token": model_info["input_price_per_1m_tokens"] / 1_000_000,
+        "output_cost_per_token": model_info["output_price_per_1m_tokens"] / 1_000_000,
+        "cached_input_cost_per_token": cached_cost_per_token,
     }
 
 
@@ -87,11 +86,13 @@ def calculate_cost(
 
     # Calculate cached input cost if available
     cached_cost = 0.0
-    if cached_input_tokens > 0 and "cached_input_cost_per_token" in cost_info:
-        cached_cost = cached_input_tokens * cost_info["cached_input_cost_per_token"]
-    elif cached_input_tokens > 0:
-        # If no cached pricing available, use regular input pricing
-        cached_cost = cached_input_tokens * cost_info["input_cost_per_token"]
+    if cached_input_tokens > 0:
+        cached_cost_per_token = cost_info.get("cached_input_cost_per_token")
+        if cached_cost_per_token is not None:
+            cached_cost = cached_input_tokens * cached_cost_per_token
+        else:
+            # If no cached pricing available, use regular input pricing
+            cached_cost = cached_input_tokens * cost_info["input_cost_per_token"]
 
     # Calculate output cost
     output_cost = output_tokens * cost_info["output_cost_per_token"]
@@ -102,9 +103,11 @@ def calculate_cost(
 def get_cost_per_token(model: str, token_type: str = "input") -> float:
     """Get cost per token for a specific model and token type."""
     assert model.strip(), "Model name cannot be empty"
-    assert token_type in ("input", "output", "cached_input"), (
-        "Token type must be 'input', 'output', or 'cached_input'"
-    )
+    assert token_type in (
+        "input",
+        "output",
+        "cached_input",
+    ), "Token type must be 'input', 'output', or 'cached_input'"
 
     cost_info = get_model_cost_info(model)
 
@@ -113,9 +116,8 @@ def get_cost_per_token(model: str, token_type: str = "input") -> float:
     if token_type == "output":
         return cost_info["output_cost_per_token"]
     # cached_input
-    return cost_info.get(
-        "cached_input_cost_per_token", cost_info["input_cost_per_token"]
-    )
+    cached_cost = cost_info.get("cached_input_cost_per_token")
+    return cached_cost if cached_cost is not None else cost_info["input_cost_per_token"]
 
 
 def estimate_completion_cost(
@@ -153,93 +155,59 @@ def estimate_completion_cost(
 
 def get_supported_models() -> list[str]:
     """Get list of models with known pricing data."""
-    pricing_data = _load_pricing_data()
-    return list(pricing_data.keys())
+    return list(MODEL_PRICING.keys())
 
 
-if __name__ == "__main__":
-    """Demonstrate cost calculation functionality."""
-    print("🧮 Cost Calculation Demo")
-    print("=" * 50)
+def _demo_model_costs(
+    model: str, input_tokens: int, output_tokens: int, cached_tokens: int
+) -> None:
+    """Demo cost calculations for a single model."""
+    print(f"🤖 Model: {model}")
 
-    # Test models from our pricing files
-    test_models = [
-        "gpt-4o-mini",
-        "o3",
-        "o4-mini",
-        "gpt-4.1",
-        "gpt-4.1-mini",
-        "gpt-4.1-nano",
-        "claude-3-5-sonnet-20241022",
-        "claude-opus-4-20250514",
-        "claude-sonnet-4",
-        "claude-haiku-3.5",
-        "gemini-2.0-flash",
-        "gemini-2.5-flash-exp",
-        "gemini-2.5-pro",
-        "gemini-2.5-flash",
-        "unknown-model",  # Test fallback
-    ]
+    # Get cost info
+    cost_info = get_model_cost_info(model)
+    print(f"   Input cost per token: ${cost_info['input_cost_per_token']:.8f}")
+    print(f"   Output cost per token: ${cost_info['output_cost_per_token']:.8f}")
+    cached_cost = cost_info.get("cached_input_cost_per_token")
+    if cached_cost is not None:
+        print(f"   Cached input cost per token: ${cached_cost:.8f}")
+    else:
+        print("   Cached input cost per token: Not supported")
 
-    test_input_tokens = 1000
-    test_output_tokens = 500
-    test_cached_tokens = 2000
+    # Calculate total cost without caching
+    total_cost = calculate_cost(model, input_tokens, output_tokens)
+    print(f"   Total cost (no cache): ${total_cost:.6f}")
 
-    print(
-        f"📊 Testing with {test_input_tokens:,} input, {test_output_tokens:,} output, and {test_cached_tokens:,} cached tokens:\n"
+    # Calculate total cost with caching
+    total_cost_with_cache = calculate_cost(
+        model, input_tokens, output_tokens, cached_tokens
     )
+    print(f"   Total cost (with cache): ${total_cost_with_cache:.6f}")
 
-    for model in test_models:
-        print(f"🤖 Model: {model}")
+    if total_cost_with_cache < total_cost:
+        savings = total_cost - total_cost_with_cache
+        savings_percent = (savings / total_cost) * 100
+        print(f"   💰 Cache savings: ${savings:.6f} ({savings_percent:.1f}%)")
 
-        try:
-            # Get cost info
-            cost_info = get_model_cost_info(model)
-            print(f"   Input cost per token: ${cost_info['input_cost_per_token']:.8f}")
-            print(
-                f"   Output cost per token: ${cost_info['output_cost_per_token']:.8f}"
-            )
-            if "cached_input_cost_per_token" in cost_info:
-                print(
-                    f"   Cached input cost per token: ${cost_info['cached_input_cost_per_token']:.8f}"
-                )
+    # Test individual token costs
+    input_cost_per_token = get_cost_per_token(model, "input")
+    output_cost_per_token = get_cost_per_token(model, "output")
+    cached_cost_per_token = get_cost_per_token(model, "cached_input")
+    print(
+        f"   Verified - Input: ${input_cost_per_token:.8f}, Output: ${output_cost_per_token:.8f}, Cached: ${cached_cost_per_token:.8f}"
+    )
+    print()
 
-            # Calculate total cost without caching
-            total_cost = calculate_cost(model, test_input_tokens, test_output_tokens)
-            print(f"   Total cost (no cache): ${total_cost:.6f}")
 
-            # Calculate total cost with caching
-            total_cost_with_cache = calculate_cost(
-                model, test_input_tokens, test_output_tokens, test_cached_tokens
-            )
-            print(f"   Total cost (with cache): ${total_cost_with_cache:.6f}")
-
-            if total_cost_with_cache < total_cost:
-                savings = total_cost - total_cost_with_cache
-                savings_percent = (savings / total_cost) * 100
-                print(f"   💰 Cache savings: ${savings:.6f} ({savings_percent:.1f}%)")
-
-            # Test individual token costs
-            input_cost_per_token = get_cost_per_token(model, "input")
-            output_cost_per_token = get_cost_per_token(model, "output")
-            cached_cost_per_token = get_cost_per_token(model, "cached_input")
-            print(
-                f"   Verified - Input: ${input_cost_per_token:.8f}, Output: ${output_cost_per_token:.8f}, Cached: ${cached_cost_per_token:.8f}"
-            )
-
-        except Exception as e:
-            print(f"   ❌ Error: {e}")
-
-        print()
-
-    # Test estimation
+def _demo_cost_estimation(models: list[str]) -> None:
+    """Demo cost estimation for sample models."""
     print("📝 Testing cost estimation:")
     test_prompt = (
         "What is the capital of France? Please provide a detailed explanation."
     )
     max_tokens = 200
 
-    for model in test_models[:3]:  # Test first 3 models
+    for model in models[:3]:  # Test first 3 models
         try:
             estimate = estimate_completion_cost(model, test_prompt, max_tokens)
             print(f"🤖 {model}:")
@@ -250,11 +218,38 @@ if __name__ == "__main__":
             print(f"   ❌ Error: {e}")
         print()
 
+
+def main() -> None:
+    """Demonstrate cost calculation functionality."""
+    print("🧮 Cost Calculation Demo")
+    print("=" * 50)
+
+    # Test models from our pricing files
+    test_models = get_supported_models()
+    test_input_tokens = 1000
+    test_output_tokens = 500
+    test_cached_tokens = 2000
+    print(
+        f"📊 Testing with {test_input_tokens:,} input, {test_output_tokens:,} output, and {test_cached_tokens:,} cached tokens:\n"
+    )
+
+    # Demo cost calculations for each model
+    for model in test_models:
+        _demo_model_costs(
+            model, test_input_tokens, test_output_tokens, test_cached_tokens
+        )
+
+    # Demo cost estimation
+    _demo_cost_estimation(test_models)
+
     # Show supported models
     print("✅ Supported models:")
-    supported = get_supported_models()
-    for model in supported:
+    for model in test_models:
         print(f"   - {model}")
 
-    print(f"\n📈 Total models with pricing data: {len(supported)}")
+    print(f"\n📈 Total models with pricing data: {len(test_models)}")
     print("🧮 Cost calculation demo completed!")
+
+
+if __name__ == "__main__":
+    main()

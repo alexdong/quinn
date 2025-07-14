@@ -1,4 +1,4 @@
-.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing
+.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing antipatterns
 
 dev:
 	uv run ruff check . --fix --unsafe-fixes
@@ -45,5 +45,18 @@ update-llms-txt:
 refresh-pricing:
 	@echo "📊 Refreshing LLM pricing data..."
 	@mkdir -p quinn/agent/pricing
-	@claude --dangerously-skip-permissions -p "Fetch the latest pricing for these models from their official provider websites and create/update JSON files in quinn/agent/pricing/\nInclude both regular and cached input pricing.\n:\n\n1. OpenAI (https://platform.openai.com/docs/pricing): Create openai.json with:\n   - gpt-4o-mini\n   - o3\n   - o4-mini\n   - gpt-4.1\n   - gpt-4.1-mini\n   - gpt-4.1-nano\n   \n2. Anthropic (https://www.anthropic.com/pricing): Create anthropic.json with:\n   - claude-3-5-sonnet-20241022\n   - claude-opus-4-20250514\n   - claude-sonnet-4\n   - claude-haiku-3.5\n\n3. Google (https://ai.google.dev/gemini-api/docs/pricing): Create google.json with:\n   - gemini-2.0-flash\n   - gemini-2.5-flash-exp\n   - gemini-2.5-pro\n   - gemini-2.5-flash\n\nEach JSON should include:\n- last_updated: current date\n- source_url: provider pricing page\n- models: object with model names as keys, each containing:\n  - input_price_per_1m_tokens\n  - output_price_per_1m_tokens\n  - cached_input_price_per_1m_tokens\n All prices in USD\n\nUse exact model names as they appear in our config.py file or as documented by the provider."
+	@claude --dangerously-skip-permissions -p "$$(cat tools/refresh_llm_pricing.md)"
 	@echo "✅ Pricing data updated!"
+
+antipatterns:
+	@echo "🔍 Scanning for code smells in changed files..."
+	@changed_files=$$(git diff --name-only --diff-filter=AMR | grep -E '\.(py|js|ts|jsx|tsx)$$'); \
+	if [ -n "$$changed_files" ]; then \
+		echo "📁 Changed files:"; \
+		echo "$$changed_files" | sed 's/^/   - /'; \
+		echo ""; \
+		echo "🧹 Running code smell detection..."; \
+		claude -p "$$(cat tools/code_smell.md)" "$$changed_files"; \
+	else \
+		echo "✅ No source files changed - no smells to detect"; \
+	fi
