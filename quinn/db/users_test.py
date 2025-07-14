@@ -149,7 +149,12 @@ def test_create_user(clean_db):
 
 def test_get_user_by_id(clean_db, test_user_data):
     """Test retrieving a user by ID."""
-    user = User(**test_user_data)
+    user = User(
+        id=test_user_data["id"],
+        email_addresses=test_user_data["email_addresses"],
+        name=test_user_data["name"],
+        settings=test_user_data["settings"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
         Users.create(user)
@@ -173,7 +178,12 @@ def test_update_user(clean_db, test_user_data):
     """Test updating an existing user."""
     import time
     
-    user = User(**test_user_data)
+    user = User(
+        id=test_user_data["id"],
+        email_addresses=test_user_data["email_addresses"],
+        name=test_user_data["name"],
+        settings=test_user_data["settings"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
         Users.create(user)
@@ -199,7 +209,12 @@ def test_update_user(clean_db, test_user_data):
 
 def test_delete_user(clean_db, test_user_data):
     """Test deleting a user."""
-    user = User(**test_user_data)
+    user = User(
+        id=test_user_data["id"],
+        email_addresses=test_user_data["email_addresses"],
+        name=test_user_data["name"],
+        settings=test_user_data["settings"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
         Users.create(user)

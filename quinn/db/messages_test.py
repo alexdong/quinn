@@ -99,7 +99,15 @@ def test_message_json_metadata_serialization():
 
 def test_create_message(setup_test_data, test_message_data):
     """Test creating a new message."""
-    message = Message(**test_message_data)
+    message = Message(
+        id=test_message_data["id"],
+        conversation_id=test_message_data["conversation_id"],
+        user_id=test_message_data["user_id"],
+        system_prompt=test_message_data["system_prompt"],
+        user_content=test_message_data["user_content"],
+        assistant_content=test_message_data["assistant_content"],
+        metadata=test_message_data["metadata"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
         Messages.create(message)
@@ -118,7 +126,15 @@ def test_create_message(setup_test_data, test_message_data):
 
 def test_get_message_by_id(setup_test_data, test_message_data):
     """Test retrieving a message by ID."""
-    message = Message(**test_message_data)
+    message = Message(
+        id=test_message_data["id"],
+        conversation_id=test_message_data["conversation_id"],
+        user_id=test_message_data["user_id"],
+        system_prompt=test_message_data["system_prompt"],
+        user_content=test_message_data["user_content"],
+        assistant_content=test_message_data["assistant_content"],
+        metadata=test_message_data["metadata"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
         Messages.create(message)
@@ -143,7 +159,15 @@ def test_get_messages_by_conversation(setup_test_data, test_message_data):
     user_id = setup_test_data["user"]["id"]
     
     # Create first message
-    message1 = Message(**test_message_data)
+    message1 = Message(
+        id=test_message_data["id"],
+        conversation_id=test_message_data["conversation_id"],
+        user_id=test_message_data["user_id"],
+        system_prompt=test_message_data["system_prompt"],
+        user_content=test_message_data["user_content"],
+        assistant_content=test_message_data["assistant_content"],
+        metadata=test_message_data["metadata"]
+    )
     
     # Create second message
     message2_id = str(uuid.uuid4())
@@ -224,7 +248,15 @@ def test_update_message(setup_test_data, test_message_data):
     """Test updating an existing message."""
     import time
     
-    message = Message(**test_message_data)
+    message = Message(
+        id=test_message_data["id"],
+        conversation_id=test_message_data["conversation_id"],
+        user_id=test_message_data["user_id"],
+        system_prompt=test_message_data["system_prompt"],
+        user_content=test_message_data["user_content"],
+        assistant_content=test_message_data["assistant_content"],
+        metadata=test_message_data["metadata"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
         Messages.create(message)
@@ -254,7 +286,15 @@ def test_update_message(setup_test_data, test_message_data):
 
 def test_delete_message(setup_test_data, test_message_data):
     """Test deleting a message."""
-    message = Message(**test_message_data)
+    message = Message(
+        id=test_message_data["id"],
+        conversation_id=test_message_data["conversation_id"],
+        user_id=test_message_data["user_id"],
+        system_prompt=test_message_data["system_prompt"],
+        user_content=test_message_data["user_content"],
+        assistant_content=test_message_data["assistant_content"],
+        metadata=test_message_data["metadata"]
+    )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
         Messages.create(message)
