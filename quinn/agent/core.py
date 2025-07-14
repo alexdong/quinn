@@ -90,11 +90,15 @@ async def generate_response(
 
         # Create response message with metadata
         return Message(
+            user_content=user_message.user_content,
             assistant_content=str(result.output),
             conversation_id=user_message.conversation_id,
-            system_prompt=prompt
-            if len(prompt) <= MAX_PROMPT_LENGTH
-            else prompt[:MAX_PROMPT_LENGTH] + "...",
+            system_prompt=user_message.system_prompt
+            or (
+                prompt
+                if len(prompt) <= MAX_PROMPT_LENGTH
+                else prompt[:MAX_PROMPT_LENGTH] + "..."
+            ),
             metadata=MessageMetrics(
                 tokens_used=tokens_used,
                 cost_usd=cost_usd,
@@ -107,6 +111,7 @@ async def generate_response(
     except Exception as e:
         # Create error response message
         return Message(
+            user_content=user_message.user_content,
             assistant_content=f"Error generating response: {e!s}",
             conversation_id=user_message.conversation_id,
             system_prompt="Error occurred during response generation",
@@ -183,17 +188,17 @@ if __name__ == "__main__":
         )
         print(f"💰 Cost calculation: ${cost:.4f}")
 
-        # Demo functions that need implementation
+        # Demo functions
         try:
             agent = await create_agent(config)
             print(f"✅ Agent created: {agent}")
-        except NotImplementedError as e:
-            print(f"⚠️  Agent creation: {e}")
+        except Exception as e:
+            print(f"⚠️  Agent creation failed: {e}")
 
         try:
             response = await generate_response(message)
             print(f"✅ Response: {response.assistant_content[:50]}...")
-        except NotImplementedError as e:
-            print(f"⚠️  Response generation: {e}")
+        except Exception as e:
+            print(f"⚠️  Response generation failed: {e}")
 
     asyncio.run(main())

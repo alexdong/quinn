@@ -34,12 +34,12 @@ def test_calculate_cost_validation() -> None:
 @pytest.mark.asyncio
 async def test_generate_response_validation() -> None:
     """Test generate_response input validation."""
-    # Test that Message validation prevents empty content
-    with pytest.raises(ValueError, match="Message content cannot be empty"):
-        Message(content="", role="user", conversation_id="conv-123")
+    # Test that Message validation prevents empty user content
+    with pytest.raises(ValueError, match="User content cannot be empty"):
+        Message(user_content="", conversation_id="conv-123")
         
     # Test empty conversation ID validation in generate_response
-    message_no_conv = Message(content="Hello", role="user", conversation_id="")
+    message_no_conv = Message(user_content="Hello", conversation_id="")
     with pytest.raises(AssertionError, match="Conversation ID cannot be empty"):
         await generate_response(message_no_conv)
 
@@ -47,19 +47,18 @@ async def test_generate_response_validation() -> None:
 @pytest.mark.asyncio
 async def test_generate_response_basic() -> None:
     """Test basic response generation (may fail gracefully without API keys)."""
-    message = Message(content="Hello", role="user", conversation_id="conv-123")
+    message = Message(user_content="Hello", conversation_id="conv-123")
     response = await generate_response(message)
     
     assert isinstance(response, Message)
-    assert response.role == "assistant"
     assert response.conversation_id == "conv-123"
-    assert response.content != ""
+    assert response.assistant_content != ""
     
     # Response should either have metadata (success) or be an error message
-    if response.content.startswith("Error generating response:"):
+    if response.assistant_content.startswith("Error generating response:"):
         # Error case - metadata is None but response is properly formatted
         assert response.metadata is None
-        assert "Error generating response:" in response.content
+        assert "Error generating response:" in response.assistant_content
     else:
         # Success case - should have metadata
         assert response.metadata is not None
@@ -69,16 +68,15 @@ async def test_generate_response_basic() -> None:
 async def test_generate_response_with_history() -> None:
     """Test response generation with conversation history."""
     history = [
-        Message(content="Hello", role="user", conversation_id="conv-123"),
-        Message(content="Hi there!", role="assistant", conversation_id="conv-123"),
+        Message(user_content="Hello", assistant_content="Hi there!", conversation_id="conv-123"),
     ]
-    message = Message(content="How are you?", role="user", conversation_id="conv-123")
+    message = Message(user_content="How are you?", conversation_id="conv-123")
     
     response = await generate_response(message, history)
     
     assert isinstance(response, Message)
-    assert response.role == "assistant"
     assert response.conversation_id == "conv-123"
+    assert response.assistant_content != ""
 
 
 @pytest.mark.asyncio
