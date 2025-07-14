@@ -181,3 +181,31 @@ def test_conversation_uuid_generation() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+def test_conversation_metrics_model_used_validation() -> None:
+    """Test ConversationMetrics model_used field validation."""
+    from quinn.models.conversation import ConversationMetrics
+    import pytest
+    
+    # Test empty model_used field
+    with pytest.raises(ValueError, match="Field cannot be empty"):
+        ConversationMetrics(
+            total_tokens_used=100,
+            total_cost_usd=0.01,
+            average_response_time_ms=500,
+            message_count=1,
+            model_used="",  # Empty string should trigger validation
+            prompt_version="240715-120000"
+        )
+    
+    # Test whitespace-only model_used field
+    with pytest.raises(ValueError, match="Field cannot be empty"):
+        ConversationMetrics(
+            total_tokens_used=100,
+            total_cost_usd=0.01,
+            average_response_time_ms=500,
+            message_count=1,
+            model_used="   ",  # Whitespace only should trigger validation
+            prompt_version="240715-120000"
+        )
+

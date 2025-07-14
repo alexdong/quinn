@@ -189,3 +189,41 @@ if __name__ == "__main__":
     print(f"Metadata: {full_message.metadata}")
 
     print("Message demonstration completed.")
+
+
+def test_message_metrics_model_used_validation() -> None:
+    """Test MessageMetrics model_used field validation."""
+    from quinn.models.message import MessageMetrics
+    import pytest
+    
+    # Test empty model_used field
+    with pytest.raises(ValueError, match="Field cannot be empty"):
+        MessageMetrics(
+            tokens_used=100,
+            cost_usd=0.01,
+            response_time_ms=500,
+            model_used="",  # Empty string should trigger validation
+            prompt_version="240715-120000"
+        )
+    
+    # Test whitespace-only model_used field  
+    with pytest.raises(ValueError, match="Field cannot be empty"):
+        MessageMetrics(
+            tokens_used=100,
+            cost_usd=0.01,
+            response_time_ms=500,
+            model_used="   ",  # Whitespace only should trigger validation
+            prompt_version="240715-120000"
+        )
+
+
+
+def test_message_user_content_validation_empty_string() -> None:
+    """Test Message user_content validation with empty string."""
+    from quinn.models.message import Message
+    import pytest
+    
+    # Test with empty string (should trigger validation)
+    with pytest.raises(ValueError, match="Message content cannot be empty"):
+        Message(user_content="")
+
