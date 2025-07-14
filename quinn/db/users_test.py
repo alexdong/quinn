@@ -124,9 +124,9 @@ class TestUsers(unittest.TestCase):
         user.settings = {"updated": True, "theme": "light"}
         
         original_updated_at = user.updated_at
-        time.sleep(1.1)  # Ensure timestamp changes (need >1 second for integer timestamps)
-        
-        Users.update(user)
+        # Mock time to simulate timestamp change without actual delay
+        with unittest.mock.patch('time.time', return_value=time.time() + 2):
+            Users.update(user)
         
         # Verify the update
         retrieved = Users.get_by_id(user.id)

@@ -189,9 +189,9 @@ class TestMessages(unittest.TestCase):
         message.metadata = {"updated": True}
         
         original_updated_at = message.last_updated_at
-        time.sleep(1.1)  # Ensure timestamp changes (need >1 second for integer timestamps)
-        
-        Messages.update(message)
+        # Mock time to simulate timestamp change without actual delay
+        with unittest.mock.patch('time.time', return_value=time.time() + 2):
+            Messages.update(message)
         
         # Verify the update
         retrieved = Messages.get_by_id("test-msg-update")

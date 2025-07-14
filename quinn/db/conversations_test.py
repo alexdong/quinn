@@ -198,9 +198,9 @@ class TestConversations(unittest.TestCase):
         conversation.metadata = {"updated": True}
         
         original_updated_at = conversation.updated_at
-        time.sleep(1.1)  # Ensure timestamp changes (need >1 second for integer timestamps)
-        
-        Conversations.update(conversation)
+        # Mock time to simulate timestamp change without actual delay
+        with unittest.mock.patch('time.time', return_value=time.time() + 2):
+            Conversations.update(conversation)
         
         # Verify the update
         retrieved = Conversations.get_by_id("test-conv-update")
