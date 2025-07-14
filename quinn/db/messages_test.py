@@ -92,6 +92,7 @@ def test_message_json_metadata_serialization():
     )
     
     assert message.metadata == metadata
+    assert message.metadata is not None
     assert message.metadata["tokens_used"] == 25
     assert message.metadata["additional_info"]["temperature"] == 0.7
 
