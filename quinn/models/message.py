@@ -9,27 +9,36 @@ from .response import MessageMetrics
 
 
 class Message(BaseModel):
-    """Single interaction containing user input and assistant response."""
+    """Single message in a conversation."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     conversation_id: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Interaction content
+    # Message content and role
+    content: str = ""
+    role: str = "user"  # "user" or "assistant"
     system_prompt: str = ""
-    user_content: str = ""
-    assistant_content: str = ""
 
     # Assistant response metrics
     metadata: MessageMetrics | None = Field(default=None)
 
-    @field_validator("user_content")
+    @field_validator("content")
     @classmethod
-    def validate_user_content(cls, v: str) -> str:
-        """Validate user content is not empty."""
+    def validate_content(cls, v: str) -> str:
+        """Validate content is not empty."""
         if not v.strip():
-            msg = "User content cannot be empty"
+            msg = "Message content cannot be empty"
+            raise ValueError(msg)
+        return v
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """Validate role is either user or assistant."""
+        if v not in ("user", "assistant"):
+            msg = "Role must be 'user' or 'assistant'"
             raise ValueError(msg)
         return v
 

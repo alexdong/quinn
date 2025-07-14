@@ -9,14 +9,14 @@ from pydantic import BaseModel, Field, field_validator
 class AgentConfig(BaseModel):
     """Configuration for AI agent behavior."""
 
-    model: str = "gemini/gemini-2.5-flash-exp"
+    model: str = "google-gla:gemini-2.0-flash"
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=4000, gt=0)
     timeout_seconds: int = Field(default=300, gt=0)
     max_retries: int = Field(default=3, ge=0)
     retry_backoff_factor: float = Field(default=2.0, gt=1.0)
     model_settings: dict[str, Any] | None = Field(default=None)
-    api_key: str = Field(min_length=1)
+    api_key: str = Field(default="", min_length=0)
 
     @field_validator("model")
     @classmethod
@@ -31,7 +31,7 @@ class AgentConfig(BaseModel):
     def sonnet4(cls) -> "AgentConfig":
         """Claude 4 Sonnet configuration optimized for complex reasoning."""
         return cls(
-            model="claude-4-sonnet-20241022",
+            model="anthropic:claude-3-5-sonnet-20241022",
             temperature=0.6,
             max_tokens=8000,
             timeout_seconds=600,
@@ -44,7 +44,7 @@ class AgentConfig(BaseModel):
     def flash25(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration for fast responses."""
         return cls(
-            model="gemini/gemini-2.5-flash-exp",
+            model="google-gla:gemini-2.0-flash",
             temperature=0.7,
             max_tokens=4000,
             timeout_seconds=300,
@@ -57,7 +57,7 @@ class AgentConfig(BaseModel):
     def flash25thinking(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration with thinking tokens enabled."""
         return cls(
-            model="gemini/gemini-2.5-flash-exp",
+            model="google-gla:gemini-2.0-flash",
             temperature=0.7,
             max_tokens=12000,
             timeout_seconds=400,
@@ -71,7 +71,7 @@ class AgentConfig(BaseModel):
     def o4mini(cls) -> "AgentConfig":
         """OpenAI GPT-4 Omni Mini configuration for efficient processing."""
         return cls(
-            model="openai/gpt-4o-mini",
+            model="openai:gpt-4o-mini",
             temperature=0.8,
             max_tokens=3000,
             timeout_seconds=240,
