@@ -16,8 +16,8 @@ def test_track_response_metrics() -> None:
     
     metrics = track_response_metrics(
         start_time=start_time,
-        model="gemini/gemini-2.5-flash-exp",
-        prompt_version="v1.0",
+        model="gemini-2.5-flash-exp",
+        prompt_version="240715-120000",
         input_tokens=100,
         output_tokens=50,
     )
@@ -26,8 +26,8 @@ def test_track_response_metrics() -> None:
     assert metrics.total_cost_usd >= 0.0
     assert metrics.average_response_time_ms > 0
     assert metrics.message_count == 1
-    assert metrics.model_used == "gemini/gemini-2.5-flash-exp"
-    assert metrics.prompt_version == "v1.0"
+    assert metrics.model_used == "gemini-2.5-flash-exp"
+    assert metrics.prompt_version == "240715-120000"
 
 
 def test_track_response_metrics_validation() -> None:
@@ -35,8 +35,8 @@ def test_track_response_metrics_validation() -> None:
     with pytest.raises(AssertionError, match="Start time must be positive"):
         track_response_metrics(
             start_time=0,
-            model="gemini/gemini-2.5-flash-exp",
-            prompt_version="v1.0",
+            model="gemini-2.5-flash-exp",
+            prompt_version="240715-120000",
             input_tokens=100,
             output_tokens=50,
         )
@@ -53,7 +53,7 @@ def test_track_response_metrics_validation() -> None:
     with pytest.raises(AssertionError, match="Prompt version cannot be empty"):
         track_response_metrics(
             start_time=time.time(),
-            model="gemini/gemini-2.5-flash-exp",
+            model="gemini-2.5-flash-exp",
             prompt_version="",
             input_tokens=100,
             output_tokens=50,
@@ -62,7 +62,7 @@ def test_track_response_metrics_validation() -> None:
     with pytest.raises(AssertionError, match="Input tokens must be non-negative"):
         track_response_metrics(
             start_time=time.time(),
-            model="gemini/gemini-2.5-flash-exp",
+            model="gemini-2.5-flash-exp",
             prompt_version="v1.0",
             input_tokens=-1,
             output_tokens=50,
@@ -71,7 +71,7 @@ def test_track_response_metrics_validation() -> None:
     with pytest.raises(AssertionError, match="Output tokens must be non-negative"):
         track_response_metrics(
             start_time=time.time(),
-            model="gemini/gemini-2.5-flash-exp",
+            model="gemini-2.5-flash-exp",
             prompt_version="v1.0",
             input_tokens=100,
             output_tokens=-1,

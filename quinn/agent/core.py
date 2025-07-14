@@ -5,14 +5,15 @@ from typing import Any
 
 from pydantic_ai import Agent
 from pydantic_ai.agent import AgentRunResult
+from pydantic_ai.settings import ModelSettings
 
 from quinn.models import AgentConfig, Message
-from quinn.models.response import MessageMetrics
+from quinn.models.message import MessageMetrics
 
-from .cost import calculate_cost as litellm_calculate_cost
+from .cost import calculate_cost
 
 # Constants
-MAX_PROMPT_LENGTH = 200
+MAX_PROMPT_LENGTH = 20000
 
 
 def _build_conversation_prompt(
@@ -33,7 +34,7 @@ def _build_conversation_prompt(
 
     # Create prompt with conversation context
     return (
-        "Previous conversation:\n"
+        "Previous conversations:\n"
         + "\n".join(conversation_messages)
         + "\n\nUser: "
         + user_message.user_content
@@ -128,34 +129,21 @@ async def create_agent(config: AgentConfig) -> Agent:
     assert isinstance(config, AgentConfig), "Config must be AgentConfig instance"
 
     # Map config to pydantic-ai settings
-    model_settings = {
-        "temperature": config.temperature,
-        "max_tokens": config.max_tokens,
-        "timeout": config.timeout_seconds,
-    }
+    model_settings = ModelSettings(
+        model=config.model,
+        temperature=config.temperature,
+        max_tokens=config.max_tokens,
+        timeout_seconds=config.timeout_seconds,
+        max_retries=config.max_retries,
+        retry_backoff_factor=config.retry_backoff_factor,
+    )
 
     # Create agent with configuration
     return Agent(
-        config.model,
+        model=config.model,
+        system_prompt="You are a helpful AI assistant.",  # TODO: supply a system prompt
         model_settings=model_settings,
         retries=config.max_retries,
-    )
-
-
-def calculate_cost(
-    model: str,
-    input_tokens: int,
-    output_tokens: int,
-) -> float:
-    """Calculate API cost based on token usage and model using litellm."""
-    assert model.strip(), "Model name cannot be empty"
-    assert input_tokens >= 0, "Input tokens must be non-negative"
-    assert output_tokens >= 0, "Output tokens must be non-negative"
-
-    return litellm_calculate_cost(
-        model=model,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
     )
 
 

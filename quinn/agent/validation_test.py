@@ -13,14 +13,12 @@ def test_validate_message_for_ai_success() -> None:
     """Test successful message validation."""
     
     history_message = Message(
-        content="Hello, how are you?",
-        role="user",
-        timestamp=datetime.now(UTC),
+        user_content="Hello, how are you?",
+        created_at=datetime.now(UTC),
     )
     
     message = Message(
-        content="This is a test input with enough characters",
-        role="user",
+        user_content="This is a test input with enough characters",
         system_prompt="You are a helpful AI assistant that provides accurate information.",
     )
     
@@ -39,8 +37,7 @@ def test_validate_message_for_ai_content_too_short() -> None:
     """Test validation fails for too short message content."""
     
     message = Message(
-        content="short",  # Less than 10 characters
-        role="user",
+        user_content="short",  # Less than 10 characters
         system_prompt="You are a helpful AI assistant that provides accurate information.",
     )
     
@@ -52,8 +49,7 @@ def test_validate_message_for_ai_system_prompt_too_short() -> None:
     """Test validation fails for too short system prompt."""
     
     message = Message(
-        content="This is a test input with enough characters",
-        role="user",
+        user_content="This is a test input with enough characters",
         system_prompt="Short",  # Less than 50 characters
     )
     
@@ -69,9 +65,8 @@ def test_message_empty_content_validation() -> None:
     # Pydantic should prevent creating a message with empty content
     with pytest.raises(ValidationError, match="Message content cannot be empty"):
         Message(
-            content="",  # Empty content
-            role="user",
-            timestamp=datetime.now(UTC),
+            user_content="",  # Empty content
+            created_at=datetime.now(UTC),
         )
 
 
@@ -83,9 +78,8 @@ def test_message_invalid_role_validation() -> None:
     # Pydantic should prevent creating a message with invalid role
     with pytest.raises(ValidationError, match="Input should be 'user' or 'assistant'"):
         Message(
-            content="Hello, how are you?",
-            role="invalid_role",  # type: ignore
-            timestamp=datetime.now(UTC),
+            user_content="Hello, how are you?",
+            created_at=datetime.now(UTC),
         )
 
 
@@ -93,8 +87,7 @@ def test_validate_message_for_ai_empty_history() -> None:
     """Test validation works with empty conversation history."""
     
     message = Message(
-        content="This is a test input with enough characters",
-        role="user",
+        user_content="This is a test input with enough characters",
         system_prompt="You are a helpful AI assistant that provides accurate information.",
     )
     
@@ -106,20 +99,17 @@ def test_validate_message_for_ai_multiple_messages() -> None:
     """Test validation works with multiple messages in history."""
     
     message1 = Message(
-        content="Hello, how are you?",
-        role="user",
-        timestamp=datetime.now(UTC),
+        user_content="Hello, how are you?",
+        created_at=datetime.now(UTC),
     )
     
     message2 = Message(
-        content="I'm doing well, thank you for asking!",
-        role="assistant",
-        timestamp=datetime.now(UTC),
+        assistant_content="I'm doing well, thank you for asking!",
+        created_at=datetime.now(UTC),
     )
     
     message = Message(
-        content="This is a test input with enough characters",
-        role="user",
+        user_content="This is a test input with enough characters",
         system_prompt="You are a helpful AI assistant that provides accurate information.",
     )
     
@@ -131,8 +121,7 @@ def test_validate_message_for_ai_no_system_prompt() -> None:
     """Test validation works without system prompt."""
     
     message = Message(
-        content="This is a test input with enough characters",
-        role="user",
+        user_content="This is a test input with enough characters",
         # No system prompt
     )
     

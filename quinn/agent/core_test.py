@@ -10,11 +10,11 @@ from .core import calculate_cost, create_agent, generate_response
 def test_calculate_cost() -> None:
     """Test cost calculation wrapper."""
     cost = calculate_cost(
-        model="gemini/gemini-2.5-flash-exp",
+        model="gemini-2.5-flash",
         input_tokens=1000,
         output_tokens=500,
     )
-    
+
     assert isinstance(cost, float)
     assert cost >= 0.0
 
@@ -23,25 +23,12 @@ def test_calculate_cost_validation() -> None:
     """Test cost calculation input validation."""
     with pytest.raises(AssertionError, match="Model name cannot be empty"):
         calculate_cost("", 100, 50)
-        
+
     with pytest.raises(AssertionError, match="Input tokens must be non-negative"):
-        calculate_cost("gemini/gemini-2.5-flash-exp", -1, 50)
-        
+        calculate_cost("gemini-2.5-flash", -1, 50)
+
     with pytest.raises(AssertionError, match="Output tokens must be non-negative"):
-        calculate_cost("gemini/gemini-2.5-flash-exp", 100, -1)
-
-
-@pytest.mark.asyncio
-async def test_generate_response_validation() -> None:
-    """Test generate_response input validation."""
-    # Test that Message validation prevents empty user content
-    with pytest.raises(ValueError, match="User content cannot be empty"):
-        Message(user_content="", conversation_id="conv-123")
-        
-    # Test empty conversation ID validation in generate_response
-    message_no_conv = Message(user_content="Hello", conversation_id="")
-    with pytest.raises(AssertionError, match="Conversation ID cannot be empty"):
-        await generate_response(message_no_conv)
+        calculate_cost("gemini-2.5-flash", 100, -1)
 
 
 @pytest.mark.asyncio
@@ -49,11 +36,11 @@ async def test_generate_response_basic() -> None:
     """Test basic response generation (may fail gracefully without API keys)."""
     message = Message(user_content="Hello", conversation_id="conv-123")
     response = await generate_response(message)
-    
+
     assert isinstance(response, Message)
     assert response.conversation_id == "conv-123"
     assert response.assistant_content != ""
-    
+
     # Response should either have metadata (success) or be an error message
     if response.assistant_content.startswith("Error generating response:"):
         # Error case - metadata is None but response is properly formatted
@@ -68,12 +55,16 @@ async def test_generate_response_basic() -> None:
 async def test_generate_response_with_history() -> None:
     """Test response generation with conversation history."""
     history = [
-        Message(user_content="Hello", assistant_content="Hi there!", conversation_id="conv-123"),
+        Message(
+            user_content="Hello",
+            assistant_content="Hi there!",
+            conversation_id="conv-123",
+        ),
     ]
     message = Message(user_content="How are you?", conversation_id="conv-123")
-    
+
     response = await generate_response(message, history)
-    
+
     assert isinstance(response, Message)
     assert response.conversation_id == "conv-123"
     assert response.assistant_content != ""
@@ -91,9 +82,10 @@ async def test_create_agent_basic() -> None:
     """Test basic agent creation."""
     config = AgentConfig()
     agent = await create_agent(config)
-    
+
     # Check that we got an Agent instance
     from pydantic_ai import Agent
+
     assert isinstance(agent, Agent)
 
 

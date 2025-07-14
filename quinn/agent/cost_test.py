@@ -15,8 +15,8 @@ def test_get_model_cost_info() -> None:
     """Test getting model cost information."""
     # Test with known models from our pricing data
     test_models = [
-        "gemini/gemini-2.5-flash-exp",
-        "gemini/gemini-2.0-flash", 
+        "gemini-2.5-flash-exp",
+        "gemini-2.0-flash", 
         "gpt-4o-mini",
         "claude-3-5-sonnet-20241022"
     ]
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     
     # Compare costs across models
     print(f"\n💰 Cost comparison for 1000 input + 500 output tokens:")
-    test_models = ["gpt-4o-mini", "claude-3-5-sonnet-20241022", "gemini/gemini-2.0-flash", "gemini/gemini-2.5-flash-exp"]
+    test_models = ["gpt-4o-mini", "claude-3-5-sonnet-20241022", "gemini-2.0-flash", "gemini-2.5-flash-exp"]
     
     for model in test_models:
         cost = calculate_cost(model, 1000, 500)
