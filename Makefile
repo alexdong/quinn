@@ -1,4 +1,4 @@
-.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing antipatterns
+.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing codesmell
 
 dev:
 	uv run ruff check . --fix --unsafe-fixes
@@ -26,20 +26,13 @@ type-coverage:
 update-llms-txt:
 	@echo "📚 Updating llms/*.txt documentation files..."
 	@mkdir -p llms
-	@claude -p "Please update the llms/ directory with documentation for tools mentioned in Python.md. For each tool: \
-	\
-	1. CLI TOOLS: Run '{tool} --help' to get help output. Save to llms/{tool}.txt. \
-	2. PYTHON PACKAGES: Check for official llms.txt files at common locations: \
-	   - https://docs.{package}.dev/latest/llms.txt or llms-full.txt \
-	   - https://{package}.readthedocs.io/llms.txt \
-	   - For pydantic-ai: https://ai.pydantic.dev/llms-full.txt \
-	   - For fasthtml: https://fastht.ml/docs/llms-ctx-full.txt \
-	3. For each file, add a footer documenting: \
-	   - Source URL or command used \
-	   - Retrieval date \
-	   - Method (curl, help command, etc.) \
-	\
-	IMPORTANT: Only update existing files or create new ones for tools in Python.md. Use curl to download llms.txt files when available. For CLI tools not installed, create placeholder noting unavailability."
+	@if [ -n "$(PATTERN)" ]; then \
+		echo "📁 Updating only files matching pattern: $(PATTERN)"; \
+		claude -p "$$(cat tools/refresh_llms_txt.md) Focus only on tools matching pattern '$(PATTERN)'."; \
+	else \
+		echo "📁 Updating all tools from Python.md"; \
+		claude -p "$$(cat tools/refresh_llms_txt.md)"; \
+	fi
 	@echo "✅ llms/*.txt files updated!"
 
 refresh-pricing:
@@ -48,15 +41,24 @@ refresh-pricing:
 	@claude --dangerously-skip-permissions -p "$$(cat tools/refresh_llm_pricing.md)"
 	@echo "✅ Pricing data updated!"
 
-antipatterns:
-	@echo "🔍 Scanning for code smells in changed files..."
-	@changed_files=$$(git diff --name-only --diff-filter=AMR | grep -E '\.(py|js|ts|jsx|tsx)$$'); \
-	if [ -n "$$changed_files" ]; then \
-		echo "📁 Changed files:"; \
-		echo "$$changed_files" | sed 's/^/   - /'; \
+codesmell:
+	@echo "🔍 Scanning for code smells..."
+	@if [ -n "$(PATTERN)" ]; then \
+		echo "📁 Using pattern: $(PATTERN)"; \
+		target_files=$$(find quinn -name "$(PATTERN)" -type f | grep -E '\.(py|js|ts|jsx|tsx)$$' 2>/dev/null || true); \
+	else \
+		echo "📁 Using git diff (changed files):"; \
+		target_files=$$(git diff --name-only --diff-filter=AMR | grep -E '\.(py|js|ts|jsx|tsx)$$'); \
+	fi; \
+	if [ -n "$$target_files" ]; then \
+		echo "$$target_files" | sed 's/^/   - /'; \
 		echo ""; \
 		echo "🧹 Running code smell detection..."; \
-		claude -p "$$(cat tools/code_smell.md)" "$$changed_files"; \
+		claude -p "$$(cat tools/code_smell.md)" "$$target_files"; \
 	else \
-		echo "✅ No source files changed - no smells to detect"; \
+		if [ -n "$(PATTERN)" ]; then \
+			echo "✅ No files matching pattern '$(PATTERN)' found"; \
+		else \
+			echo "✅ No source files changed - no smells to detect"; \
+		fi; \
 	fi

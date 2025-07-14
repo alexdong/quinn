@@ -27,13 +27,13 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   2. [x] Create checklist for "good" rubber duck behavior
   3. [x] Document anti-patterns to avoid (being directive, solving problems, leading questions)
 
-2. [ ] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
-  1. [ ] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
-  2. [ ] Implement basic response generation logic with error handling
-  3. [ ] Add retry logic for API failures with exponential backoff
-  4. [ ] Implement cost tracking (tokens, API costs, response time) per interaction
-  5. [ ] Implement prompt versioning to track changes over time
-  6. [ ] Implement prompt caching to avoid repeated API calls
+2. [x] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
+  1. [x] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
+  2. [x] Implement basic response generation logic with error handling
+  3. [x] Add retry logic for API failures with exponential backoff
+  4. [x] Implement cost tracking (tokens, API costs, response time) per interaction
+  5. [x] Implement prompt versioning to track changes over time
+  6. [x] Implement prompt caching to avoid repeated API calls
 
 3. [ ] Create conversation context management
   1. [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
