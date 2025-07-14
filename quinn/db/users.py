@@ -27,20 +27,20 @@ class Users:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     INSERT INTO users (id, created_at, updated_at, name, email_addresses, settings)
                     VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        user.id,
-                        user.created_at,
-                        user.updated_at,
-                        user.name,
-                        json.dumps(user.email_addresses),
-                        json.dumps(user.settings) if user.settings else None,
-                    ),
+                    """
+                params = (
+                    user.id,
+                    user.created_at,
+                    user.updated_at,
+                    user.name,
+                    json.dumps(user.email_addresses),
+                    json.dumps(user.settings) if user.settings else None,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("User created successfully: %s", user.id)
         except Exception as e:
@@ -55,7 +55,10 @@ class Users:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+                sql = "SELECT * FROM users WHERE id = ?"
+                params = (user_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 row = cursor.fetchone()
                 if row:
                     logger.debug("User found: %s", user_id)
@@ -81,7 +84,9 @@ class Users:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM users")
+                sql = "SELECT * FROM users"
+                logger.info("SQL: %s", sql)
+                cursor.execute(sql)
                 rows = cursor.fetchall()
                 for row in rows:
                     email_addresses = json.loads(row[4])
@@ -110,20 +115,20 @@ class Users:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     UPDATE users
                     SET updated_at = ?, name = ?, email_addresses = ?, settings = ?
                     WHERE id = ?
-                    """,
-                    (
-                        user.updated_at,
-                        user.name,
-                        json.dumps(user.email_addresses),
-                        json.dumps(user.settings) if user.settings else None,
-                        user.id,
-                    ),
+                    """
+                params = (
+                    user.updated_at,
+                    user.name,
+                    json.dumps(user.email_addresses),
+                    json.dumps(user.settings) if user.settings else None,
+                    user.id,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("User updated successfully: %s", user.id)
         except Exception as e:
@@ -168,7 +173,10 @@ class Users:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+                sql = "DELETE FROM users WHERE id = ?"
+                params = (user_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 rows_affected = cursor.rowcount
                 conn.commit()
                 if rows_affected > 0:

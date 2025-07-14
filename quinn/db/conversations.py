@@ -33,25 +33,25 @@ class Conversations:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     INSERT INTO conversations (id, user_id, created_at, updated_at, title, status, total_cost, message_count, metadata)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        conversation.id,
-                        conversation.user_id,
-                        conversation.created_at,
-                        conversation.updated_at,
-                        conversation.title,
-                        conversation.status,
-                        conversation.total_cost,
-                        conversation.message_count,
-                        json.dumps(conversation.metadata)
-                        if conversation.metadata
-                        else None,
-                    ),
+                    """
+                params = (
+                    conversation.id,
+                    conversation.user_id,
+                    conversation.created_at,
+                    conversation.updated_at,
+                    conversation.title,
+                    conversation.status,
+                    conversation.total_cost,
+                    conversation.message_count,
+                    json.dumps(conversation.metadata)
+                    if conversation.metadata
+                    else None,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("Conversation created successfully: %s", conversation.id)
         except Exception as e:
@@ -66,9 +66,10 @@ class Conversations:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM conversations WHERE id = ?", (conversation_id,)
-                )
+                sql = "SELECT * FROM conversations WHERE id = ?"
+                params = (conversation_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 row = cursor.fetchone()
                 if row:
                     logger.debug("Conversation found: %s", conversation_id)
@@ -97,9 +98,10 @@ class Conversations:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM conversations WHERE user_id = ?", (user_id,)
-                )
+                sql = "SELECT * FROM conversations WHERE user_id = ?"
+                params = (user_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 rows = cursor.fetchall()
                 conversations = [
                     Conversation(
@@ -132,24 +134,24 @@ class Conversations:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     UPDATE conversations
                     SET updated_at = ?, title = ?, status = ?, total_cost = ?, message_count = ?, metadata = ?
                     WHERE id = ?
-                    """,
-                    (
-                        conversation.updated_at,
-                        conversation.title,
-                        conversation.status,
-                        conversation.total_cost,
-                        conversation.message_count,
-                        json.dumps(conversation.metadata)
-                        if conversation.metadata
-                        else None,
-                        conversation.id,
-                    ),
+                    """
+                params = (
+                    conversation.updated_at,
+                    conversation.title,
+                    conversation.status,
+                    conversation.total_cost,
+                    conversation.message_count,
+                    json.dumps(conversation.metadata)
+                    if conversation.metadata
+                    else None,
+                    conversation.id,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("Conversation updated successfully: %s", conversation.id)
         except Exception as e:
@@ -164,9 +166,10 @@ class Conversations:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "DELETE FROM conversations WHERE id = ?", (conversation_id,)
-                )
+                sql = "DELETE FROM conversations WHERE id = ?"
+                params = (conversation_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 rows_affected = cursor.rowcount
                 conn.commit()
                 if rows_affected > 0:

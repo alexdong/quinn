@@ -33,23 +33,23 @@ class Messages:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     INSERT INTO messages (id, conversation_id, user_id, created_at, last_updated_at, system_prompt, user_content, assistant_content, metadata)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        message.id,
-                        message.conversation_id,
-                        message.user_id,
-                        message.created_at,
-                        message.last_updated_at,
-                        message.system_prompt,
-                        message.user_content,
-                        message.assistant_content,
-                        json.dumps(message.metadata) if message.metadata else None,
-                    ),
+                    """
+                params = (
+                    message.id,
+                    message.conversation_id,
+                    message.user_id,
+                    message.created_at,
+                    message.last_updated_at,
+                    message.system_prompt,
+                    message.user_content,
+                    message.assistant_content,
+                    json.dumps(message.metadata) if message.metadata else None,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("Message created successfully: %s", message.id)
         except Exception as e:
@@ -64,7 +64,10 @@ class Messages:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT * FROM messages WHERE id = ?", (message_id,))
+                sql = "SELECT * FROM messages WHERE id = ?"
+                params = (message_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 row = cursor.fetchone()
                 if row:
                     logger.debug("Message found: %s", message_id)
@@ -93,10 +96,10 @@ class Messages:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC",
-                    (conversation_id,),
-                )
+                sql = "SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC"
+                params = (conversation_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 rows = cursor.fetchall()
                 messages = [
                     Message(
@@ -132,21 +135,21 @@ class Messages:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                sql = """
                     UPDATE messages
                     SET last_updated_at = ?, system_prompt = ?, user_content = ?, assistant_content = ?, metadata = ?
                     WHERE id = ?
-                    """,
-                    (
-                        message.last_updated_at,
-                        message.system_prompt,
-                        message.user_content,
-                        message.assistant_content,
-                        json.dumps(message.metadata) if message.metadata else None,
-                        message.id,
-                    ),
+                    """
+                params = (
+                    message.last_updated_at,
+                    message.system_prompt,
+                    message.user_content,
+                    message.assistant_content,
+                    json.dumps(message.metadata) if message.metadata else None,
+                    message.id,
                 )
+                logger.info("SQL: %s | Params: %s", sql.strip(), params)
+                cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("Message updated successfully: %s", message.id)
         except Exception as e:
@@ -161,7 +164,10 @@ class Messages:
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+                sql = "DELETE FROM messages WHERE id = ?"
+                params = (message_id,)
+                logger.info("SQL: %s | Params: %s", sql, params)
+                cursor.execute(sql, params)
                 rows_affected = cursor.rowcount
                 conn.commit()
                 if rows_affected > 0:
