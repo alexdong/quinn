@@ -30,7 +30,9 @@ MAX_PROMPT_LENGTH = 20000
 
 def _load_system_prompt() -> str:
     """Load the system prompt from the templates directory."""
-    prompt_path = Path(__file__).parent.parent / "templates" / "prompts" / "system_prompt.txt"
+    prompt_path = (
+        Path(__file__).parent.parent / "templates" / "prompts" / "system_prompt.txt"
+    )
     try:
         return prompt_path.read_text(encoding="utf-8").strip()
     except FileNotFoundError:

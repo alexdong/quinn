@@ -29,4 +29,6 @@ def validate_message_for_ai(
         for i, hist_message in enumerate(conversation_history):
             # Only check user_content if it exists and is not empty
             if hist_message.user_content:
-                assert hist_message.user_content.strip(), f"Empty user content at index {i}"
+                assert hist_message.user_content.strip(), (
+                    f"Empty user content at index {i}"
+                )

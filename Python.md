@@ -194,6 +194,8 @@ Tests are the safety net for refactoring and the specification for expected beha
 - Use `pytest.approx` with two decimal points for float/decimal comparisons
 - Use `@pytest.mark.parametrize` to separate code from test data
 - Use `@pytest.mark.{category}` and `@pytest.mark.requirement({FeatureName})` for test categorization
+- Use `fixture` functions for reusable test setup
+- For all assertions, make sure to include the `msg` parameter with a descriptive message
 
 ### Test-Driven Development
 

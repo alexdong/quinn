@@ -45,7 +45,8 @@ class Message(BaseModel):
     def validate_user_content(cls, v: str) -> str:
         """Validate user content is not empty when provided."""
         if v is not None and v.strip() == "":
-            raise ValueError("Message content cannot be empty")
+            msg = "Message content cannot be empty"
+            raise ValueError(msg)
         return v
 
     # Assistant response metrics
