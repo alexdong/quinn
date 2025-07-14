@@ -1,14 +1,11 @@
 """Prompt context data models."""
 
 import uuid
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, field_validator
 
+from .conversation import Message
 from .types import PROMPT_VERSION
-
-if TYPE_CHECKING:
-    from .conversation import Message
 
 
 class PromptContext(BaseModel):

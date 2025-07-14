@@ -3,7 +3,7 @@
 from .config import AgentConfig
 from .conversation import Conversation, Message
 from .prompt import PromptContext
-from .response import AgentResponse, ConversationMetrics
+from .response import ConversationMetrics, MessageMetrics
 from .types import PROMPT_VERSION
 
 # Rebuild models to resolve forward references
@@ -13,9 +13,9 @@ Conversation.model_rebuild()
 __all__ = [
     "PROMPT_VERSION",
     "AgentConfig",
-    "AgentResponse",
     "Conversation",
     "ConversationMetrics",
     "Message",
+    "MessageMetrics",
     "PromptContext",
 ]

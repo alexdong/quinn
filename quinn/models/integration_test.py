@@ -2,7 +2,7 @@
 
 from .conversation import Conversation, Message
 from .prompt import PromptContext
-from .response import AgentResponse, ConversationMetrics
+from .response import ConversationMetrics, MessageMetrics
 
 
 def test_conversation_with_metrics() -> None:
@@ -55,43 +55,29 @@ def test_complete_workflow() -> None:
         system_prompt="You are an AI assistant",
     )
     
-    # Create agent response
-    response = AgentResponse(
-        content="AI stands for Artificial Intelligence...",
-        conversation_id=conversation.id,
-        message_id=user_message.id,
-        tokens_used=75,
-        cost_usd=0.001,
-        response_time_ms=850,
-        model_used="gpt-4",
-        prompt_version="240715-120000",
-    )
-    
-    # Add assistant message to conversation
+    # Create assistant message with metrics
     assistant_message = Message(
-        content=response.content,
+        content="AI stands for Artificial Intelligence...",
         role="assistant",
+        conversation_id=conversation.id,
+        metadata=MessageMetrics(
+            tokens_used=75,
+            cost_usd=0.001,
+            response_time_ms=850,
+            model_used="gpt-4",
+            prompt_version="240715-120000",
+        ),
     )
     conversation.add_message(assistant_message)
-    
-    # Create metrics
-    metrics = ConversationMetrics(
-        total_tokens_used=response.tokens_used,
-        total_cost_usd=response.cost_usd,
-        average_response_time_ms=response.response_time_ms,
-        message_count=len(conversation.messages),
-        model_used=response.model_used,
-        prompt_version=response.prompt_version,
-    )
-    conversation.metrics = metrics
     
     # Verify complete workflow
     assert len(conversation.messages) == 2
     assert conversation.messages[0].role == "user"
     assert conversation.messages[1].role == "assistant"
+    assert conversation.metrics is not None
     assert conversation.metrics.message_count == 2
-    assert response.conversation_id == conversation.id
-    assert response.message_id == user_message.id
+    assert conversation.metrics.total_tokens_used == 75
+    assert assistant_message.conversation_id == conversation.id
 
 
 def test_conversation_message_history_flow() -> None:

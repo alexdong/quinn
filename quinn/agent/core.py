@@ -2,7 +2,7 @@
 
 from pydantic_ai import Agent
 
-from quinn.models import AgentConfig, AgentResponse, Message
+from quinn.models import AgentConfig, Message
 
 from .cost import calculate_cost as litellm_calculate_cost
 
@@ -11,7 +11,7 @@ async def generate_response(
     user_input: str,
     conversation_id: str,
     conversation_history: list[Message] | None = None,
-) -> AgentResponse:
+) -> Message:
     """Generate AI response with full error handling and metrics tracking."""
     assert user_input.strip(), "User input cannot be empty"
     assert conversation_id.strip(), "Conversation ID cannot be empty"

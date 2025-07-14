@@ -2,7 +2,7 @@
 
 import pytest
 
-from quinn.models import AgentResponse
+from quinn.models import Message, MessageMetrics
 
 from .cache import cache_response, clear_cache, generate_prompt_hash, get_cached_response
 
@@ -47,12 +47,17 @@ def test_cache_operations() -> None:
     assert result is None
     
     # Create a test response
-    response = AgentResponse(
+    response = Message(
         content="Test response",
+        role="assistant",
         conversation_id="conv-123",
-        message_id="msg-456",
-        model_used="gemini/gemini-2.5-flash-exp",
-        prompt_version="v1.0",
+        metadata=MessageMetrics(
+            tokens_used=50,
+            cost_usd=0.001,
+            response_time_ms=500,
+            model_used="gemini/gemini-2.5-flash-exp",
+            prompt_version="240715-120000",
+        ),
     )
     
     # Cache the response
@@ -63,7 +68,8 @@ def test_cache_operations() -> None:
     assert cached is not None
     assert cached.content == "Test response"
     assert cached.conversation_id == "conv-123"
-    assert cached.message_id == "msg-456"
+    assert cached.metadata is not None
+    assert cached.metadata.model_used == "gemini/gemini-2.5-flash-exp"
     
     # Clear cache and test miss again
     clear_cache()
@@ -73,12 +79,17 @@ def test_cache_operations() -> None:
 
 def test_cache_validation() -> None:
     """Test cache operation validation."""
-    response = AgentResponse(
+    response = Message(
         content="Test response",
-        conversation_id="conv-123", 
-        message_id="msg-456",
-        model_used="gemini/gemini-2.5-flash-exp",
-        prompt_version="v1.0",
+        role="assistant",
+        conversation_id="conv-123",
+        metadata=MessageMetrics(
+            tokens_used=50,
+            cost_usd=0.001,
+            response_time_ms=500,
+            model_used="gemini/gemini-2.5-flash-exp",
+            prompt_version="240715-120000",
+        ),
     )
     
     with pytest.raises(AssertionError, match="Prompt hash cannot be empty"):
@@ -87,7 +98,7 @@ def test_cache_validation() -> None:
     with pytest.raises(AssertionError, match="Prompt hash cannot be empty"):
         get_cached_response("")
     
-    with pytest.raises(AssertionError, match="Response must be AgentResponse instance"):
+    with pytest.raises(AssertionError, match="Response must be Message instance"):
         cache_response("hash", "not-a-response")  # type: ignore
 
 

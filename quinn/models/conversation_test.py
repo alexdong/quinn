@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 import pytest
 
 from .conversation import Conversation, Message
+from .response import MessageMetrics
 
 
 def test_message_default_values() -> None:
@@ -13,7 +14,7 @@ def test_message_default_values() -> None:
     message = Message(content="Hello world")
     assert message.role == "user"
     assert message.content == "Hello world"
-    assert message.metadata == {}
+    assert message.metadata is None
     assert isinstance(message.id, str)
     assert len(message.id) == 36  # UUID4 length
     assert isinstance(message.timestamp, datetime)
@@ -22,17 +23,25 @@ def test_message_default_values() -> None:
 def test_message_custom_values() -> None:
     """Test Message model with custom values."""
     custom_time = datetime.now(UTC)
-    custom_metadata = {"key": "value", "number": 42}
+    custom_metadata = MessageMetrics(
+        tokens_used=100,
+        cost_usd=0.005,
+        response_time_ms=750,
+        model_used="claude-3.5-sonnet",
+        prompt_version="240715-120000",
+    )
     
     message = Message(
         role="assistant",
         content="AI response",
         timestamp=custom_time,
+        conversation_id="conv-123",
         metadata=custom_metadata,
     )
     assert message.role == "assistant"
     assert message.content == "AI response"
     assert message.timestamp == custom_time
+    assert message.conversation_id == "conv-123"
     assert message.metadata == custom_metadata
 
 
@@ -54,15 +63,17 @@ def test_message_empty_content_validation() -> None:
 
 
 def test_message_metadata_types() -> None:
-    """Test Message metadata supports various types."""
-    metadata = {
-        "string": "value",
-        "int": 42,
-        "float": 3.14,
-        "bool": True,
-    }
+    """Test Message metadata supports MessageMetrics type."""
+    metadata = MessageMetrics(
+        tokens_used=42,
+        cost_usd=3.14,
+        response_time_ms=100,
+        model_used="test-model",
+        prompt_version="240715-120000",
+    )
     message = Message(content="Test", metadata=metadata)
     assert message.metadata == metadata
+    assert isinstance(message.metadata, MessageMetrics)
 
 
 def test_conversation_default_values() -> None:
