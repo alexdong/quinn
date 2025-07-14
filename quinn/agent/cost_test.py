@@ -57,11 +57,14 @@ def test_get_cost_per_token() -> None:
     model = "gpt-4o-mini"
     input_cost = get_cost_per_token(model, "input")
     output_cost = get_cost_per_token(model, "output")
+    cached_input_cost = get_cost_per_token(model, "cached_input")
     
     assert isinstance(input_cost, float)
     assert isinstance(output_cost, float)
+    assert isinstance(cached_input_cost, float)
     assert input_cost >= 0.0
     assert output_cost >= 0.0
+    assert cached_input_cost >= 0.0
 
 
 def test_estimate_completion_cost() -> None:
@@ -135,6 +138,31 @@ def test_free_model_pricing() -> None:
     assert cost == 0.0
 
 
+def test_cached_input_cost() -> None:
+    """Test cost calculation with cached input tokens."""
+    model = "gpt-4o-mini"
+    
+    # Test with cached input tokens
+    cost_with_cache = calculate_cost(
+        model=model,
+        input_tokens=500,
+        output_tokens=300,
+        cached_input_tokens=1000,
+    )
+    
+    # Test without cached input tokens
+    cost_without_cache = calculate_cost(
+        model=model,
+        input_tokens=1500,  # 500 + 1000
+        output_tokens=300,
+    )
+    
+    assert isinstance(cost_with_cache, float)
+    assert cost_with_cache >= 0.0
+    # Cached cost should typically be less than or equal to regular cost
+    assert cost_with_cache <= cost_without_cache
+
+
 def test_calculate_cost_validation() -> None:
     """Test cost calculation input validation."""
     with pytest.raises(AssertionError, match="Model name cannot be empty"):
@@ -145,6 +173,9 @@ def test_calculate_cost_validation() -> None:
         
     with pytest.raises(AssertionError, match="Output tokens must be non-negative"):
         calculate_cost("gemini/gemini-2.5-flash-exp", 100, -1)
+    
+    with pytest.raises(AssertionError, match="Cached input tokens must be non-negative"):
+        calculate_cost("gpt-4o-mini", 100, 50, -1)
 
 
 if __name__ == "__main__":
@@ -158,6 +189,7 @@ if __name__ == "__main__":
     test_get_supported_models()
     test_fallback_pricing()
     test_free_model_pricing()
+    test_cached_input_cost()
     test_calculate_cost_validation()
     
     print("✅ All cost calculation tests passed!")

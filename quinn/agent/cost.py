@@ -41,11 +41,17 @@ def get_model_cost_info(model: str) -> dict[str, float]:
 
     if model in pricing_data:
         model_info = pricing_data[model]
-        return {
+        result = {
             "input_cost_per_token": model_info["input_price_per_1m_tokens"] / 1_000_000,
             "output_cost_per_token": model_info["output_price_per_1m_tokens"]
             / 1_000_000,
         }
+        # Add cached input pricing if available
+        if "cached_input_price_per_1m_tokens" in model_info:
+            result["cached_input_cost_per_token"] = (
+                model_info["cached_input_price_per_1m_tokens"] / 1_000_000
+            )
+        return result
 
     # Fallback pricing for unknown models (based on Gemini 2.0 Flash)
     logger.warning("Unknown model %s, using fallback pricing", model)
@@ -59,29 +65,57 @@ def calculate_cost(
     model: str,
     input_tokens: int,
     output_tokens: int,
+    cached_input_tokens: int = 0,
 ) -> float:
-    """Calculate total cost for API usage using local pricing data."""
+    """Calculate total cost for API usage using local pricing data.
+
+    Args:
+        model: The model name
+        input_tokens: Number of regular input tokens
+        output_tokens: Number of output tokens
+        cached_input_tokens: Number of cached input tokens (for models that support caching)
+    """
     assert model.strip(), "Model name cannot be empty"
     assert input_tokens >= 0, "Input tokens must be non-negative"
     assert output_tokens >= 0, "Output tokens must be non-negative"
+    assert cached_input_tokens >= 0, "Cached input tokens must be non-negative"
 
     cost_info = get_model_cost_info(model)
+
+    # Calculate regular input cost
     input_cost = input_tokens * cost_info["input_cost_per_token"]
+
+    # Calculate cached input cost if available
+    cached_cost = 0.0
+    if cached_input_tokens > 0 and "cached_input_cost_per_token" in cost_info:
+        cached_cost = cached_input_tokens * cost_info["cached_input_cost_per_token"]
+    elif cached_input_tokens > 0:
+        # If no cached pricing available, use regular input pricing
+        cached_cost = cached_input_tokens * cost_info["input_cost_per_token"]
+
+    # Calculate output cost
     output_cost = output_tokens * cost_info["output_cost_per_token"]
 
-    return input_cost + output_cost
+    return input_cost + cached_cost + output_cost
 
 
 def get_cost_per_token(model: str, token_type: str = "input") -> float:
     """Get cost per token for a specific model and token type."""
     assert model.strip(), "Model name cannot be empty"
-    assert token_type in ("input", "output"), "Token type must be 'input' or 'output'"
+    assert token_type in ("input", "output", "cached_input"), (
+        "Token type must be 'input', 'output', or 'cached_input'"
+    )
 
     cost_info = get_model_cost_info(model)
 
     if token_type == "input":
         return cost_info["input_cost_per_token"]
-    return cost_info["output_cost_per_token"]
+    if token_type == "output":
+        return cost_info["output_cost_per_token"]
+    # cached_input
+    return cost_info.get(
+        "cached_input_cost_per_token", cost_info["input_cost_per_token"]
+    )
 
 
 def estimate_completion_cost(
@@ -154,6 +188,10 @@ if __name__ == "__main__":
             print(
                 f"   Output cost per token: ${cost_info['output_cost_per_token']:.8f}"
             )
+            if "cached_input_cost_per_token" in cost_info:
+                print(
+                    f"   Cached input cost per token: ${cost_info['cached_input_cost_per_token']:.8f}"
+                )
 
             # Calculate total cost
             total_cost = calculate_cost(model, test_input_tokens, test_output_tokens)

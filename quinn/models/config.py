@@ -44,7 +44,7 @@ class AgentConfig(BaseModel):
     def flash25(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration for fast responses."""
         return cls(
-            model="gemini/gemini-2.0-flash",
+            model="gemini/gemini-2.5-flash",
             temperature=0.7,
             max_tokens=4000,
             timeout_seconds=300,
@@ -57,7 +57,7 @@ class AgentConfig(BaseModel):
     def flash25thinking(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration with thinking tokens enabled."""
         return cls(
-            model="gemini/gemini-2.0-flash",
+            model="gemini/gemini-2.5-flash",
             temperature=0.7,
             max_tokens=12000,
             timeout_seconds=400,
