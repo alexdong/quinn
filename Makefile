@@ -1,4 +1,4 @@
-.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing codesmell
+.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing code-smell
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -45,11 +45,12 @@ refresh-pricing:  ## Refresh LLM pricing data from provider websites
 	@claude --dangerously-skip-permissions -p "$$(cat tools/refresh_llm_pricing.md)"
 	@echo "✅ Pricing data updated!"
 
-codesmell:  ## Scan for code smells in changed files or pattern. Usage: make codesmell [PATTERN=glob*]
+code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DIR=directory]
 	@echo "🔍 Scanning for code smells..."
-	@if [ -n "$(PATTERN)" ]; then \
-		echo "📁 Using pattern: $(PATTERN)"; \
-		target_files=$$(find quinn -name "$(PATTERN)" -type f | grep -E '\.(py|js|ts|jsx|tsx)$$' 2>/dev/null || true); \
+	@search_path=$${DIR:-quinn}; \
+	if [ -n "$(PATTERN)" ]; then \
+		echo "📁 Using pattern: $(PATTERN) in $$search_path/"; \
+		target_files=$$(/usr/bin/find "$$search_path" -name "$(PATTERN)" -type f -not -path "*/__pycache__/*" -not -name "*.pyc" | grep -E '\.(py|js|ts|jsx|tsx)$$' 2>/dev/null || true); \
 	else \
 		echo "📁 Using git diff (changed files):"; \
 		target_files=$$(git diff --name-only --diff-filter=AMR | grep -E '\.(py|js|ts|jsx|tsx)$$'); \
@@ -61,7 +62,7 @@ codesmell:  ## Scan for code smells in changed files or pattern. Usage: make cod
 		claude -p "$$(cat tools/code_smell.md)" "$$target_files"; \
 	else \
 		if [ -n "$(PATTERN)" ]; then \
-			echo "✅ No files matching pattern '$(PATTERN)' found"; \
+			echo "✅ No files matching pattern '$(PATTERN)' found in $$search_path/"; \
 		else \
 			echo "✅ No source files changed - no smells to detect"; \
 		fi; \

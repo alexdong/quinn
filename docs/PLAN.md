@@ -34,6 +34,11 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   4. [x] Implement cost tracking (tokens, API costs, response time) per interaction
   5. [x] Implement prompt versioning to track changes over time
   6. [x] Implement prompt caching to avoid repeated API calls
+  7. [ ] Create comprehensive Quinn rubber duck system prompt based on METHODOLOGY.md
+  8. [ ] Fix failing integration tests and ensure full end-to-end functionality
+  9. [ ] Test that Quinn actually behaves as rubber duck (asks questions, doesn't give solutions)
+  10. [ ] Verify error handling works correctly for API failures, network issues, invalid inputs
+  11. [ ] Validate cost calculations match actual API pricing and token usage
 
 3. [ ] Create conversation context management
   1. [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
