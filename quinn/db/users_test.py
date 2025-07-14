@@ -259,6 +259,68 @@ class TestUsers(unittest.TestCase):
         assert retrieved is not None
         assert retrieved.email_addresses == []
 
+    def test_get_user_by_email(self) -> None:
+        """Test retrieving user by email address."""
+        user = User(
+            id=str(uuid.uuid4()),
+            name="Email Test User",
+            email_addresses=["primary@example.com", "secondary@example.com"],
+        )
+        Users.create(user)
+
+        # Test finding by primary email
+        retrieved_user = Users.get_by_email("primary@example.com")
+        assert retrieved_user is not None
+        assert retrieved_user.id == user.id
+        assert retrieved_user.name == "Email Test User"
+
+        # Test finding by secondary email
+        retrieved_user = Users.get_by_email("secondary@example.com")
+        assert retrieved_user is not None
+        assert retrieved_user.id == user.id
+
+        # Test with non-existent email
+        retrieved_user = Users.get_by_email("nonexistent@example.com")
+        assert retrieved_user is None
+
+    def test_add_alternative_email(self) -> None:
+        """Test adding alternative email addresses to existing user."""
+        user = User(
+            id=str(uuid.uuid4()),
+            name="Alt Email User",
+            email_addresses=["original@example.com"],
+        )
+        Users.create(user)
+
+        # Add new alternative email
+        result = Users.add_alternative_email(user.id, "alternative@example.com")
+        assert result is True
+
+        # Verify email was added
+        retrieved_user = Users.get_by_id(user.id)
+        assert retrieved_user is not None
+        assert len(retrieved_user.email_addresses) == 2
+        assert "original@example.com" in retrieved_user.email_addresses
+        assert "alternative@example.com" in retrieved_user.email_addresses
+
+        # Verify we can find user by new email
+        retrieved_user = Users.get_by_email("alternative@example.com")
+        assert retrieved_user is not None
+        assert retrieved_user.id == user.id
+
+        # Try to add duplicate email
+        result = Users.add_alternative_email(user.id, "alternative@example.com")
+        assert result is False
+
+        # Verify no duplicate was added
+        retrieved_user = Users.get_by_id(user.id)
+        assert retrieved_user is not None
+        assert len(retrieved_user.email_addresses) == 2
+
+        # Try to add email to non-existent user
+        result = Users.add_alternative_email("non-existent-user", "test@example.com")
+        assert result is False
+
 
 if __name__ == "__main__":
     unittest.main()

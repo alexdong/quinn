@@ -56,6 +56,26 @@ class Users:
             return None
 
     @staticmethod
+    def get_by_email(email: str) -> User | None:
+        """Retrieves a user by any of their email addresses."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users")
+            rows = cursor.fetchall()
+            for row in rows:
+                email_addresses = json.loads(row[4])
+                if email in email_addresses:
+                    return User(
+                        id=row[0],
+                        created_at=row[1],
+                        updated_at=row[2],
+                        name=row[3],
+                        email_addresses=email_addresses,
+                        settings=json.loads(row[5]) if row[5] else None,
+                    )
+            return None
+
+    @staticmethod
     def update(user: User) -> None:
         """Updates an existing user."""
         user.updated_at = int(time.time())
@@ -76,6 +96,23 @@ class Users:
                 ),
             )
             conn.commit()
+
+    @staticmethod
+    def add_alternative_email(user_id: str, email: str) -> bool:
+        """Adds an alternative email address to an existing user.
+        
+        Returns True if email was added, False if user not found or email already exists.
+        """
+        user = Users.get_by_id(user_id)
+        if not user:
+            return False
+        
+        if email in user.email_addresses:
+            return False  # Email already exists
+        
+        user.email_addresses.append(email)
+        Users.update(user)
+        return True
 
     @staticmethod
     def delete(user_id: str) -> None:
