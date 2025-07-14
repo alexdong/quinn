@@ -72,7 +72,7 @@ async def generate_response(
         conversation_history = []
 
     # Create agent with default config for now
-    config = AgentConfig()
+    config = AgentConfig.flash25()
     agent = await create_agent(config)
 
     # Build conversation prompt
@@ -170,40 +170,22 @@ if __name__ == "__main__":
         """Demo the agent core functions."""
         print("🤖 Quinn Agent Core Demo")
 
+        conversation_id = str(uuid4())
+
         # Create sample configuration
-        config = AgentConfig(
-            model="claude-3.5-sonnet-20241022",
-            temperature=0.7,
-            max_tokens=1000,
-        )
+        config = AgentConfig.flash25()
         print(f"📋 Config: {config.model}")
 
         # Create sample message
         message = Message(
-            conversation_id=str(uuid4()),
-            user_content="What's the best way to structure a Python project?",
+            conversation_id=conversation_id,
+            user_content="What's the capital of France?",
         )
-        print(f"📧 Message: {message.user_content[:50]}...")
+        print(f"📧 Message: {message.user_content}")
 
-        # Demonstrate cost calculation (this function works)
-        cost = calculate_cost(
-            model="claude-3-5-sonnet-20241022",
-            input_tokens=100,
-            output_tokens=200,
-        )
-        print(f"💰 Cost calculation: ${cost:.4f}")
-
-        # Demo functions
-        try:
-            agent = await create_agent(config)
-            print(f"✅ Agent created: {agent}")
-        except Exception as e:
-            print(f"⚠️  Agent creation failed: {e}")
-
-        try:
-            response = await generate_response(message)
-            print(f"✅ Response: {response.assistant_content[:50]}...")
-        except Exception as e:
-            print(f"⚠️  Response generation failed: {e}")
+        agent = await create_agent(config)
+        print(f"✅ Agent created: {agent}")
+        message = await generate_response(message)
+        print(f"✅ Response: {message.assistant_content}")
 
     asyncio.run(main())

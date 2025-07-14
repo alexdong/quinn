@@ -47,8 +47,9 @@ if __name__ == "__main__":
 
     # Create complete interaction with response and metrics
     import time
+
     time.sleep(0.1)  # Simulate processing time
-    
+
     complete_interaction = Message(
         user_content="What is artificial intelligence?",
         assistant_content="AI is the simulation of human intelligence in machines...",
