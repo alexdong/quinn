@@ -1,5 +1,7 @@
 """Configuration data models."""
 
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -12,6 +14,7 @@ class AgentConfig(BaseModel):
     timeout_seconds: int = Field(default=300, gt=0)
     max_retries: int = Field(default=3, ge=0)
     retry_backoff_factor: float = Field(default=2.0, gt=1.0)
+    model_settings: dict[str, Any] | None = Field(default=None)
 
     @field_validator("model")
     @classmethod
@@ -58,6 +61,19 @@ class AgentConfig(BaseModel):
             retry_backoff_factor=1.8,
         )
 
+    @classmethod
+    def flash25thinking(cls) -> "AgentConfig":
+        """Gemini 2.5 Flash configuration with thinking tokens enabled."""
+        return cls(
+            model="gemini/gemini-2.5-flash-exp",
+            temperature=0.7,
+            max_tokens=6000,
+            timeout_seconds=400,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            model_settings={"gemini_thinking_config": {"thinking_budget": 4096}},
+        )
+
 
 if __name__ == "__main__":
     # Demonstrate AgentConfig usage
@@ -75,6 +91,9 @@ if __name__ == "__main__":
 
     flash_config = AgentConfig.flash25()
     print(f"Flash 2.5: {flash_config}")
+
+    flash_thinking_config = AgentConfig.flash25thinking()
+    print(f"Flash 2.5 Thinking: {flash_thinking_config}")
 
     o4mini_config = AgentConfig.o4mini()
     print(f"O4 Mini: {o4mini_config}")
