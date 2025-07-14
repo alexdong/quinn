@@ -15,6 +15,7 @@ def test_conversation_with_metrics() -> None:
     
     conversation = Conversation(metrics=metrics)
     assert conversation.metrics == metrics
+    assert conversation.metrics is not None
     assert conversation.metrics.total_tokens_used == 500
 
 

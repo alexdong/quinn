@@ -55,42 +55,42 @@ class Conversation(BaseModel):
 if __name__ == "__main__":
     # Demonstrate Message and Conversation usage
     print("Message and Conversation demonstration:")
-    
+
     # Create messages
     user_message = Message(content="Hello, Quinn!", role="user")
     print(f"User message: {user_message.content} (ID: {user_message.id[:8]}...)")
-    
+
     assistant_message = Message(
         content="Hello! How can I help you today?",
         role="assistant",
-        metadata={"model": "claude-3.5-sonnet", "tokens": 45}
+        metadata={"model": "claude-3.5-sonnet", "tokens": 45},
     )
     print(f"Assistant message: {assistant_message.content}")
     print(f"Metadata: {assistant_message.metadata}")
-    
+
     # Create conversation
     conversation = Conversation()
     print(f"\nNew conversation created (ID: {conversation.id[:8]}...)")
     print(f"Created at: {conversation.created_at}")
-    
+
     # Add messages
     conversation.add_message(user_message)
     conversation.add_message(assistant_message)
     print(f"Added 2 messages, conversation updated at: {conversation.updated_at}")
-    
+
     # Query conversation
     latest_message = conversation.get_latest_message()
     print(f"Latest message: {latest_message.content if latest_message else 'None'}")
-    
+
     user_messages = conversation.get_messages_by_role("user")
     assistant_messages = conversation.get_messages_by_role("assistant")
     print(f"User messages: {len(user_messages)}")
     print(f"Assistant messages: {len(assistant_messages)}")
-    
+
     # Validation example
     try:
         invalid_message = Message(content="")
     except ValueError as e:
         print(f"Validation error (empty content): {e}")
-    
+
     print("Message and Conversation demonstration completed.")

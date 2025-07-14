@@ -70,6 +70,7 @@ extend-select = [
   "W",      # pycodestyle warnings - PEP 8 warning violations
 ]
 extend-ignore = [
+    "COM812",   # flake8-commas - allow trailing commas in function calls
     "EM102",    # flake8-errmsg - allow exception message in f-string
     "E501",     # pycodestyle - ignore line too long (let formatter handle it)
     "E501",     # pycodestyle - ignore line too long (duplicate entry)
