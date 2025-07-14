@@ -83,3 +83,114 @@ def test_agent_config_empty_model_validation() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+def test_agent_config_sonnet4() -> None:
+    """Test AgentConfig.sonnet4() class method."""
+    config = AgentConfig.sonnet4()
+    assert config.model == "claude-3-5-sonnet-20241022"
+    assert config.temperature == 0.6
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_flash25() -> None:
+    """Test AgentConfig.flash25() class method."""
+    config = AgentConfig.flash25()
+    assert config.model == "gemini-2.5-flash"
+    assert config.temperature == 0.7
+    assert config.max_tokens == 4000
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_flash25thinking() -> None:
+    """Test AgentConfig.flash25thinking() class method."""
+    config = AgentConfig.flash25thinking()
+    assert config.model == "gemini-2.5-flash"
+    assert config.temperature == 0.7
+    assert config.max_tokens == 12000
+    assert config.timeout_seconds == 400
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_o3() -> None:
+    """Test AgentConfig.o3() class method."""
+    config = AgentConfig.o3()
+    assert config.model == "o3"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_o4mini_advanced() -> None:
+    """Test AgentConfig.o4mini_advanced() class method."""
+    config = AgentConfig.o4mini_advanced()
+    assert config.model == "o4-mini"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gpt41() -> None:
+    """Test AgentConfig.gpt41() class method."""
+    config = AgentConfig.gpt41()
+    assert config.model == "gpt-4.1"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gpt41mini() -> None:
+    """Test AgentConfig.gpt41mini() class method."""
+    config = AgentConfig.gpt41mini()
+    assert config.model == "gpt-4.1-mini"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gpt41nano() -> None:
+    """Test AgentConfig.gpt41nano() class method."""
+    config = AgentConfig.gpt41nano()
+    assert config.model == "gpt-4.1-nano"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_opus4() -> None:
+    """Test AgentConfig.opus4() class method."""
+    config = AgentConfig.opus4()
+    assert config.model == "claude-opus-4-20250514"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_sonnet4_new() -> None:
+    """Test AgentConfig.sonnet4_new() class method."""
+    config = AgentConfig.sonnet4_new()
+    assert config.model == "claude-sonnet-4"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_haiku35() -> None:
+    """Test AgentConfig.haiku35() class method."""
+    config = AgentConfig.haiku35()
+    assert config.model == "claude-haiku-3.5"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gemini20flash() -> None:
+    """Test AgentConfig.gemini20flash() class method."""
+    config = AgentConfig.gemini20flash()
+    assert config.model == "gemini-2.0-flash"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gemini25pro() -> None:
+    """Test AgentConfig.gemini25pro() class method."""
+    config = AgentConfig.gemini25pro()
+    assert config.model == "gemini-2.5-pro"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_gemini25flash() -> None:
+    """Test AgentConfig.gemini25flash() class method."""
+    config = AgentConfig.gemini25flash()
+    assert config.model == "gemini-2.5-flash"
+    assert isinstance(config, AgentConfig)
+
+
+def test_agent_config_o4mini() -> None:
+    """Test AgentConfig.o4mini() class method."""
+    config = AgentConfig.o4mini()
+    assert config.model == "gpt-4o-mini"
+    assert isinstance(config, AgentConfig)
+
