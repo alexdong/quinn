@@ -4,6 +4,8 @@ import uuid
 
 from pydantic import BaseModel, Field, field_validator
 
+from .types import PROMPT_VERSION
+
 
 class ConversationMetrics(BaseModel):
     """Tracking metrics for conversations and responses."""
@@ -13,9 +15,9 @@ class ConversationMetrics(BaseModel):
     average_response_time_ms: int = Field(default=0, ge=0)
     message_count: int = Field(default=0, ge=0)
     model_used: str = ""
-    prompt_version: str = ""
+    prompt_version: PROMPT_VERSION = ""
 
-    @field_validator("model_used", "prompt_version")
+    @field_validator("model_used")
     @classmethod
     def validate_not_empty(cls, v: str) -> str:
         """Validate string fields are not empty."""
@@ -38,7 +40,7 @@ class AgentResponse(BaseModel):
     cost_usd: float = Field(default=0.0, ge=0.0)
     response_time_ms: int = Field(default=0, ge=0)
     model_used: str = ""
-    prompt_version: str = ""
+    prompt_version: PROMPT_VERSION = ""
 
     @field_validator("content", "conversation_id", "message_id")
     @classmethod

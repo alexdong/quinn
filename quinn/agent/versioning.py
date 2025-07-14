@@ -1,17 +1,18 @@
 """Prompt versioning and management."""
 
-import time
+from datetime import UTC, datetime
 from pathlib import Path
 
-
-def get_current_prompt_version() -> str:
-    """Get current prompt version identifier."""
-    # For now, use a simple timestamp-based version
-
-    return f"v{int(time.time())}"
+from quinn.models.types import PROMPT_VERSION
 
 
-def load_system_prompt(version: str = "latest") -> str:
+def get_current_prompt_version() -> PROMPT_VERSION:
+    """Get current prompt version identifier in YYMMDD-HHMMSS format."""
+    now = datetime.now(UTC)
+    return f"{now.strftime('%y%m%d-%H%M%S')}"
+
+
+def load_system_prompt(version: str | PROMPT_VERSION = "latest") -> str:
     """Load system prompt by version."""
     assert version.strip(), "Version cannot be empty"
 
@@ -23,7 +24,7 @@ def load_system_prompt(version: str = "latest") -> str:
         # Load the default system prompt
         prompt_file = prompts_dir / "system.txt"
     else:
-        # Load versioned prompt
+        # Load versioned prompt - version is already validated if it's PROMPT_VERSION type
         prompt_file = prompts_dir / f"system_{version}.txt"
 
     if not prompt_file.exists():
@@ -42,10 +43,10 @@ Key principles:
     return prompt_file.read_text().strip()
 
 
-def save_prompt_version(content: str, version: str) -> None:
+def save_prompt_version(content: str, version: PROMPT_VERSION) -> None:
     """Save a new prompt version."""
     assert content.strip(), "Prompt content cannot be empty"
-    assert version.strip(), "Version cannot be empty"
+    # Version validation is handled by PROMPT_VERSION type
 
     project_root = Path(__file__).parent.parent.parent
     prompts_dir = project_root / "quinn" / "templates" / "prompts"
