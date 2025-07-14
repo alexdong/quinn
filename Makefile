@@ -1,17 +1,21 @@
-.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing codesmell
+.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing codesmell
 
-dev:
+help:  ## Show this help message
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+dev:  ## Run code quality checks (ruff, format, type check)
 	uv run ruff check . --fix --unsafe-fixes
 	uv run ruff format .
 	uv run ty check .
 
-test:
+test:  ## Run tests with last-failed first
 	pytest --lf
 
-test-coverage:
+test-coverage:  ## Run tests with coverage reporting
 	pytest --cov=. --cov-report=html --cov-report=term --duration=5 
 
-type-coverage:
+type-coverage:  ## Check type annotation coverage and quality
 	@echo "🔍 Checking type annotation coverage..."
 	@echo "📊 Checking for missing return type annotations..."
 	@uv run ruff check . --select ANN201 --quiet || echo "❌ Missing return type annotations found"
@@ -23,7 +27,7 @@ type-coverage:
 	@uv run ruff check . --select ANN401 --quiet && echo "✅ No problematic Any usage found" || echo "⚠️  Some Any usage found (may be acceptable in tests)"
 	@echo "📈 Type coverage assessment complete!"
 
-update-llms-txt:
+update-llms-txt:  ## Update llm documentation files. Usage: make update-llms-txt [PATTERN=tool_name]
 	@echo "📚 Updating llms/*.txt documentation files..."
 	@mkdir -p llms
 	@if [ -n "$(PATTERN)" ]; then \
@@ -35,13 +39,13 @@ update-llms-txt:
 	fi
 	@echo "✅ llms/*.txt files updated!"
 
-refresh-pricing:
+refresh-pricing:  ## Refresh LLM pricing data from provider websites
 	@echo "📊 Refreshing LLM pricing data..."
 	@mkdir -p quinn/agent/pricing
 	@claude --dangerously-skip-permissions -p "$$(cat tools/refresh_llm_pricing.md)"
 	@echo "✅ Pricing data updated!"
 
-codesmell:
+codesmell:  ## Scan for code smells in changed files or pattern. Usage: make codesmell [PATTERN=glob*]
 	@echo "🔍 Scanning for code smells..."
 	@if [ -n "$(PATTERN)" ]; then \
 		echo "📁 Using pattern: $(PATTERN)"; \
