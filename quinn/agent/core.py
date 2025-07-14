@@ -1,7 +1,7 @@
 """Core AI agent functionality."""
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, NamedTuple
 
 from pydantic_ai import Agent
 from pydantic_ai.agent import AgentRunResult
@@ -11,6 +11,17 @@ from quinn.models import AgentConfig, Message
 from quinn.models.message import MessageMetrics
 
 from .cost import calculate_cost
+
+
+class UsageMetrics(NamedTuple):
+    """Detailed usage metrics breakdown."""
+
+    input_tokens: int
+    output_tokens: int
+    cached_tokens: int
+    total_tokens: int
+    total_cost_usd: float
+
 
 # Constants
 MAX_PROMPT_LENGTH = 20000
@@ -43,22 +54,43 @@ def _build_conversation_prompt(
 
 def _calculate_usage_metrics(
     result: AgentRunResult[Any], config: AgentConfig
-) -> tuple[int, float]:
-    """Calculate token usage and cost from result."""
-    cost_usd = 0.0
-    tokens_used = 0
-
+) -> UsageMetrics:
+    """Calculate detailed token usage and cost breakdown from result."""
     usage = result.usage()
-    if usage:
-        tokens_used = (usage.request_tokens or 0) + (usage.response_tokens or 0)
-        if usage.request_tokens and usage.response_tokens:
-            cost_usd = calculate_cost(
-                model=config.model,
-                input_tokens=usage.request_tokens,
-                output_tokens=usage.response_tokens,
-            )
+    assert usage, "Usage information is required for metrics calculation"
 
-    return tokens_used, cost_usd
+    input_tokens = usage.request_tokens or 0
+    output_tokens = usage.response_tokens or 0
+
+    # Extract cached tokens from details if available
+    cached_tokens = 0
+    if usage.details:
+        # Common keys for cached tokens across different providers
+        cached_keys = ["cache_read_input_tokens", "cached_tokens", "cache_tokens"]
+        for key in cached_keys:
+            if key in usage.details:
+                cached_tokens = usage.details[key]
+                break
+
+    total_tokens = usage.total_tokens or (input_tokens + output_tokens)
+
+    # Calculate cost
+    cost_usd = 0.0
+    assert input_tokens >= 0, "Input tokens must be non-negative"
+    assert output_tokens >= 0, "Output tokens must be non-negative"
+    cost_usd = calculate_cost(
+        model=config.model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+    )
+
+    return UsageMetrics(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cached_tokens=cached_tokens,
+        total_tokens=total_tokens,
+        total_cost_usd=cost_usd,
+    )
 
 
 async def generate_response(
@@ -87,7 +119,7 @@ async def generate_response(
 
         # Calculate metrics
         response_time_ms = int((end_time - start_time).total_seconds() * 1000)
-        tokens_used, cost_usd = _calculate_usage_metrics(result, config)
+        usage_metrics = _calculate_usage_metrics(result, config)
 
         # Create response message with metadata
         return Message(
@@ -103,8 +135,8 @@ async def generate_response(
                 else prompt[:MAX_PROMPT_LENGTH] + "..."
             ),
             metadata=MessageMetrics(
-                tokens_used=tokens_used,
-                cost_usd=cost_usd,
+                tokens_used=usage_metrics.total_tokens,
+                cost_usd=usage_metrics.total_cost_usd,
                 response_time_ms=response_time_ms,
                 model_used=config.model,
                 prompt_version="240715-120000",  # Static for now

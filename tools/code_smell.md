@@ -5,7 +5,7 @@ Your mission is to review source files and produce a precise, actionable report 
 
 ## 1. CONTEXT
 
-The project includes an `ANTIPATTERNS.md` reference that defines these key smells:
+The project includes a `docs/RULES.md` reference that defines these key smells:
 - **Defensive try/except blocks**: Wrapping operations in unnecessary exception handling instead of using assertions
 - **Re-loading heavy resources**: Loading data repeatedly in function calls instead of module-level caching
 - **Deep nesting**: Complex if/else chains instead of early returns and flat structure
@@ -29,7 +29,7 @@ For **EACH source file** (Python, JS, etc.) you receive:
    - `lines` – line span (e.g., "12-27" or "45")
    - `smell_name` – concise descriptive name
    - `why_it_smells` – 1-2 sentences explaining the issue
-   - `refactor_hint` – exact, actionable next step (ideally referencing ANTIPATTERNS.md patterns)
+   - `refactor_hint` – exact, actionable next step (ideally referencing docs/RULES.md patterns)
 3. **If a file is clean** (no smells detected), record:
    ```json
    { "file_path": "path/to/file.py", "clean": true }
@@ -46,7 +46,7 @@ Return **valid JSON** wrapped in a markdown code-block:
     "lines": "12-27",
     "smell_name": "Defensive try/except",
     "why_it_smells": "Catches all exceptions instead of validating inputs with clear assertions.",
-    "refactor_hint": "Replace try/except with assertions as shown in ANTIPATTERNS.md §1."
+    "refactor_hint": "Replace try/except with assertions as shown in docs/RULES.md §1."
   },
   {
     "file_path": "src/utils.py", 
@@ -77,5 +77,5 @@ Return **valid JSON** wrapped in a markdown code-block:
 - Keep `refactor_hint` ≤ 40 words  
 - **Never output plain text** outside the JSON code-block
 - Focus on **actionable improvements** that enhance maintainability
-- Reference specific ANTIPATTERNS.md sections when applicable
+- Reference specific docs/RULES.md sections when applicable
 - Prioritize smells that impact performance or readability most significantly
