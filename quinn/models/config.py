@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 class AgentConfig(BaseModel):
     """Configuration for AI agent behavior."""
 
-    model: str = "gemini/gemini-2.5-flash-exp"
+    model: str = "gemini-2.5-flash"
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=4000, gt=0)
     timeout_seconds: int = Field(default=300, gt=0)
@@ -44,7 +44,7 @@ class AgentConfig(BaseModel):
     def flash25(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration for fast responses."""
         return cls(
-            model="gemini/gemini-2.5-flash",
+            model="gemini-2.5-flash",
             temperature=0.7,
             max_tokens=4000,
             timeout_seconds=300,
@@ -57,7 +57,7 @@ class AgentConfig(BaseModel):
     def flash25thinking(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration with thinking tokens enabled."""
         return cls(
-            model="gemini/gemini-2.5-flash",
+            model="gemini-2.5-flash",
             temperature=0.7,
             max_tokens=12000,
             timeout_seconds=400,
@@ -225,60 +225,24 @@ class AgentConfig(BaseModel):
 
 
 if __name__ == "__main__":
-    # Demonstrate AgentConfig usage
+    import inspect
+
     print("AgentConfig demonstration:")
 
-    # Default configuration
     default_config = AgentConfig()
     print(f"Default config: {default_config}")
 
-    # Prebuilt configurations
-    print("\nPrebuilt configurations:")
+    print("\nDynamically loaded prebuilt configurations:")
 
-    # OpenAI models
-    print("\n🤖 OpenAI Models:")
-    print(f"O4 Mini: {AgentConfig.o4mini()}")
-    print(f"O3: {AgentConfig.o3()}")
-    print(f"O4-Mini Advanced: {AgentConfig.o4mini_advanced()}")
-    print(f"GPT-4.1: {AgentConfig.gpt41()}")
-    print(f"GPT-4.1 Mini: {AgentConfig.gpt41mini()}")
-    print(f"GPT-4.1 Nano: {AgentConfig.gpt41nano()}")
+    for name, method in inspect.getmembers(AgentConfig, inspect.isfunction):
+        if (
+            isinstance(method, classmethod)
+            and name != "validate_model_not_empty"
+            and method.__annotations__.get("return") is AgentConfig
+        ):
+            try:
+                config_instance = method.__func__(AgentConfig)
+                print(f"{name.replace('_', ' ').title()}: {config_instance}")
+            except Exception as e:
+                print(f"Error calling {name}: {e}")
 
-    # Anthropic models
-    print("\n🧠 Anthropic Models:")
-    print(f"Sonnet 4: {AgentConfig.sonnet4()}")
-    print(f"Opus 4: {AgentConfig.opus4()}")
-    print(f"Sonnet 4 (new): {AgentConfig.sonnet4_new()}")
-    print(f"Haiku 3.5: {AgentConfig.haiku35()}")
-
-    # Google models
-    print("\n🚀 Google Models:")
-    print(f"Flash 2.5: {AgentConfig.flash25()}")
-    print(f"Flash 2.5 Thinking: {AgentConfig.flash25thinking()}")
-    print(f"Gemini 2.0 Flash: {AgentConfig.gemini20flash()}")
-    print(f"Gemini 2.5 Pro: {AgentConfig.gemini25pro()}")
-    print(f"Gemini 2.5 Flash: {AgentConfig.gemini25flash()}")
-
-    # Custom configuration
-    custom_config = AgentConfig(
-        model="claude-3.5-sonnet",
-        temperature=0.5,
-        max_tokens=2000,
-        timeout_seconds=600,
-        max_retries=5,
-        retry_backoff_factor=1.5,
-    )
-    print(f"\nCustom config: {custom_config}")
-
-    # Validation examples
-    try:
-        invalid_config = AgentConfig(temperature=-0.1)
-    except ValueError as e:
-        print(f"\nValidation error (temperature): {e}")
-
-    try:
-        invalid_config = AgentConfig(model="")
-    except ValueError as e:
-        print(f"Validation error (empty model): {e}")
-
-    print("AgentConfig demonstration completed.")
