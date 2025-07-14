@@ -1,4 +1,4 @@
-.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing code-smell
+.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing code-smell upgrade
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -10,10 +10,10 @@ dev:  ## Run code quality checks (ruff, format, type check)
 	uv run ty check .
 
 test:  ## Run tests with last-failed first
-	pytest --lf
+	uv run pytest
 
 test-coverage:  ## Run tests with coverage reporting
-	pytest --cov=. --cov-report=html --cov-report=term --duration=5 
+	uv run pytest --cov=. --cov-report=html --cov-report=term --durations=5 
 
 type-coverage:  ## Check type annotation coverage and quality
 	@echo "🔍 Checking type annotation coverage..."
@@ -72,3 +72,7 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 			echo "✅ No source files changed - no smells to detect"; \
 		fi; \
 	fi
+
+upgrade:  ## Upgrade dependencies to latest versions
+	@echo "🔄 Upgrading dependencies to latest versions..."
+	@uv run pip-compile --upgrade
