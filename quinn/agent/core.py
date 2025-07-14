@@ -164,30 +164,7 @@ if __name__ == "__main__":
     import asyncio
     from uuid import uuid4
 
-    from pydantic_ai import Agent
-
     from quinn.models import AgentConfig, Message
-
-    print("🤖 Quinn Agent Core Demo")
-    
-    # First, test basic pydantic-ai functionality
-    print("\n📝 Testing basic pydantic-ai Agent...")
-    try:
-        # Try simple synchronous call with Gemini
-        agent = Agent('google-gla:gemini-2.0-flash')
-        result = agent.run_sync('What is 2+2?')
-        print(f"✅ Basic test successful: {result.output}")
-    except Exception as e:
-        print(f"❌ Basic test failed: {e}")
-        
-        # Try with OpenAI as fallback
-        try:
-            print("🔄 Trying OpenAI fallback...")
-            agent = Agent('openai:gpt-4o-mini')
-            result = agent.run_sync('What is 2+2?')
-            print(f"✅ OpenAI test successful: {result.output}")
-        except Exception as e2:
-            print(f"❌ OpenAI test also failed: {e2}")
 
     async def main() -> None:
         """Demo the agent core functions."""
@@ -206,12 +183,12 @@ if __name__ == "__main__":
         )
         print(f"📧 Message: {message.user_content}")
 
-        try:
-            agent = await create_agent(config)
-            print(f"✅ Agent created: {agent}")
-            message = await generate_response(message)
-            print(f"✅ Response: {message.assistant_content}")
-        except Exception as e:
-            print(f"❌ Quinn core test failed: {e}")
+        agent = await create_agent(config)
+        print(f"✅ Agent created: {agent}")
+        message = await generate_response(message)
+        print(f"✅ Response: {message.assistant_content}")
+        assert "Paris" in message.assistant_content, "Response should mention Paris"
+
+        print(message.metadata)
 
     asyncio.run(main())

@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from .response import MessageMetrics
 
@@ -15,54 +15,39 @@ class Message(BaseModel):
     conversation_id: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Message content and role
-    content: str = ""
-    role: str = "user"  # "user" or "assistant"
     system_prompt: str = ""
+    user_content: str = ""
+    assistant_content: str = ""
 
     # Assistant response metrics
     metadata: MessageMetrics | None = Field(default=None)
-
-    @field_validator("content")
-    @classmethod
-    def validate_content(cls, v: str) -> str:
-        """Validate content is not empty."""
-        if not v.strip():
-            msg = "Message content cannot be empty"
-            raise ValueError(msg)
-        return v
-
-    @field_validator("role")
-    @classmethod
-    def validate_role(cls, v: str) -> str:
-        """Validate role is either user or assistant."""
-        if v not in ("user", "assistant"):
-            msg = "Role must be 'user' or 'assistant'"
-            raise ValueError(msg)
-        return v
 
 
 if __name__ == "__main__":
     # Demonstrate Message usage
     print("Message demonstration:")
 
-    # Create interaction with user input only
-    user_interaction = Message(user_content="Hello, Quinn!")
-    print(
-        f"User input: {user_interaction.user_content} (ID: {user_interaction.id[:8]}...)"
+    # Create user message
+    user_message = Message(
+        conversation_id="conv-12345",
+        user_content="Hello, Quinn!",
+        system_prompt="You are a helpful AI assistant",
     )
-    print(f"Created at: {user_interaction.created_at}")
+    print(f"User message: {user_message.user_content} (ID: {user_message.id[:8]}...)")
+    print(f"Created at: {user_message.created_at}")
 
-    # Create complete interaction with response and metrics
+    # Create assistant message with metrics
     import time
 
     time.sleep(0.1)  # Simulate processing time
 
-    complete_interaction = Message(
-        user_content="What is artificial intelligence?",
-        assistant_content="AI is the simulation of human intelligence in machines...",
+    assistant_message = Message(
         conversation_id="conv-12345",
+        user_content="What is AI?",
+        assistant_content="AI is the simulation of human intelligence in machines...",
         system_prompt="You are a helpful AI assistant",
         last_updated_at=datetime.now(UTC),  # Simulate response received
         metadata=MessageMetrics(
@@ -73,18 +58,12 @@ if __name__ == "__main__":
             prompt_version="240715-120000",
         ),
     )
-    print("Complete interaction:")
-    print(f"  User: {complete_interaction.user_content}")
-    print(f"  Assistant: {complete_interaction.assistant_content[:50]}...")
-    print(f"  Created: {complete_interaction.created_at}")
-    print(f"  Updated: {complete_interaction.last_updated_at}")
-    print(f"  Conversation ID: {complete_interaction.conversation_id}")
-    print(f"  Metadata: {complete_interaction.metadata}")
-
-    # Validation example
-    try:
-        invalid_message = Message(user_content="")
-    except ValueError as e:
-        print(f"Validation error (empty user content): {e}")
+    print("Assistant message:")
+    print(f"  User content: {assistant_message.user_content}")
+    print(f"  Assistant content: {assistant_message.assistant_content[:50]}...")
+    print(f"  Created: {assistant_message.created_at}")
+    print(f"  Updated: {assistant_message.last_updated_at}")
+    print(f"  Conversation ID: {assistant_message.conversation_id}")
+    print(f"  Metadata: {assistant_message.metadata}")
 
     print("Message demonstration completed.")

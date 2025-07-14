@@ -66,6 +66,10 @@ class Conversation(BaseModel):
         """Get the most recent message."""
         return self.messages[-1] if self.messages else None
 
+    def get_messages_by_role(self, role: str) -> list[Message]:
+        """Get all messages with the specified role."""
+        return [msg for msg in self.messages if msg.role == role]
+
 
 if __name__ == "__main__":
     # Demonstrate Message and Conversation usage

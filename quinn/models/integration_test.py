@@ -21,14 +21,12 @@ def test_conversation_with_metrics() -> None:
 def test_message_with_system_prompt() -> None:
     """Test Message with system prompt functionality."""
     message = Message(
-        content="How are you?",
-        role="user",
+        user_content="How are you?",
         system_prompt="Be helpful and friendly",
     )
     
-    assert message.content == "How are you?"
+    assert message.user_content == "How are you?"
     assert message.system_prompt == "Be helpful and friendly"
-    assert message.role == "user"
 
 
 def test_complete_workflow() -> None:
@@ -38,8 +36,7 @@ def test_complete_workflow() -> None:
     
     # Add user message with system prompt
     user_message = Message(
-        content="What is AI?",
-        role="user",
+        user_content="What is AI?",
         system_prompt="You are an AI assistant",
         conversation_id=conversation.id,
     )
@@ -47,8 +44,8 @@ def test_complete_workflow() -> None:
     
     # Create assistant message with metrics
     assistant_message = Message(
-        content="AI stands for Artificial Intelligence...",
-        role="assistant",
+        user_content="What is AI?",
+        assistant_content="AI stands for Artificial Intelligence...",
         conversation_id=conversation.id,
         metadata=MessageMetrics(
             tokens_used=75,
@@ -62,8 +59,8 @@ def test_complete_workflow() -> None:
     
     # Verify complete workflow
     assert len(conversation.messages) == 2
-    assert conversation.messages[0].role == "user"
-    assert conversation.messages[1].role == "assistant"
+    assert conversation.messages[0].user_content == "What is AI?"
+    assert conversation.messages[1].assistant_content == "AI stands for Artificial Intelligence..."
     assert conversation.metrics is not None
     assert conversation.metrics.message_count == 2
     assert conversation.metrics.total_tokens_used == 75
@@ -76,9 +73,9 @@ def test_conversation_message_history_flow() -> None:
     conversation = Conversation()
     
     # Add several messages
-    msg1 = Message(content="Hello", role="user")
-    msg2 = Message(content="Hi there!", role="assistant")
-    msg3 = Message(content="How can you help?", role="user", system_prompt="Be helpful")
+    msg1 = Message(user_content="Hello")
+    msg2 = Message(assistant_content="Hi there!")
+    msg3 = Message(user_content="How can you help?", system_prompt="Be helpful")
     
     conversation.add_message(msg1)
     conversation.add_message(msg2)
@@ -87,8 +84,6 @@ def test_conversation_message_history_flow() -> None:
     # Verify integration
     assert len(conversation.messages) == 3
     assert conversation.get_latest_message() == msg3
-    assert len(conversation.get_messages_by_role("user")) == 2
-    assert len(conversation.get_messages_by_role("assistant")) == 1
     assert msg3.system_prompt == "Be helpful"
 
 

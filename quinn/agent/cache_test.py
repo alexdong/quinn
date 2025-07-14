@@ -48,8 +48,7 @@ def test_cache_operations() -> None:
     
     # Create a test response
     response = Message(
-        content="Test response",
-        role="assistant",
+        assistant_content="Test response",
         conversation_id="conv-123",
         metadata=MessageMetrics(
             tokens_used=50,
@@ -66,7 +65,7 @@ def test_cache_operations() -> None:
     # Test cache hit
     cached = get_cached_response(hash_key)
     assert cached is not None
-    assert cached.content == "Test response"
+    assert cached.assistant_content == "Test response"
     assert cached.conversation_id == "conv-123"
     assert cached.metadata is not None
     assert cached.metadata.model_used == "gemini/gemini-2.5-flash-exp"
@@ -80,8 +79,7 @@ def test_cache_operations() -> None:
 def test_cache_validation() -> None:
     """Test cache operation validation."""
     response = Message(
-        content="Test response",
-        role="assistant",
+        assistant_content="Test response",
         conversation_id="conv-123",
         metadata=MessageMetrics(
             tokens_used=50,

@@ -12,10 +12,10 @@ from .response import MessageMetrics
 
 def test_message_default_values() -> None:
     """Test Message model with default values."""
-    message = Message(content="Hello world")
+    message = Message(user_content="Hello world")
     
-    assert message.content == "Hello world"
-    assert message.role == "user"
+    assert message.user_content == "Hello world"
+    assert message.assistant_content == ""
     assert message.conversation_id == ""
     assert message.system_prompt == ""
     assert message.metadata is None
@@ -35,16 +35,16 @@ def test_message_custom_values() -> None:
     )
     
     message = Message(
-        content="Custom message content",
-        role="assistant",
+        user_content="What is AI?",
+        assistant_content="Custom message content",
         conversation_id="conv-12345",
         system_prompt="You are a helpful assistant",
         timestamp=custom_time,
         metadata=metadata,
     )
     
-    assert message.content == "Custom message content"
-    assert message.role == "assistant"
+    assert message.assistant_content == "Custom message content"
+    assert message.user_content == "What is AI?"
     assert message.conversation_id == "conv-12345"
     assert message.system_prompt == "You are a helpful assistant"
     assert message.timestamp == custom_time
@@ -53,8 +53,8 @@ def test_message_custom_values() -> None:
 
 def test_message_uuid_generation() -> None:
     """Test Message UUID generation is unique."""
-    message1 = Message(content="test1")
-    message2 = Message(content="test2")
+    message1 = Message(user_content="test1")
+    message2 = Message(user_content="test2")
     
     assert message1.id != message2.id
     assert uuid.UUID(message1.id)  # Should not raise
@@ -62,31 +62,29 @@ def test_message_uuid_generation() -> None:
 
 
 def test_message_empty_content_validation() -> None:
-    """Test Message empty content validation."""
-    with pytest.raises(ValidationError, match="Message content cannot be empty"):
-        Message(content="")
-    
-    with pytest.raises(ValidationError, match="Message content cannot be empty"):
-        Message(content="   ")  # Whitespace only
+    """Test Message with empty content (should work since fields are optional)."""
+    # Empty content should be allowed since all fields have defaults
+    message = Message()
+    assert message.user_content == ""
+    assert message.assistant_content == ""
 
 
-def test_message_invalid_role_validation() -> None:
-    """Test Message invalid role validation."""
-    with pytest.raises(ValidationError, match="Input should be 'user' or 'assistant'"):
-        Message(content="Hello", role="invalid_role")  # type: ignore
+def test_message_content_fields() -> None:
+    """Test Message content fields work correctly."""
+    message = Message(user_content="Hello", assistant_content="Hi there!")
+    assert message.user_content == "Hello"
+    assert message.assistant_content == "Hi there!"
 
 
 def test_message_with_system_prompt() -> None:
     """Test Message with system prompt."""
     message = Message(
-        content="What is AI?",
-        role="user",
+        user_content="What is AI?",
         system_prompt="You are an expert AI researcher",
     )
     
-    assert message.content == "What is AI?"
+    assert message.user_content == "What is AI?"
     assert message.system_prompt == "You are an expert AI researcher"
-    assert message.role == "user"
 
 
 def test_message_with_metadata() -> None:
@@ -100,8 +98,7 @@ def test_message_with_metadata() -> None:
     )
     
     message = Message(
-        content="Hello",
-        role="assistant",
+        assistant_content="Hello",
         metadata=metadata,
     )
     
@@ -116,8 +113,7 @@ def test_message_conversation_context() -> None:
     conv_id = str(uuid.uuid4())
     
     message = Message(
-        content="Follow-up question",
-        role="user",
+        user_content="Follow-up question",
         conversation_id=conv_id,
         system_prompt="Continue being helpful",
     )
@@ -137,8 +133,7 @@ def test_message_serialization() -> None:
     )
     
     message = Message(
-        content="Test message",
-        role="user",
+        user_content="Test message",
         conversation_id="conv-456",
         system_prompt="Be concise",
         metadata=metadata,
@@ -146,8 +141,7 @@ def test_message_serialization() -> None:
     
     data = message.model_dump()
     
-    assert data["content"] == "Test message"
-    assert data["role"] == "user"
+    assert data["user_content"] == "Test message"
     assert data["conversation_id"] == "conv-456"
     assert data["system_prompt"] == "Be concise"
     assert data["metadata"]["tokens_used"] == 50
@@ -156,16 +150,14 @@ def test_message_serialization() -> None:
 def test_message_from_dict() -> None:
     """Test Message can be created from dict."""
     data = {
-        "content": "From dict",
-        "role": "assistant",
+        "assistant_content": "From dict",
         "conversation_id": "conv-789",
         "system_prompt": "Be helpful",
     }
     
     message = Message(**data)
     
-    assert message.content == "From dict"
-    assert message.role == "assistant"
+    assert message.assistant_content == "From dict"
     assert message.conversation_id == "conv-789"
     assert message.system_prompt == "Be helpful"
 
@@ -175,13 +167,13 @@ if __name__ == "__main__":
     print("Message demonstration:")
     
     # Basic message
-    basic_message = Message(content="Hello, Quinn!")
-    print(f"Basic message: {basic_message.content} (ID: {basic_message.id[:8]}...)")
+    basic_message = Message(user_content="Hello, Quinn!")
+    print(f"Basic message: {basic_message.user_content} (ID: {basic_message.id[:8]}...)")
     
     # Message with all fields
     full_message = Message(
-        content="How can I help you today?",
-        role="assistant",
+        user_content="What can you help me with?",
+        assistant_content="How can I help you today?",
         conversation_id="conv-demo",
         system_prompt="You are Quinn, a helpful AI assistant",
         metadata=MessageMetrics(
@@ -192,14 +184,9 @@ if __name__ == "__main__":
             prompt_version="240715-120000",
         ),
     )
-    print(f"Full message: {full_message.content}")
+    print(f"Full message user: {full_message.user_content}")
+    print(f"Full message assistant: {full_message.assistant_content}")
     print(f"System prompt: {full_message.system_prompt[:30]}...")
     print(f"Metadata: {full_message.metadata}")
-    
-    # Validation examples
-    try:
-        invalid_message = Message(content="")
-    except ValidationError as e:
-        print(f"Validation error: {e}")
     
     print("Message demonstration completed.")
