@@ -1,0 +1,10 @@
+{
+  "last_updated": "2025-01-14",
+  "source_url": "https://openai.com/pricing", 
+  "models": {
+    "gpt-4o-mini": {
+      "input_price_per_1m_tokens": 0.15,
+      "output_price_per_1m_tokens": 0.60
+    }
+  }
+}
