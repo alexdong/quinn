@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "AI-powered email rubber duck for guided problem-solving"
 requires-python = ">=3.13"
 dependencies = [
-    "pydantic-ai[anthropic,openai,gemini]>=0.0.14",
+    "pydantic-ai>=0.0.14",
     "python-fasthtml>=0.7.0",
     "click>=8.0.0",
     "rich>=13.0.0",
@@ -15,6 +15,8 @@ dependencies = [
     "loguru>=0.7.0",
     "plotly>=5.0.0",
     "streamlit>=1.0.0",
+    "litellm>=1.74.3",
+    "pytest-asyncio>=1.0.0",
 ]
 
 [tool.uv]

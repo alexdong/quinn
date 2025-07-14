@@ -4,6 +4,8 @@ from pydantic_ai import Agent
 
 from quinn.models import AgentConfig, AgentResponse, Message
 
+from .cost import calculate_cost as litellm_calculate_cost
+
 
 async def generate_response(
     user_input: str,
@@ -32,16 +34,13 @@ async def create_agent(config: AgentConfig) -> Agent:
 
 
 def calculate_cost(
+    model: str,
     input_tokens: int,
     output_tokens: int,
-    config: AgentConfig,
 ) -> float:
-    """Calculate API cost based on token usage and model."""
-    assert input_tokens >= 0, "Input tokens must be non-negative"
-    assert output_tokens >= 0, "Output tokens must be non-negative"
-    assert isinstance(config, AgentConfig), "Config must be AgentConfig instance"
-
-    input_cost = input_tokens * config.input_cost_per_token
-    output_cost = output_tokens * config.output_cost_per_token
-
-    return input_cost + output_cost
+    """Calculate API cost based on token usage and model using litellm."""
+    return litellm_calculate_cost(
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+    )
