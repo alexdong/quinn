@@ -19,8 +19,15 @@ def temp_db() -> Generator[Path]:
     db_file = Path(tempfile.mktemp(suffix=".db"))
 
     # Create tables in test database
-    with sqlite3.connect(db_file) as conn, Path("quinn/db/schema.sql").open() as f:
-        conn.executescript(f.read())
+    conn = None
+    try:
+        conn = sqlite3.connect(db_file)
+        with Path("quinn/db/schema.sql").open() as f:
+            conn.executescript(f.read())
+        conn.commit()
+    finally:
+        if conn:
+            conn.close()
 
     # Patch DATABASE_FILE to use test database
     with patch("quinn.db.database.DATABASE_FILE", str(db_file)):

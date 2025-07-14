@@ -83,54 +83,57 @@ class Conversation(BaseModel):
 
 
 if __name__ == "__main__":
-    # Demonstrate Message and Conversation usage
-    print("Message and Conversation demonstration:")
+    import sys
+    # Only run demonstration if not in test environment
+    if "pytest" not in sys.modules:
+        # Demonstrate Message and Conversation usage
+        print("Message and Conversation demonstration:")
 
-    from .message import MessageMetrics
+        from .message import MessageMetrics
 
-    message = Message(
-        user_content="Hello! How can I help you today?",
-        conversation_id="conv-12345",
-        metadata=MessageMetrics(
-            tokens_used=45,
-            cost_usd=0.001,
-            response_time_ms=800,
-            model_used="claude-3.5-sonnet",
-            prompt_version="240715-120000",
-        ),
-    )
-    print(f"Assistant message: {message.user_content}")
-    print(f"Metadata: {message.metadata}")
+        message = Message(
+            user_content="Hello! How can I help you today?",
+            conversation_id="conv-12345",
+            metadata=MessageMetrics(
+                tokens_used=45,
+                cost_usd=0.001,
+                response_time_ms=800,
+                model_used="claude-3.5-sonnet",
+                prompt_version="240715-120000",
+            ),
+        )
+        print(f"Assistant message: {message.user_content}")
+        print(f"Metadata: {message.metadata}")
 
-    # Create conversation
-    conversation = Conversation()
-    print(f"\nNew conversation created (ID: {conversation.id[:8]}...)")
-    print(f"Created at: {conversation.created_at}")
+        # Create conversation
+        conversation = Conversation()
+        print(f"\nNew conversation created (ID: {conversation.id[:8]}...)")
+        print(f"Created at: {conversation.created_at}")
 
-    # Add messages
-    conversation.add_message(message)
-    print(f"Added 2 messages, conversation updated at: {conversation.updated_at}")
-    print(f"Conversation metrics: {conversation.metrics}")
+        # Add messages
+        conversation.add_message(message)
+        print(f"Added 2 messages, conversation updated at: {conversation.updated_at}")
+        print(f"Conversation metrics: {conversation.metrics}")
 
-    # Query conversation
-    latest_message = conversation.get_latest_message()
-    print(
-        f"Latest message: {latest_message.user_content if latest_message else 'None'}"
-    )
+        # Query conversation
+        latest_message = conversation.get_latest_message()
+        print(
+            f"Latest message: {latest_message.user_content if latest_message else 'None'}"
+        )
 
-    # Create another assistant message to test metric aggregation
-    second_assistant_message = Message(
-        user_content="I can help with various tasks.",
-        conversation_id="conv-12345",
-        metadata=MessageMetrics(
-            tokens_used=30,
-            cost_usd=0.0008,
-            response_time_ms=600,
-            model_used="claude-3.5-sonnet",
-            prompt_version="240715-120000",
-        ),
-    )
-    conversation.add_message(second_assistant_message)
-    print(f"After adding 3rd message, metrics: {conversation.metrics}")
+        # Create another assistant message to test metric aggregation
+        second_assistant_message = Message(
+            user_content="I can help with various tasks.",
+            conversation_id="conv-12345",
+            metadata=MessageMetrics(
+                tokens_used=30,
+                cost_usd=0.0008,
+                response_time_ms=600,
+                model_used="claude-3.5-sonnet",
+                prompt_version="240715-120000",
+            ),
+        )
+        conversation.add_message(second_assistant_message)
+        print(f"After adding 3rd message, metrics: {conversation.metrics}")
 
-    print("Message and Conversation demonstration completed.")
+        print("Message and Conversation demonstration completed.")
