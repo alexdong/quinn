@@ -41,10 +41,10 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   11. [ ] Validate cost calculations match actual API pricing and token usage
 
 3. [ ] Create conversation context management
-  1. [ ] Design SQLite schema: conversations, messages, metadata, prompt_versions
-  2. [ ] Create tables for: conversation_id, timestamp, prompt_version, tokens_used, cost, response_time, model_used
+  1. [x] Design SQLite schema: users, conversations, messages (with embedded metrics)
+  2. [ ] Create SQL DDL files and database connection layer
   3. [ ] Implement basic CRUD operations for conversation management
-  4. [ ] Add in-memory storage backend for testing purposes
+  4. [ ] Add in-memory SQLite backend for testing purposes
   5. [ ] Implement session management with metadata tracking
 
 4. [ ] Create a CLI script that allows us to iterate on the prompts quickly

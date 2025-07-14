@@ -51,6 +51,9 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 	if [ -n "$(PATTERN)" ]; then \
 		echo "📁 Using pattern: $(PATTERN) in $$search_path/"; \
 		target_files=$$(/usr/bin/find "$$search_path" -name "$(PATTERN)" -type f -not -path "*/__pycache__/*" -not -name "*.pyc" | grep -E '\.(py|js|ts|jsx|tsx)$$' 2>/dev/null || true); \
+	elif [ -n "$(DIR)" ]; then \
+		echo "📁 Scanning all files in $$search_path/"; \
+		target_files=$$(/usr/bin/find "$$search_path" -type f -not -path "*/__pycache__/*" -not -name "*.pyc" | grep -E '\.(py|js|ts|jsx|tsx)$$' 2>/dev/null || true); \
 	else \
 		echo "📁 Using git diff (changed files):"; \
 		target_files=$$(git diff --name-only --diff-filter=AMR | grep -E '\.(py|js|ts|jsx|tsx)$$'); \
@@ -63,6 +66,8 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 	else \
 		if [ -n "$(PATTERN)" ]; then \
 			echo "✅ No files matching pattern '$(PATTERN)' found in $$search_path/"; \
+		elif [ -n "$(DIR)" ]; then \
+			echo "✅ No source files found in $$search_path/"; \
 		else \
 			echo "✅ No source files changed - no smells to detect"; \
 		fi; \
