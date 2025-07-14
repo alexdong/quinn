@@ -82,7 +82,7 @@ extend-ignore = [
 max-complexity = 5
 
 [tool.pytest.ini_options]
-testpaths = ["src", "tests"]
+testpaths = ["quinn", "tests"]
 python_files = ["*_test.py"]
 addopts = "-vv --tb=short"
 asyncio_mode = "auto"

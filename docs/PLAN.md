@@ -38,23 +38,17 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   8. [x] Verify error handling works correctly for API failures, network issues, invalid inputs
   9. [x] Validate cost calculations match actual API pricing and token usage
 
-3. [x] Create conversation context management
+3. [ ] Create conversation context management
   1. [x] Design SQLite schema: users, conversations, messages (with embedded metrics)
   2. [x] Create SQL DDL files and database connection layer
-  3. [x] Implement basic CRUD operations for conversation management
+  3. [ ] Implement basic CRUD operations for conversation management
   4. [ ] Add in-memory SQLite backend for testing purposes
-  5. [x] Implement session management with metadata tracking
+  5. [ ] Implement session management with metadata tracking
 
 4. [ ] Create a CLI script that allows us to iterate on the prompts quickly
   1. [ ] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
   2. [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
   3. [ ] Receive the response and prints output and any metadata
-
-5. [ ] Establish the map-reduce pattern for considering perspectives
-  1. [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
-  2. [ ] Each perspective will be provided a separate prompt to get further clarification questions.
-  3. [ ] Each perspective will be processed independently to generate tailored follow-up questions.
-  4. [ ] The final response will be a summary of all perspectives and their follow-up questions.
 
 6. [ ] Develop core prompts through iterative testing
   1. [ ] Create initial system prompt enforcing rubber duck methodology
@@ -150,6 +144,9 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
   - [ ] Create admin interface for session viewing
   - [ ] Implement rate limiting and abuse prevention
 
+  10. [ ] Implement prompt versioning to track changes over time
+  11. [ ] Implement prompt caching to avoid repeated API calls. The `agent/cache.py` has the wrong idea.
+
 - [ ] Implement Admin Interface
   - [ ] Create admin dashboard for session management
   - [ ] Add session statistics and analytics
@@ -160,6 +157,14 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
   - [ ] Validate Postmark webhook signatures
   - [ ] Create audit logging for all interactions
   - [ ] Add an "allowlist" feature for email senders
+
+### Phase 5: Introduce Perspectives
+
+5. [ ] Establish the map-reduce pattern for considering perspectives
+  1. [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
+  2. [ ] Each perspective will be provided a separate prompt to get further clarification questions.
+  3. [ ] Each perspective will be processed independently to generate tailored follow-up questions.
+  4. [ ] The final response will be a summary of all perspectives and their follow-up questions.
 
 
 ### Phase 5: Core Infrastructure Setup
