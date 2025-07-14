@@ -21,15 +21,13 @@ class PromptTemplateHandler:
             lstrip_blocks=True,
         )
 
-    def _load_system_prompt(self) -> str:
-        """Load the system prompt from system_prompt.txt."""
-        system_prompt_path = (
-            Path(__file__).parent.parent / "templates" / "prompts" / "system_prompt.txt"
+    def _load_guidance(self) -> str:
+        """Load the guidance content from guidance.txt."""
+        guidance_path = (
+            Path(__file__).parent.parent / "templates" / "prompts" / "guidance.txt"
         )
-        try:
-            return system_prompt_path.read_text(encoding="utf-8").strip()
-        except FileNotFoundError:
-            return "You are Quinn, a helpful AI assistant that guides users to solve their own problems by asking thoughtful questions rather than providing direct solutions."
+        assert guidance_path.exists(), "Guidance file not found"
+        return guidance_path.read_text(encoding="utf-8").strip()
 
     def _format_conversation_history(self, conversation: Conversation) -> str:
         """Format conversation history for template rendering."""
@@ -51,24 +49,20 @@ class PromptTemplateHandler:
 
         template = self.env.get_template("initial_prompt.j2")
         return template.render(
-            system_prompt=self._load_system_prompt(),
+            guidance=self._load_guidance(),
             user_problem=user_problem,
         )
 
-    def render_subsequent_prompt(
-        self, conversation: Conversation, previous_response: str
-    ) -> str:
+    def render_subsequent_prompt(self, conversation: Conversation) -> str:
         """Render subsequent prompt template with conversation history."""
         assert conversation.messages, "Conversation must have messages"
-        assert previous_response.strip(), "Previous response cannot be empty"
 
         conversation_history = self._format_conversation_history(conversation)
 
         template = self.env.get_template("subsequent_prompt.j2")
         return template.render(
-            system_prompt=self._load_system_prompt(),
+            guidance=self._load_guidance(),
             conversation_history=conversation_history,
-            previous_response=previous_response,
         )
 
     def render_template(self, template_name: str, **kwargs: str) -> str:
@@ -84,10 +78,10 @@ def render_initial_prompt(user_problem: str) -> str:
     return handler.render_initial_prompt(user_problem)
 
 
-def render_subsequent_prompt(conversation: Conversation, previous_response: str) -> str:
+def render_subsequent_prompt(conversation: Conversation) -> str:
     """Render subsequent prompt for ongoing conversation."""
     handler = PromptTemplateHandler()
-    return handler.render_subsequent_prompt(conversation, previous_response)
+    return handler.render_subsequent_prompt(conversation)
 
 
 if __name__ == "__main__":
@@ -116,10 +110,15 @@ if __name__ == "__main__":
             assistant_content="What specific trade-offs are you considering?",
         )
     )
-
-    subsequent_prompt = render_subsequent_prompt(
-        conversation, "I'm mainly worried about scalability and team coordination."
+    conversation.add_message(
+        Message(
+            conversation_id=conversation.id,
+            user_content="I'm mainly worried about scalability and team coordination.",
+            assistant_content="Can you tell me more about your team size and expected user growth?",
+        )
     )
+
+    subsequent_prompt = render_subsequent_prompt(conversation)
     print(f"✅ Subsequent prompt rendered ({len(subsequent_prompt)} chars)")
     assert "scalability" in subsequent_prompt.lower()
     assert "conversation history" in subsequent_prompt.lower()
@@ -129,7 +128,7 @@ if __name__ == "__main__":
     handler = PromptTemplateHandler()
     custom_prompt = handler.render_template(
         "initial_prompt.j2",
-        system_prompt="Test system prompt",
+        guidance="Test guidance content",
         user_problem="Test problem",
     )
     print(f"✅ Custom template rendered ({len(custom_prompt)} chars)")
