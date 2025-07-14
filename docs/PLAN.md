@@ -38,12 +38,12 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   8. [x] Verify error handling works correctly for API failures, network issues, invalid inputs
   9. [x] Validate cost calculations match actual API pricing and token usage
 
-3. [ ] Create conversation context management
+3. [x] Create conversation context management
   1. [x] Design SQLite schema: users, conversations, messages (with embedded metrics)
   2. [x] Create SQL DDL files and database connection layer
-  3. [ ] Implement basic CRUD operations for conversation management
-  4. [ ] Add in-memory SQLite backend for testing purposes
-  5. [ ] Implement session management with metadata tracking
+  3. [x] Implement basic CRUD operations for conversation management
+  4. [x] Add in-memory SQLite backend for testing purposes
+  5. [x] Implement session management with metadata tracking
 
 4. [ ] Create a CLI script that allows us to iterate on the prompts quickly
   1. [ ] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
