@@ -15,7 +15,6 @@ dependencies = [
     "loguru>=0.7.0",
     "plotly>=5.0.0",
     "streamlit>=1.0.0",
-    "litellm>=1.74.3",
     "pytest-asyncio>=1.0.0",
 ]
 

@@ -31,7 +31,7 @@ class AgentConfig(BaseModel):
     def sonnet4(cls) -> "AgentConfig":
         """Claude 4 Sonnet configuration optimized for complex reasoning."""
         return cls(
-            model="anthropic:claude-3-5-sonnet-20241022",
+            model="claude-3-5-sonnet-20241022",
             temperature=0.6,
             max_tokens=8000,
             timeout_seconds=600,
@@ -44,7 +44,7 @@ class AgentConfig(BaseModel):
     def flash25(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration for fast responses."""
         return cls(
-            model="google-gla:gemini-2.0-flash",
+            model="gemini/gemini-2.0-flash",
             temperature=0.7,
             max_tokens=4000,
             timeout_seconds=300,
@@ -57,7 +57,7 @@ class AgentConfig(BaseModel):
     def flash25thinking(cls) -> "AgentConfig":
         """Gemini 2.5 Flash configuration with thinking tokens enabled."""
         return cls(
-            model="google-gla:gemini-2.0-flash",
+            model="gemini/gemini-2.0-flash",
             temperature=0.7,
             max_tokens=12000,
             timeout_seconds=400,
@@ -71,7 +71,7 @@ class AgentConfig(BaseModel):
     def o4mini(cls) -> "AgentConfig":
         """OpenAI GPT-4 Omni Mini configuration for efficient processing."""
         return cls(
-            model="openai:gpt-4o-mini",
+            model="gpt-4o-mini",
             temperature=0.8,
             max_tokens=3000,
             timeout_seconds=240,

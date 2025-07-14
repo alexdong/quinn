@@ -1,4 +1,4 @@
-.PHONY: dev test test-coverage type-coverage update-llms-txt
+.PHONY: dev test test-coverage type-coverage update-llms-txt refresh-pricing
 
 dev:
 	uv run ruff check . --fix --unsafe-fixes
@@ -41,3 +41,9 @@ update-llms-txt:
 	\
 	IMPORTANT: Only update existing files or create new ones for tools in Python.md. Use curl to download llms.txt files when available. For CLI tools not installed, create placeholder noting unavailability."
 	@echo "✅ llms/*.txt files updated!"
+
+refresh-pricing:
+	@echo "📊 Refreshing LLM pricing data..."
+	@mkdir -p quinn/agent/pricing
+	@claude -p "Fetch the latest pricing for these models from their official provider websites and create/update JSON files in quinn/agent/pricing/:\n\n1. OpenAI (https://openai.com/pricing): Create openai.json with gpt-4o-mini pricing\n2. Anthropic (https://www.anthropic.com/pricing): Create anthropic.json with claude-3-5-sonnet-20241022 pricing\n3. Google (https://ai.google.dev/pricing): Create google.json with gemini-2.0-flash and gemini-2.5-flash-exp pricing\n\nEach JSON should include:\n- last_updated: current date\n- source_url: provider pricing page\n- models: object with model names as keys, each containing input_price_per_1m_tokens and output_price_per_1m_tokens in USD\n\nUse exact model names as they appear in our config.py file."
+	@echo "✅ Pricing data updated!"
