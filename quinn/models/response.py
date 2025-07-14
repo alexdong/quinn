@@ -1,6 +1,5 @@
 """Response data models."""
 
-
 from pydantic import BaseModel, Field, field_validator
 
 from .types import PROMPT_VERSION

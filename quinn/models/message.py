@@ -20,6 +20,9 @@ class Message(BaseModel):
     # Optional fields from AgentResponse
     conversation_id: str = ""
 
+    # Prompt context
+    system_prompt: str = ""
+
     # Individual message/API call metrics
     metadata: MessageMetrics | None = Field(default=None)
 

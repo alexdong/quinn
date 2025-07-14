@@ -34,18 +34,22 @@ def test_calculate_cost_validation() -> None:
 @pytest.mark.asyncio
 async def test_generate_response_validation() -> None:
     """Test generate_response input validation."""
-    with pytest.raises(AssertionError, match="User input cannot be empty"):
-        await generate_response("", "conv-123")
+    # Test that Message validation prevents empty content
+    with pytest.raises(ValueError, match="Message content cannot be empty"):
+        Message(content="", role="user", conversation_id="conv-123")
         
+    # Test empty conversation ID validation in generate_response
+    message_no_conv = Message(content="Hello", role="user", conversation_id="")
     with pytest.raises(AssertionError, match="Conversation ID cannot be empty"):
-        await generate_response("Hello", "")
+        await generate_response(message_no_conv)
 
 
 @pytest.mark.asyncio
 async def test_generate_response_not_implemented() -> None:
     """Test that generate_response raises NotImplementedError."""
+    message = Message(content="Hello", role="user", conversation_id="conv-123")
     with pytest.raises(NotImplementedError, match="Response generation not yet implemented"):
-        await generate_response("Hello", "conv-123")
+        await generate_response(message)
 
 
 @pytest.mark.asyncio

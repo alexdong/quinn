@@ -1,7 +1,6 @@
 """Integration tests for model interactions."""
 
 from .conversation import Conversation, Message
-from .prompt import PromptContext
 from .response import ConversationMetrics, MessageMetrics
 
 
@@ -19,23 +18,17 @@ def test_conversation_with_metrics() -> None:
     assert conversation.metrics.total_tokens_used == 500
 
 
-def test_prompt_context_with_messages() -> None:
-    """Test PromptContext integration with Message history."""
-    messages = [
-        Message(content="Hello", role="user"),
-        Message(content="Hi!", role="assistant"),
-    ]
-    
-    context = PromptContext(
-        user_input="How are you?",
-        conversation_history=messages,
-        prompt_version="240715-120000",
-        system_prompt="Be helpful",
+def test_message_with_system_prompt() -> None:
+    """Test Message with system prompt functionality."""
+    message = Message(
+        content="How are you?",
+        role="user",
+        system_prompt="Be helpful and friendly",
     )
     
-    assert len(context.conversation_history) == 2
-    assert context.conversation_history[0].role == "user"
-    assert context.conversation_history[1].role == "assistant"
+    assert message.content == "How are you?"
+    assert message.system_prompt == "Be helpful and friendly"
+    assert message.role == "user"
 
 
 def test_complete_workflow() -> None:
@@ -43,17 +36,14 @@ def test_complete_workflow() -> None:
     # Create conversation
     conversation = Conversation()
     
-    # Add user message
-    user_message = Message(content="What is AI?", role="user")
-    conversation.add_message(user_message)
-    
-    # Create prompt context
-    context = PromptContext(
-        user_input="What is AI?",
-        conversation_history=conversation.messages,
-        prompt_version="240715-120000",
+    # Add user message with system prompt
+    user_message = Message(
+        content="What is AI?",
+        role="user",
         system_prompt="You are an AI assistant",
+        conversation_id=conversation.id,
     )
+    conversation.add_message(user_message)
     
     # Create assistant message with metrics
     assistant_message = Message(
@@ -81,33 +71,25 @@ def test_complete_workflow() -> None:
 
 
 def test_conversation_message_history_flow() -> None:
-    """Test message history flow through conversation and prompt context."""
+    """Test message history flow through conversation."""
     # Start with empty conversation
     conversation = Conversation()
     
     # Add several messages
     msg1 = Message(content="Hello", role="user")
     msg2 = Message(content="Hi there!", role="assistant")
-    msg3 = Message(content="How can you help?", role="user")
+    msg3 = Message(content="How can you help?", role="user", system_prompt="Be helpful")
     
     conversation.add_message(msg1)
     conversation.add_message(msg2)
     conversation.add_message(msg3)
     
-    # Use conversation history in prompt context
-    context = PromptContext(
-        user_input="I need help with code",
-        conversation_history=conversation.messages,
-        prompt_version="240715-120000",
-        system_prompt="You are a coding assistant",
-    )
-    
     # Verify integration
-    assert len(context.conversation_history) == 3
-    assert context.conversation_history == conversation.messages
+    assert len(conversation.messages) == 3
     assert conversation.get_latest_message() == msg3
     assert len(conversation.get_messages_by_role("user")) == 2
     assert len(conversation.get_messages_by_role("assistant")) == 1
+    assert msg3.system_prompt == "Be helpful"
 
 
 if __name__ == "__main__":
