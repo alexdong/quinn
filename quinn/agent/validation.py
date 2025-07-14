@@ -14,8 +14,8 @@ def validate_message_for_ai(
     assert isinstance(message, Message), "Message must be Message instance"
 
     # Additional validation beyond model validation
-    assert len(message.content.strip()) >= MIN_USER_INPUT_LENGTH, (
-        "Message content too short (min 10 chars)"
+    assert len(message.user_content.strip()) >= MIN_USER_INPUT_LENGTH, (
+        "User content too short (min 10 chars)"
     )
 
     # Only validate system prompt if it's provided
@@ -27,7 +27,4 @@ def validate_message_for_ai(
     # Validate conversation history if present
     if conversation_history:
         for i, hist_message in enumerate(conversation_history):
-            assert hist_message.content.strip(), f"Empty message content at index {i}"
-            assert hist_message.role in ("user", "assistant"), (
-                f"Invalid role at index {i}: {hist_message.role}"
-            )
+            assert hist_message.user_content.strip(), f"Empty user content at index {i}"

@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import UTC, datetime
-from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -10,28 +9,26 @@ from .response import MessageMetrics
 
 
 class Message(BaseModel):
-    """Single message in a conversation thread with LLM API metadata."""
+    """Single interaction containing user input and assistant response."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    role: Literal["user", "assistant"] = "user"
-    content: str = ""
+    user_content: str = ""
+    assistant_content: str = ""
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    # Optional fields from AgentResponse
+    # Conversation context
     conversation_id: str = ""
-
-    # Prompt context
     system_prompt: str = ""
 
-    # Individual message/API call metrics
+    # Assistant response metrics
     metadata: MessageMetrics | None = Field(default=None)
 
-    @field_validator("content")
+    @field_validator("user_content")
     @classmethod
-    def validate_content(cls, v: str) -> str:
-        """Validate message content is not empty."""
+    def validate_user_content(cls, v: str) -> str:
+        """Validate user content is not empty."""
         if not v.strip():
-            msg = "Message content cannot be empty"
+            msg = "User content cannot be empty"
             raise ValueError(msg)
         return v
 
@@ -40,31 +37,36 @@ if __name__ == "__main__":
     # Demonstrate Message usage
     print("Message demonstration:")
 
-    # Create user message
-    user_message = Message(content="Hello, Quinn!", role="user")
-    print(f"User message: {user_message.content} (ID: {user_message.id[:8]}...)")
+    # Create interaction with user input only
+    user_interaction = Message(user_content="Hello, Quinn!")
+    print(
+        f"User input: {user_interaction.user_content} (ID: {user_interaction.id[:8]}...)"
+    )
 
-    # Create assistant message with metrics
-    assistant_message = Message(
-        content="Hello! How can I help you today?",
-        role="assistant",
+    # Create complete interaction with response and metrics
+    complete_interaction = Message(
+        user_content="What is artificial intelligence?",
+        assistant_content="AI is the simulation of human intelligence in machines...",
         conversation_id="conv-12345",
+        system_prompt="You are a helpful AI assistant",
         metadata=MessageMetrics(
-            tokens_used=45,
-            cost_usd=0.001,
-            response_time_ms=800,
+            tokens_used=75,
+            cost_usd=0.002,
+            response_time_ms=1200,
             model_used="claude-3.5-sonnet",
             prompt_version="240715-120000",
         ),
     )
-    print(f"Assistant message: {assistant_message.content}")
-    print(f"Conversation ID: {assistant_message.conversation_id}")
-    print(f"Metadata: {assistant_message.metadata}")
+    print("Complete interaction:")
+    print(f"  User: {complete_interaction.user_content}")
+    print(f"  Assistant: {complete_interaction.assistant_content[:50]}...")
+    print(f"  Conversation ID: {complete_interaction.conversation_id}")
+    print(f"  Metadata: {complete_interaction.metadata}")
 
     # Validation example
     try:
-        invalid_message = Message(content="")
+        invalid_message = Message(user_content="")
     except ValueError as e:
-        print(f"Validation error (empty content): {e}")
+        print(f"Validation error (empty user content): {e}")
 
     print("Message demonstration completed.")
