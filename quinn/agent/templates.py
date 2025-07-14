@@ -8,13 +8,13 @@ from quinn.models.conversation import Conversation
 from quinn.models.message import Message
 
 
-class PromptTemplateHandler:
+class PromptGenerator:
     """Handle Jinja2 template rendering for Quinn prompts."""
 
     def __init__(self) -> None:
         """Initialize template handler with templates directory."""
         templates_dir = Path(__file__).parent.parent / "templates" / "prompts"
-        self.env = jinja2.Environment(
+        self.jinja_env = jinja2.Environment(
             loader=jinja2.FileSystemLoader(templates_dir),
             autoescape=jinja2.select_autoescape(["html", "xml"]),
             trim_blocks=True,
@@ -36,10 +36,9 @@ class PromptTemplateHandler:
 
         history_parts = []
         for msg in conversation.messages:
-            if msg.user_content:
-                history_parts.append(f"User: {msg.user_content}")
-            if msg.assistant_content:
-                history_parts.append(f"Assistant: {msg.assistant_content}")
+            history_parts.append(f"User: {msg.user_content}")
+            history_parts.append(f"Assistant: {msg.assistant_content}")
+            history_parts.append("-------\n\n")
 
         return "\n".join(history_parts)
 
@@ -47,7 +46,7 @@ class PromptTemplateHandler:
         """Render initial prompt template with user problem."""
         assert user_problem.strip(), "User problem cannot be empty"
 
-        template = self.env.get_template("initial_prompt.j2")
+        template = self.jinja_env.get_template("initial_prompt.j2")
         return template.render(
             guidance=self._load_guidance(),
             user_problem=user_problem,
@@ -59,28 +58,28 @@ class PromptTemplateHandler:
 
         conversation_history = self._format_conversation_history(conversation)
 
-        template = self.env.get_template("subsequent_prompt.j2")
+        template = self.jinja_env.get_template("subsequent_prompt.j2")
         return template.render(
             guidance=self._load_guidance(),
             conversation_history=conversation_history,
         )
 
-    def render_template(self, template_name: str, **kwargs: str) -> str:
+    def render_template(self, template_name: str, **kwargs: dict[str, str]) -> str:
         """Render any template with provided variables."""
-        template = self.env.get_template(template_name)
+        template = self.jinja_env.get_template(template_name)
         return template.render(**kwargs)
 
 
 # Convenience functions for direct use
 def render_initial_prompt(user_problem: str) -> str:
     """Render initial prompt for a new conversation."""
-    handler = PromptTemplateHandler()
+    handler = PromptGenerator()
     return handler.render_initial_prompt(user_problem)
 
 
 def render_subsequent_prompt(conversation: Conversation) -> str:
     """Render subsequent prompt for ongoing conversation."""
-    handler = PromptTemplateHandler()
+    handler = PromptGenerator()
     return handler.render_subsequent_prompt(conversation)
 
 
@@ -91,7 +90,7 @@ if __name__ == "__main__":
     # Test initial prompt
     print("\n📝 Testing initial prompt rendering...")
     initial_prompt = render_initial_prompt(
-        "I'm trying to decide whether to use microservices or a monolith for my new web application."
+        "I'm trying to decide whether to use fasthtml or flask for my new web application."
     )
     print(f"✅ Initial prompt rendered ({len(initial_prompt)} chars)")
     assert "microservices" in initial_prompt.lower()
@@ -125,7 +124,7 @@ if __name__ == "__main__":
 
     # Test template handler directly
     print("\n📝 Testing template handler...")
-    handler = PromptTemplateHandler()
+    handler = PromptGenerator()
     custom_prompt = handler.render_template(
         "initial_prompt.j2",
         guidance="Test guidance content",

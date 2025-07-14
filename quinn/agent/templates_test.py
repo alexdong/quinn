@@ -5,21 +5,21 @@ import pytest
 from quinn.models.conversation import Conversation
 from quinn.models.message import Message
 
-from .templates import PromptTemplateHandler, render_initial_prompt, render_subsequent_prompt
+from .templates import PromptGenerator, render_initial_prompt, render_subsequent_prompt
 
 
-class TestPromptTemplateHandler:
-    """Test PromptTemplateHandler class."""
+class TestPromptGenerator:
+    """Test PromptGenerator class."""
 
     def test_init(self) -> None:
         """Test template handler initialization."""
-        handler = PromptTemplateHandler()
-        assert handler.env is not None
-        assert handler.env.loader is not None
+        handler = PromptGenerator()
+        assert handler.jinja_env is not None
+        assert handler.jinja_env.loader is not None
 
     def test_load_guidance(self) -> None:
         """Test guidance loading."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         guidance = handler._load_guidance()
         assert isinstance(guidance, str)
         assert len(guidance) > 0
@@ -27,14 +27,14 @@ class TestPromptTemplateHandler:
 
     def test_format_conversation_history_empty(self) -> None:
         """Test conversation history formatting with empty conversation."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         conversation = Conversation()
         history = handler._format_conversation_history(conversation)
         assert history == ""
 
     def test_format_conversation_history_with_messages(self) -> None:
         """Test conversation history formatting with messages."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         conversation = Conversation()
 
         # Add user message
@@ -58,7 +58,7 @@ class TestPromptTemplateHandler:
 
     def test_render_initial_prompt(self) -> None:
         """Test initial prompt rendering."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         user_problem = "I can't decide between React and Vue for my project."
 
         prompt = handler.render_initial_prompt(user_problem)
@@ -70,19 +70,19 @@ class TestPromptTemplateHandler:
 
     def test_render_initial_prompt_empty_problem(self) -> None:
         """Test initial prompt rendering fails with empty problem."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         with pytest.raises(AssertionError, match="User problem cannot be empty"):
             handler.render_initial_prompt("")
 
     def test_render_initial_prompt_whitespace_problem(self) -> None:
         """Test initial prompt rendering fails with whitespace-only problem."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         with pytest.raises(AssertionError, match="User problem cannot be empty"):
             handler.render_initial_prompt("   ")
 
     def test_render_subsequent_prompt(self) -> None:
         """Test subsequent prompt rendering."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         conversation = Conversation()
 
         # Add initial message
@@ -102,7 +102,7 @@ class TestPromptTemplateHandler:
 
     def test_render_subsequent_prompt_empty_conversation(self) -> None:
         """Test subsequent prompt rendering fails with empty conversation."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
         conversation = Conversation()
 
         with pytest.raises(AssertionError, match="Conversation must have messages"):
@@ -110,7 +110,7 @@ class TestPromptTemplateHandler:
 
     def test_render_template_generic(self) -> None:
         """Test generic template rendering."""
-        handler = PromptTemplateHandler()
+        handler = PromptGenerator()
 
         # Test with initial_prompt.j2
         result = handler.render_template(
@@ -183,7 +183,7 @@ class TestTemplateIntegration:
                 assistant_content="What specific challenges do you anticipate with backend complexity?",
             )
         )
-        
+
         subsequent_prompt = render_subsequent_prompt(conversation)
 
         assert "social media platform" in subsequent_prompt.lower()
@@ -197,9 +197,18 @@ class TestTemplateIntegration:
 
         # Add multiple message pairs
         messages_data = [
-            ("What programming language should I learn?", "What are your goals with programming?"),
-            ("I want to build mobile apps.", "Have you considered cross-platform vs native development?"),
-            ("I think cross-platform makes more sense.", "What factors led you to that conclusion?"),
+            (
+                "What programming language should I learn?",
+                "What are your goals with programming?",
+            ),
+            (
+                "I want to build mobile apps.",
+                "Have you considered cross-platform vs native development?",
+            ),
+            (
+                "I think cross-platform makes more sense.",
+                "What factors led you to that conclusion?",
+            ),
         ]
 
         for user_content, assistant_content in messages_data:
@@ -219,7 +228,7 @@ class TestTemplateIntegration:
                 assistant_content="What framework are you considering for cross-platform development?",
             )
         )
-        
+
         prompt = render_subsequent_prompt(conversation)
 
         # Check that all previous exchanges are preserved
