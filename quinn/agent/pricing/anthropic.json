@@ -4,7 +4,27 @@
   "models": {
     "claude-3-5-sonnet-20241022": {
       "input_price_per_1m_tokens": 3.00,
-      "output_price_per_1m_tokens": 15.00
+      "output_price_per_1m_tokens": 15.00,
+      "cached_input_price_per_1m_tokens": 0.30,
+      "notes": "200K context window, cache write costs $3.75/MTok, cache read costs $0.30/MTok"
+    },
+    "claude-opus-4-20250514": {
+      "input_price_per_1m_tokens": 15.00,
+      "output_price_per_1m_tokens": 75.00,
+      "cached_input_price_per_1m_tokens": 1.50,
+      "notes": "Cache write costs $18.75/MTok, cache read costs $1.50/MTok"
+    },
+    "claude-sonnet-4": {
+      "input_price_per_1m_tokens": 3.00,
+      "output_price_per_1m_tokens": 15.00,
+      "cached_input_price_per_1m_tokens": 0.30,
+      "notes": "Same pricing as Sonnet 3.7"
+    },
+    "claude-haiku-3.5": {
+      "input_price_per_1m_tokens": 0.25,
+      "output_price_per_1m_tokens": 1.25,
+      "cached_input_price_per_1m_tokens": 0.03,
+      "notes": "Next generation of fastest model, cache write costs $0.30/MTok, cache read costs $0.03/MTok"
     }
   }
 }

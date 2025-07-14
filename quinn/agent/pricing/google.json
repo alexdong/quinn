@@ -1,14 +1,30 @@
 {
   "last_updated": "2025-01-14",
-  "source_url": "https://ai.google.dev/pricing",
+  "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
   "models": {
-    "gemini/gemini-2.0-flash": {
+    "gemini-2.0-flash": {
       "input_price_per_1m_tokens": 0.075,
-      "output_price_per_1m_tokens": 0.30
+      "output_price_per_1m_tokens": 0.30,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "Generally available, better quality than 1.5 Flash at same speed and cost"
     },
-    "gemini/gemini-2.5-flash-exp": {
+    "gemini-2.5-flash-exp": {
       "input_price_per_1m_tokens": 0.0,
-      "output_price_per_1m_tokens": 0.0
+      "output_price_per_1m_tokens": 0.0,
+      "cached_input_price_per_1m_tokens": 0.0,
+      "notes": "Experimental model, free during preview period"
+    },
+    "gemini-2.5-pro": {
+      "input_price_per_1m_tokens": 1.25,
+      "output_price_per_1m_tokens": 5.00,
+      "cached_input_price_per_1m_tokens": 0.3125,
+      "notes": "State-of-the-art multipurpose model, implicit caching provides 75% discount on cached tokens"
+    },
+    "gemini-2.5-flash": {
+      "input_price_per_1m_tokens": 0.15,
+      "output_price_per_1m_tokens": 0.60,
+      "cached_input_price_per_1m_tokens": 0.0375,
+      "notes": "Best price/performance model, 1M token context, implicit caching provides 75% discount"
     }
   }
 }

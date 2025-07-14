@@ -1,10 +1,42 @@
 {
   "last_updated": "2025-01-14",
-  "source_url": "https://openai.com/pricing", 
+  "source_url": "https://platform.openai.com/docs/pricing",
   "models": {
     "gpt-4o-mini": {
       "input_price_per_1m_tokens": 0.15,
-      "output_price_per_1m_tokens": 0.60
+      "output_price_per_1m_tokens": 0.60,
+      "cached_input_price_per_1m_tokens": 0.075,
+      "notes": "128K context window, October 2023 knowledge cutoff"
+    },
+    "o3": {
+      "input_price_per_1m_tokens": 15.00,
+      "output_price_per_1m_tokens": 60.00,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "Available through ChatGPT subscription, exact API pricing may vary"
+    },
+    "o4-mini": {
+      "input_price_per_1m_tokens": 2.50,
+      "output_price_per_1m_tokens": 10.00,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "Optimized for fast, cost-efficient reasoning"
+    },
+    "gpt-4.1": {
+      "input_price_per_1m_tokens": 10.00,
+      "output_price_per_1m_tokens": 30.00,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "1M token context window, June 2024 knowledge cutoff"
+    },
+    "gpt-4.1-mini": {
+      "input_price_per_1m_tokens": 3.00,
+      "output_price_per_1m_tokens": 12.00,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "Part of GPT-4.1 series"
+    },
+    "gpt-4.1-nano": {
+      "input_price_per_1m_tokens": 0.075,
+      "output_price_per_1m_tokens": 0.30,
+      "cached_input_price_per_1m_tokens": null,
+      "notes": "Most cost-efficient model in GPT-4.1 series"
     }
   }
 }
