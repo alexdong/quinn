@@ -1,11 +1,13 @@
 """Tests for users database operations."""
 
 import uuid
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 
-from quinn.db.users import User, Users
+from quinn.db.users import Users
+from quinn.models.user import User
 
 
 def test_user_model_defaults():
@@ -19,8 +21,8 @@ def test_user_model_defaults():
     assert user.email_addresses == email_addresses
     assert user.name is None
     assert user.settings is None
-    assert isinstance(user.created_at, int)
-    assert isinstance(user.updated_at, int)
+    assert isinstance(user.created_at, datetime)
+    assert isinstance(user.updated_at, datetime)
 
 
 def test_user_model_with_optional_fields():
@@ -55,13 +57,13 @@ def test_user_single_email_address():
 
 
 def test_user_empty_email_addresses_list():
-    """Test User model with empty email addresses list."""
+    """Test User model validation with empty email addresses list."""
     user_id = str(uuid.uuid4())
     email_addresses = []
     
-    user = User(id=user_id, email_addresses=email_addresses)
-    
-    assert user.email_addresses == []
+    # Should raise validation error for empty email addresses
+    with pytest.raises(ValueError, match="At least one email address is required"):
+        User(id=user_id, email_addresses=email_addresses)
 
 
 def test_user_with_null_name():

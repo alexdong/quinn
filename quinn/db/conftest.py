@@ -105,6 +105,7 @@ def setup_test_data(
     clean_db: Path,
     test_user_data: dict[str, Any],
     test_conversation_data: dict[str, Any],
+    test_message_data: dict[str, Any],
 ) -> dict[str, Any]:
     """Set up test user and conversation for foreign key constraints."""
     with (
@@ -145,7 +146,8 @@ def setup_test_data(
         conn.commit()
 
     return {
-        "user": test_user_data,
-        "conversation": test_conversation_data,
+        "test_user_data": test_user_data,
+        "test_conversation_data": test_conversation_data,
+        "test_message_data": test_message_data,
         "db_file": clean_db,
     }

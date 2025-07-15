@@ -75,54 +75,61 @@ def test_message_model_with_metadata():
 
 def test_messages_create(setup_test_data):
     """Test creating a message in the database."""
-    test_message_data = setup_test_data["test_message_data"]
+    # Create a new message with unique ID
+    new_message_id = str(uuid.uuid4())
+    conversation_id = setup_test_data["test_conversation_data"]["id"]
+    user_id = setup_test_data["test_user_data"]["id"]
     
     message = Message(
-        id=test_message_data["id"],
-        conversation_id=test_message_data["conversation_id"],
-        system_prompt=test_message_data["system_prompt"],
-        user_content=test_message_data["user_content"],
-        assistant_content=test_message_data["assistant_content"],
+        id=new_message_id,
+        conversation_id=conversation_id,
+        system_prompt="You are a helpful assistant",
+        user_content="Hello, how are you?",
+        assistant_content="I'm doing well, thank you!",
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, test_message_data["user_id"])
+        Messages.create(message, user_id)
         
         # Verify message was created
-        retrieved_message = Messages.get_by_id(test_message_data["id"])
+        retrieved_message = Messages.get_by_id(new_message_id)
         assert retrieved_message is not None
-        assert retrieved_message.id == test_message_data["id"]
-        assert retrieved_message.conversation_id == test_message_data["conversation_id"]
-        assert retrieved_message.system_prompt == test_message_data["system_prompt"]
-        assert retrieved_message.user_content == test_message_data["user_content"]
-        assert retrieved_message.assistant_content == test_message_data["assistant_content"]
+        assert retrieved_message.id == new_message_id
+        assert retrieved_message.conversation_id == conversation_id
+        assert retrieved_message.system_prompt == "You are a helpful assistant"
+        assert retrieved_message.user_content == "Hello, how are you?"
+        assert retrieved_message.assistant_content == "I'm doing well, thank you!"
 
 
 def test_messages_get_by_id(setup_test_data):
     """Test retrieving a message by ID."""
-    test_message_data = setup_test_data["test_message_data"]
+    # Create a new message with unique ID
+    new_message_id = str(uuid.uuid4())
+    conversation_id = setup_test_data["test_conversation_data"]["id"]
+    user_id = setup_test_data["test_user_data"]["id"]
     
     message = Message(
-        id=test_message_data["id"],
-        conversation_id=test_message_data["conversation_id"],
-        system_prompt=test_message_data["system_prompt"],
-        user_content=test_message_data["user_content"],
-        assistant_content=test_message_data["assistant_content"],
+        id=new_message_id,
+        conversation_id=conversation_id,
+        system_prompt="You are a helpful assistant",
+        user_content="Test message content",
+        assistant_content="Test response content",
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, test_message_data["user_id"])
+        Messages.create(message, user_id)
         
-        retrieved_message = Messages.get_by_id(test_message_data["id"])
+        retrieved_message = Messages.get_by_id(new_message_id)
         assert retrieved_message is not None
-        assert retrieved_message.id == test_message_data["id"]
-        assert retrieved_message.conversation_id == test_message_data["conversation_id"]
+        assert retrieved_message.id == new_message_id
+        assert retrieved_message.conversation_id == conversation_id
 
 
 def test_messages_get_by_conversation(setup_test_data):
     """Test retrieving messages by conversation."""
-    conversation_id = str(uuid.uuid4())
-    user_id = str(uuid.uuid4())
+    # Use existing test data to satisfy foreign key constraints
+    conversation_id = setup_test_data["test_conversation_data"]["id"]
+    user_id = setup_test_data["test_user_data"]["id"]
     
     # Create test messages with specific times
     now = datetime.now(UTC)
@@ -163,20 +170,31 @@ def test_messages_get_by_conversation(setup_test_data):
 
 def test_messages_update(setup_test_data):
     """Test updating a message."""
-    test_message_data = setup_test_data["test_message_data"]
+    import time
+    
+    # Create a new message with unique ID
+    new_message_id = str(uuid.uuid4())
+    conversation_id = setup_test_data["test_conversation_data"]["id"]
+    user_id = setup_test_data["test_user_data"]["id"]
     
     message = Message(
-        id=test_message_data["id"],
-        conversation_id=test_message_data["conversation_id"],
-        system_prompt=test_message_data["system_prompt"],
-        user_content=test_message_data["user_content"],
-        assistant_content=test_message_data["assistant_content"],
+        id=new_message_id,
+        conversation_id=conversation_id,
+        system_prompt="Original system prompt",
+        user_content="Original user content",
+        assistant_content="Original assistant content",
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, test_message_data["user_id"])
+        Messages.create(message, user_id)
         
-        original_updated_at = message.last_updated_at
+        # Get the original timestamp from database (to avoid precision issues)
+        original_message = Messages.get_by_id(new_message_id)
+        assert original_message is not None
+        original_updated_at = original_message.last_updated_at
+        
+        # Wait a moment to ensure different timestamp  
+        time.sleep(1.1)  # Wait more than 1 second to ensure integer timestamp difference
         
         # Update the message
         message.system_prompt = "Updated system prompt"
@@ -186,38 +204,42 @@ def test_messages_update(setup_test_data):
         Messages.update(message)
         
         # Verify the update
-        retrieved_message = Messages.get_by_id(test_message_data["id"])
+        retrieved_message = Messages.get_by_id(new_message_id)
         assert retrieved_message is not None
         assert retrieved_message.system_prompt == "Updated system prompt"
         assert retrieved_message.user_content == "Updated user content"
         assert retrieved_message.assistant_content == "Updated assistant content"
+        # Verify timestamp was updated (database uses second precision)
         assert retrieved_message.last_updated_at > original_updated_at
 
 
 def test_messages_delete(setup_test_data):
     """Test deleting a message."""
-    test_message_data = setup_test_data["test_message_data"]
+    # Create a new message with unique ID
+    new_message_id = str(uuid.uuid4())
+    conversation_id = setup_test_data["test_conversation_data"]["id"]
+    user_id = setup_test_data["test_user_data"]["id"]
     
     message = Message(
-        id=test_message_data["id"],
-        conversation_id=test_message_data["conversation_id"],
-        system_prompt=test_message_data["system_prompt"],
-        user_content=test_message_data["user_content"],
-        assistant_content=test_message_data["assistant_content"],
+        id=new_message_id,
+        conversation_id=conversation_id,
+        system_prompt="Test system prompt",
+        user_content="Test user content",
+        assistant_content="Test assistant content",
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, test_message_data["user_id"])
+        Messages.create(message, user_id)
         
         # Verify message exists
-        retrieved_message = Messages.get_by_id(test_message_data["id"])
+        retrieved_message = Messages.get_by_id(new_message_id)
         assert retrieved_message is not None
         
         # Delete the message
-        Messages.delete(test_message_data["id"])
+        Messages.delete(new_message_id)
         
         # Verify deletion
-        deleted_message = Messages.get_by_id(test_message_data["id"])
+        deleted_message = Messages.get_by_id(new_message_id)
         assert deleted_message is None
 
 
