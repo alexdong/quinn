@@ -203,3 +203,13 @@ def test_load_system_prompt_file_reading() -> None:
     assert isinstance(prompt, str)
     assert len(prompt) > 0
 
+
+
+def test_load_system_prompt_reads_real_file() -> None:
+    """Test that load_system_prompt reads from the actual file when it exists."""
+    # This should hit line 43: return prompt_file.read_text().strip()
+    # by reading the actual system.txt file
+    result = load_system_prompt()
+    assert isinstance(result, str)
+    assert len(result.strip()) > 0
+
