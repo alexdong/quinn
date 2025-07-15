@@ -43,10 +43,10 @@ Key principles:
     return prompt_file.read_text().strip()
 
 
-def save_prompt_version(content: str, version: PROMPT_VERSION) -> None:
+def save_prompt_version(version: PROMPT_VERSION, content: str) -> None:
     """Save a new prompt version."""
-    assert content.strip(), "Prompt content cannot be empty"
     assert version.strip(), "Version cannot be empty"
+    assert content.strip(), "Prompt content cannot be empty"
 
     project_root = Path(__file__).parent.parent.parent
     prompts_dir = project_root / "quinn" / "templates" / "prompts"

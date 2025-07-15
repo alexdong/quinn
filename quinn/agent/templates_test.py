@@ -115,8 +115,10 @@ class TestPromptGenerator:
         # Test with initial_prompt.j2
         result = handler.render_template(
             "initial_prompt.j2",
-            guidance="Test guidance content",
-            user_problem="Test problem statement",
+            **{
+                "guidance": "Test guidance content",
+                "user_problem": "Test problem statement",
+            }
         )
         assert "Test guidance content" in result
         assert "Test problem statement" in result

@@ -1,4 +1,4 @@
-.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing code-smell upgrade
+.PHONY: help dev test test-coverage type-coverage update-llms-txt refresh-pricing code-smell upgrade commit
 
 help:  ## Show this help message
 	@echo "Available targets:"
@@ -76,3 +76,25 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 upgrade:  ## Upgrade dependencies to latest versions
 	@echo "🔄 Upgrading dependencies to latest versions..."
 	@uv run pip-compile --upgrade
+
+commit:  ## Run all quality checks and create an automated commit
+	@echo "🚀 Running complete quality and testing pipeline..."
+	@echo "📋 Step 1: Code quality checks..."
+	@$(MAKE) dev
+	@echo "✅ Code quality checks passed!"
+	@echo ""
+	@echo "🧪 Step 2: Running tests..."
+	@$(MAKE) test
+	@echo "✅ Tests passed!"
+	@echo ""
+	@echo "📊 Step 3: Type coverage check..."
+	@$(MAKE) type-coverage
+	@echo "✅ Type coverage check passed!"
+	@echo ""
+	@echo "📈 Step 4: Test coverage check..."
+	@$(MAKE) test-coverage
+	@echo "✅ Test coverage check passed!"
+	@echo ""
+	@echo "🤖 Step 5: Creating automated commit..."
+	@claude commit --dangerously-skip-permissions
+	@echo "✅ Commit pipeline completed successfully!"

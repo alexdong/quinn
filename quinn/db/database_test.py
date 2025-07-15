@@ -182,3 +182,115 @@ class TestDatabase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_get_db_connection_error_handling(self):
+        """Test error handling in get_db_connection."""
+        from unittest.mock import patch, MagicMock
+        import pytest
+        
+        # Test connection error
+        with patch("quinn.db.database.sqlite3.connect", side_effect=Exception("Connection failed")):
+            with pytest.raises(Exception, match="Connection failed"):
+                with get_db_connection():
+                    pass
+    
+    def test_get_db_connection_rollback_on_error(self):
+        """Test rollback is called when an error occurs."""
+        from unittest.mock import patch, MagicMock
+        import pytest
+        
+        mock_conn = MagicMock()
+        with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
+            with pytest.raises(Exception, match="Test error"):
+                with get_db_connection() as conn:
+                    raise Exception("Test error")
+            
+            # Verify rollback was called
+            mock_conn.rollback.assert_called_once()
+    
+    def test_get_db_connection_close_error(self):
+        """Test handling of close errors."""
+        from unittest.mock import patch, MagicMock
+        
+        mock_conn = MagicMock()
+        mock_conn.close.side_effect = Exception("Close failed")
+        
+        with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
+            # Should not raise exception even if close fails
+            with get_db_connection():
+                pass
+            
+            # Verify close was attempted
+            mock_conn.close.assert_called_once()
+    
+    def test_create_tables_error_handling(self):
+        """Test error handling in create_tables."""
+        from unittest.mock import patch
+        import pytest
+        
+        # Test when get_db_connection fails
+        with patch("quinn.db.database.get_db_connection", side_effect=Exception("DB error")):
+            with pytest.raises(Exception, match="DB error"):
+                create_tables()
+        
+        # Test when schema file cannot be read
+        with patch("pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")):
+            with pytest.raises(FileNotFoundError, match="Schema not found"):
+                create_tables()
+
+
+    def test_get_db_connection_error_handling(self):
+        """Test error handling in get_db_connection."""
+        from unittest.mock import patch
+        import pytest
+        
+        # Test connection error
+        with patch("quinn.db.database.sqlite3.connect", side_effect=Exception("Connection failed")):
+            with pytest.raises(Exception, match="Connection failed"):
+                with get_db_connection():
+                    pass
+    
+    def test_get_db_connection_rollback_on_error(self):
+        """Test rollback is called when an error occurs."""
+        from unittest.mock import patch, MagicMock
+        import pytest
+        
+        mock_conn = MagicMock()
+        with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
+            with pytest.raises(Exception, match="Test error"):
+                with get_db_connection() as conn:
+                    raise Exception("Test error")
+            
+            # Verify rollback was called
+            mock_conn.rollback.assert_called_once()
+    
+    def test_get_db_connection_close_error(self):
+        """Test handling of close errors."""
+        from unittest.mock import patch, MagicMock
+        
+        mock_conn = MagicMock()
+        mock_conn.close.side_effect = Exception("Close failed")
+        
+        with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
+            # Should not raise exception even if close fails
+            with get_db_connection():
+                pass
+            
+            # Verify close was attempted
+            mock_conn.close.assert_called_once()
+
+    def test_create_tables_error_handling(self):
+        """Test error handling in create_tables."""
+        from unittest.mock import patch
+        import pytest
+        
+        # Test when get_db_connection fails
+        with patch("quinn.db.database.get_db_connection", side_effect=Exception("DB error")):
+            with pytest.raises(Exception, match="DB error"):
+                create_tables()
+        
+        # Test when schema file cannot be read
+        with patch("pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")):
+            with pytest.raises(FileNotFoundError, match="Schema not found"):
+                create_tables()
+

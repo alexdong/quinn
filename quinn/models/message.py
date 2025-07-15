@@ -55,6 +55,7 @@ class Message(BaseModel):
 
 if __name__ == "__main__":
     import sys
+
     # Only run demonstration if not in test environment
     if "pytest" not in sys.modules:
         # Demonstrate Message usage
@@ -66,7 +67,9 @@ if __name__ == "__main__":
             user_content="Hello, Quinn!",
             system_prompt="You are a helpful AI assistant",
         )
-        print(f"User message: {user_message.user_content} (ID: {user_message.id[:8]}...)")
+        print(
+            f"User message: {user_message.user_content} (ID: {user_message.id[:8]}...)"
+        )
         print(f"Created at: {user_message.created_at}")
 
         # Create assistant message with metrics

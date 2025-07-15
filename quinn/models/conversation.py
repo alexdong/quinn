@@ -84,6 +84,7 @@ class Conversation(BaseModel):
 
 if __name__ == "__main__":
     import sys
+
     # Only run demonstration if not in test environment
     if "pytest" not in sys.modules:
         # Demonstrate Message and Conversation usage

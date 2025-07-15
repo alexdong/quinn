@@ -1,8 +1,8 @@
 """Configuration data models."""
 
+import inspect
 import os
 from typing import Any
-import inspect
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -27,46 +27,6 @@ class AgentConfig(BaseModel):
             msg = "Model name cannot be empty"
             raise ValueError(msg)
         return v
-
-    @classmethod
-    def sonnet4(cls) -> "AgentConfig":
-        """Claude 4 Sonnet configuration optimized for complex reasoning."""
-        return cls(
-            model="claude-3-5-sonnet-20241022",
-            temperature=0.6,
-            max_tokens=8000,
-            timeout_seconds=600,
-            max_retries=3,
-            retry_backoff_factor=2.0,
-            api_key=os.getenv("ANTHROPIC_API_KEY", ""),
-        )
-
-    @classmethod
-    def flash25(cls) -> "AgentConfig":
-        """Gemini 2.5 Flash configuration for fast responses."""
-        return cls(
-            model="gemini-2.5-flash",
-            temperature=0.7,
-            max_tokens=4000,
-            timeout_seconds=300,
-            max_retries=3,
-            retry_backoff_factor=2.0,
-            api_key=os.getenv("GEMINI_API_KEY", ""),
-        )
-
-    @classmethod
-    def flash25thinking(cls) -> "AgentConfig":
-        """Gemini 2.5 Flash configuration with thinking tokens enabled."""
-        return cls(
-            model="gemini-2.5-flash",
-            temperature=0.7,
-            max_tokens=12000,
-            timeout_seconds=400,
-            max_retries=3,
-            retry_backoff_factor=2.0,
-            model_settings={"gemini_thinking_config": {"thinking_budget": 4096}},
-            api_key=os.getenv("GEMINI_API_KEY", ""),
-        )
 
     @classmethod
     def o4mini(cls) -> "AgentConfig":
@@ -160,7 +120,7 @@ class AgentConfig(BaseModel):
         )
 
     @classmethod
-    def sonnet4_new(cls) -> "AgentConfig":
+    def sonnet4(cls) -> "AgentConfig":
         """Claude Sonnet 4 configuration for balanced reasoning."""
         return cls(
             model="claude-sonnet-4",
@@ -183,19 +143,6 @@ class AgentConfig(BaseModel):
             max_retries=4,
             retry_backoff_factor=1.5,
             api_key=os.getenv("ANTHROPIC_API_KEY", ""),
-        )
-
-    @classmethod
-    def gemini20flash(cls) -> "AgentConfig":
-        """Gemini 2.0 Flash configuration for general use."""
-        return cls(
-            model="gemini-2.0-flash",
-            temperature=0.7,
-            max_tokens=4000,
-            timeout_seconds=300,
-            max_retries=3,
-            retry_backoff_factor=2.0,
-            api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
     @classmethod
@@ -225,23 +172,59 @@ class AgentConfig(BaseModel):
         )
 
     @classmethod
+    def gemini25flashthinking(cls) -> "AgentConfig":
+        """Gemini 2.5 Flash configuration with thinking tokens enabled."""
+        return cls(
+            model="gemini-2.5-flash",
+            temperature=0.7,
+            max_tokens=12000,
+            timeout_seconds=400,
+            max_retries=3,
+            retry_backoff_factor=2.0,
+            model_settings={"gemini_thinking_config": {"thinking_budget": 4096}},
+            api_key=os.getenv("GEMINI_API_KEY", ""),
+        )
+
+    @classmethod
     def get_all_models(cls) -> list[str]:
         """Get all available model names from class methods."""
+
         models = []
-        for name, method in inspect.getmembers(cls, inspect.ismethod):
-            if name not in ("validate_model_not_empty", "get_all_models") and hasattr(
-                method, "__func__"
-            ):
+        # Get all class methods that return AgentConfig instances
+        for name, method in inspect.getmembers(cls, predicate=inspect.ismethod):
+            # Skip private methods and the current method
+            if name.startswith("_") or name == "get_all_models":
+                continue
+
+            # Check if it's a classmethod that returns AgentConfig
+            if hasattr(method, "__self__") and method.__self__ is cls:
+                sig = inspect.signature(method)
+                if len(sig.parameters) > 0:  # Only cls parameter
+                    continue
+
                 config_instance = method()
+                assert isinstance(config_instance, cls), (
+                    f"Method {name} did not return an AgentConfig instance"
+                )
                 models.append(config_instance.model)
-        return models
+
+        return list(set(models))
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Demonstrate AgentConfig functionality."""
     print("AgentConfig demonstration:")
 
     default_config = AgentConfig()
     print(f"Default config: {default_config}")
 
     print("\nAvailable models:")
-    print(AgentConfig.get_all_models())
+    models = AgentConfig.get_all_models()
+    for model in models:
+        print(f"  - {model}")
+
+    print(f"\nTotal models available: {len(models)}")
+
+
+if __name__ == "__main__":
+    main()

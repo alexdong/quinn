@@ -64,7 +64,7 @@ class PromptGenerator:
             conversation_history=conversation_history,
         )
 
-    def render_template(self, template_name: str, **kwargs: dict[str, str]) -> str:
+    def render_template(self, template_name: str, **kwargs: str) -> str:
         """Render any template with provided variables."""
         template = self.jinja_env.get_template(template_name)
         return template.render(**kwargs)
@@ -89,11 +89,19 @@ if __name__ == "__main__":
 
     # Test initial prompt
     print("\n📝 Testing initial prompt rendering...")
-    initial_prompt = render_initial_prompt(
-        "I'm trying to decide whether to use fasthtml or flask for my new web application."
-    )
+    user_problem = "I'm trying to decide whether to use fasthtml or flask for my new web application."
+    initial_prompt = render_initial_prompt(user_problem)
     print(f"✅ Initial prompt rendered ({len(initial_prompt)} chars)")
-    assert "microservices" in initial_prompt.lower()
+    print("\n" + "=" * 50)
+    print("INBOUND (User Problem):")
+    print("=" * 50)
+    print(user_problem)
+    print("\n" + "=" * 50)
+    print("OUTBOUND (Initial Prompt):")
+    print("=" * 50)
+    print(initial_prompt)
+    print("=" * 50)
+    assert "fasthtml" in initial_prompt.lower()
     assert "clarifying questions" in initial_prompt.lower()
 
     # Test subsequent prompt
@@ -119,6 +127,19 @@ if __name__ == "__main__":
 
     subsequent_prompt = render_subsequent_prompt(conversation)
     print(f"✅ Subsequent prompt rendered ({len(subsequent_prompt)} chars)")
+    print("\n" + "=" * 50)
+    print("INBOUND (Conversation History):")
+    print("=" * 50)
+    for i, msg in enumerate(conversation.messages, 1):
+        print(f"Message {i}:")
+        print(f"  User: {msg.user_content}")
+        print(f"  Assistant: {msg.assistant_content}")
+        print()
+    print("\n" + "=" * 50)
+    print("OUTBOUND (Subsequent Prompt):")
+    print("=" * 50)
+    print(subsequent_prompt)
+    print("=" * 50)
     assert "scalability" in subsequent_prompt.lower()
     assert "conversation history" in subsequent_prompt.lower()
 
@@ -134,3 +155,67 @@ if __name__ == "__main__":
     assert "Test problem" in custom_prompt
 
     print("\n✅ All template tests passed!")
+
+    # Calculate costs for all models
+    print("\n💰 Calculating template costs for all models...")
+
+    from rich.console import Console
+    from rich.table import Table
+
+    from quinn.agent.cost import calculate_cost, get_supported_models
+    from quinn.models.config import AgentConfig
+
+    console = Console()
+
+    # Get token counts (rough estimate: 1 token ≈ 4 characters)
+    initial_tokens = len(initial_prompt) // 4
+    subsequent_tokens = len(subsequent_prompt) // 4
+
+    table = Table(title="Template Cost Analysis by Model (Sorted by Total Cost)")
+    table.add_column("Model", style="cyan")
+    table.add_column("Initial Cost", style="yellow")
+    table.add_column("Subsequent Cost", style="yellow")
+    table.add_column("Total Cost", style="red")
+
+    # Get models from config that have pricing data
+    config_models = set(AgentConfig.get_all_models())
+    pricing_models = set(get_supported_models())
+    available_models = config_models.intersection(pricing_models)
+
+    # Calculate costs and store in list for sorting
+    cost_data = []
+    for model in available_models:
+        try:
+            # Calculate cost for just input tokens (templates are input only)
+            initial_cost = calculate_cost(model, initial_tokens, 0)
+            subsequent_cost = calculate_cost(model, subsequent_tokens, 0)
+            total_cost = initial_cost + subsequent_cost
+
+            cost_data.append(
+                {
+                    "model": model,
+                    "initial_cost": initial_cost,
+                    "subsequent_cost": subsequent_cost,
+                    "total_cost": total_cost,
+                }
+            )
+        except Exception as e:
+            print(f"⚠️  Could not calculate cost for {model}: {e}")
+            continue
+
+    # Sort by total cost ascending
+    cost_data.sort(key=lambda x: x["total_cost"])
+
+    # Add rows to table
+    for item in cost_data:
+        table.add_row(
+            item["model"],
+            f"${item['initial_cost']:.6f}",
+            f"${item['subsequent_cost']:.6f}",
+            f"${item['total_cost']:.6f}",
+        )
+
+    console.print(table)
+    print(
+        f"\n📊 Token counts: Initial={initial_tokens:,}, Subsequent={subsequent_tokens:,}"
+    )

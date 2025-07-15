@@ -46,9 +46,10 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   5. [x] Implement session management with metadata tracking
 
 4. [ ] Create a CLI script that allows us to iterate on the prompts quickly
-  1. [ ] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
-  2. [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
-  3. [ ] Receive the response and prints output and any metadata
+  1. [ ] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
+  2. [ ] Receive the response and save the response etc to DB
+  3. [ ] Print out the response in a user-friendly format
+  3. [ ] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
 
 6. [ ] Develop core prompts through iterative testing
   1. [ ] Create initial system prompt enforcing rubber duck methodology
