@@ -124,3 +124,73 @@ def test_load_system_prompt_validation() -> None:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+def test_load_system_prompt_fallback_content() -> None:
+    """Test that fallback prompt contains expected content."""
+    from unittest.mock import patch
+    
+    # Mock file not found to trigger fallback
+    with patch("pathlib.Path.exists", return_value=False):
+        prompt = load_system_prompt()
+        
+        # Check that fallback content is returned
+        assert "You are Quinn" in prompt
+        assert "encouraging and supportive" in prompt
+        assert "understanding the problem thoroughly" in prompt
+
+
+def test_save_prompt_version() -> None:
+    """Test saving a prompt version."""
+    import tempfile
+    from pathlib import Path
+    from unittest.mock import patch, MagicMock
+    
+    test_content = "Test system prompt content"
+    test_version = "240715-120000"
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        
+        # Mock the Path(__file__).parent.parent.parent chain
+        mock_file_path = MagicMock()
+        mock_file_path.parent.parent.parent = temp_path
+        
+        with patch("quinn.agent.versioning.Path") as mock_path:
+            mock_path.return_value = mock_file_path
+            mock_path.__file__ = "fake_file.py"
+            
+            save_prompt_version(test_version, test_content)
+            
+            # Verify file was created with correct content
+            expected_file = temp_path / "quinn" / "templates" / "prompts" / f"system_{test_version}.txt"
+            assert expected_file.exists()
+            assert expected_file.read_text() == test_content
+
+
+def test_save_prompt_version_creates_directories() -> None:
+    """Test that save_prompt_version creates necessary directories."""
+    import tempfile
+    from pathlib import Path
+    from unittest.mock import patch, MagicMock
+    
+    test_content = "Test content"
+    test_version = "240715-120000"
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        
+        # Mock the Path(__file__).parent.parent.parent chain
+        mock_file_path = MagicMock()
+        mock_file_path.parent.parent.parent = temp_path
+        
+        with patch("quinn.agent.versioning.Path") as mock_path:
+            mock_path.return_value = mock_file_path
+            mock_path.__file__ = "fake_file.py"
+            
+            save_prompt_version(test_version, test_content)
+            
+            # Verify directories were created
+            prompts_dir = temp_path / "quinn" / "templates" / "prompts"
+            assert prompts_dir.exists()
+            assert prompts_dir.is_dir()
+

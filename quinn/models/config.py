@@ -2,6 +2,7 @@
 
 import os
 from typing import Any
+import inspect
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -223,25 +224,24 @@ class AgentConfig(BaseModel):
             api_key=os.getenv("GEMINI_API_KEY", ""),
         )
 
+    @classmethod
+    def get_all_models(cls) -> list[str]:
+        """Get all available model names from class methods."""
+        models = []
+        for name, method in inspect.getmembers(cls, inspect.ismethod):
+            if name not in ("validate_model_not_empty", "get_all_models") and hasattr(
+                method, "__func__"
+            ):
+                config_instance = method()
+                models.append(config_instance.model)
+        return models
+
 
 if __name__ == "__main__":
-    import inspect
-
     print("AgentConfig demonstration:")
 
     default_config = AgentConfig()
     print(f"Default config: {default_config}")
 
-    print("\nDynamically loaded prebuilt configurations:")
-
-    for name, method in inspect.getmembers(AgentConfig, inspect.isfunction):
-        if (
-            isinstance(method, classmethod)
-            and name != "validate_model_not_empty"
-            and method.__annotations__.get("return") is AgentConfig
-        ):
-            try:
-                config_instance = method.__func__(AgentConfig)
-                print(f"{name.replace('_', ' ').title()}: {config_instance}")
-            except Exception as e:
-                print(f"Error calling {name}: {e}")
+    print("\nAvailable models:")
+    print(AgentConfig.get_all_models())
