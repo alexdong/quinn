@@ -1,32 +1,20 @@
 import json
 import logging
-import time
-
-from pydantic import BaseModel, Field
+from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
+from quinn.models.message import Message, MessageMetrics
 
 logger = logging.getLogger(__name__)
 
 
-class Message(BaseModel):
-    id: str
-    conversation_id: str
-    user_id: str
-    created_at: int = Field(default_factory=lambda: int(time.time()))
-    last_updated_at: int = Field(default_factory=lambda: int(time.time()))
-    system_prompt: str = ""
-    user_content: str = ""
-    assistant_content: str = ""
-    metadata: dict | None = None
-
-
 class Messages:
     @staticmethod
-    def create(message: Message) -> None:
+    def create(message: Message, user_id: str) -> None:
         """Creates a new message in the database."""
         logger.info(
-            "Creating message: id={message.id}, conversation_id=%s",
+            "Creating message: id=%s, conversation_id=%s",
+            message.id,
             message.conversation_id,
         )
 
@@ -40,20 +28,22 @@ class Messages:
                 params = (
                     message.id,
                     message.conversation_id,
-                    message.user_id,
-                    message.created_at,
-                    message.last_updated_at,
+                    user_id,
+                    int(message.created_at.timestamp()),
+                    int(message.last_updated_at.timestamp()),
                     message.system_prompt,
                     message.user_content,
                     message.assistant_content,
-                    json.dumps(message.metadata) if message.metadata else None,
+                    json.dumps(message.metadata.model_dump())
+                    if message.metadata
+                    else None,
                 )
                 logger.info("SQL: %s | Params: %s", sql.strip(), params)
                 cursor.execute(sql, params)
                 conn.commit()
                 logger.debug("Message created successfully: %s", message.id)
         except Exception as e:
-            logger.error("Failed to create message {message.id}: %s", e)
+            logger.error("Failed to create message %s: %s", message.id, e)
             raise
 
     @staticmethod
@@ -71,21 +61,26 @@ class Messages:
                 row = cursor.fetchone()
                 if row:
                     logger.debug("Message found: %s", message_id)
+                    # Convert from database format to models format
+                    metadata = None
+                    if row[8]:
+                        metadata_dict = json.loads(row[8])
+                        metadata = MessageMetrics(**metadata_dict)
+
                     return Message(
                         id=row[0],
                         conversation_id=row[1],
-                        user_id=row[2],
-                        created_at=row[3],
-                        last_updated_at=row[4],
+                        created_at=datetime.fromtimestamp(row[3], UTC),
+                        last_updated_at=datetime.fromtimestamp(row[4], UTC),
                         system_prompt=row[5],
                         user_content=row[6],
                         assistant_content=row[7],
-                        metadata=json.loads(row[8]) if row[8] else None,
+                        metadata=metadata,
                     )
                 logger.debug("Message not found: %s", message_id)
                 return None
         except Exception as e:
-            logger.error("Failed to retrieve message {message_id}: %s", e)
+            logger.error("Failed to retrieve message %s: %s", message_id, e)
             raise
 
     @staticmethod
@@ -101,35 +96,45 @@ class Messages:
                 logger.info("SQL: %s | Params: %s", sql, params)
                 cursor.execute(sql, params)
                 rows = cursor.fetchall()
-                messages = [
-                    Message(
+                messages = []
+                for row in rows:
+                    # Convert from database format to models format
+                    metadata = None
+                    if row[8]:
+                        metadata_dict = json.loads(row[8])
+                        metadata = MessageMetrics(**metadata_dict)
+
+                    message = Message(
                         id=row[0],
                         conversation_id=row[1],
-                        user_id=row[2],
-                        created_at=row[3],
-                        last_updated_at=row[4],
+                        created_at=datetime.fromtimestamp(row[3], UTC),
+                        last_updated_at=datetime.fromtimestamp(row[4], UTC),
                         system_prompt=row[5],
                         user_content=row[6],
                         assistant_content=row[7],
-                        metadata=json.loads(row[8]) if row[8] else None,
+                        metadata=metadata,
                     )
-                    for row in rows
-                ]
+                    messages.append(message)
+
                 logger.debug(
-                    "Found {len(messages)} messages for conversation %s",
+                    "Found %d messages for conversation %s",
+                    len(messages),
                     conversation_id,
                 )
                 return messages
         except Exception as e:
             logger.error(
-                "Failed to retrieve messages for conversation {conversation_id}: %s", e
+                "Failed to retrieve messages for conversation %s: %s",
+                conversation_id,
+                e,
             )
             raise
 
     @staticmethod
     def update(message: Message) -> None:
         """Updates an existing message."""
-        message.last_updated_at = int(time.time())
+        # Update the last_updated_at timestamp
+        message.last_updated_at = datetime.now(UTC)
         logger.info("Updating message: %s", message.id)
 
         try:
@@ -141,11 +146,13 @@ class Messages:
                     WHERE id = ?
                     """
                 params = (
-                    message.last_updated_at,
+                    int(message.last_updated_at.timestamp()),
                     message.system_prompt,
                     message.user_content,
                     message.assistant_content,
-                    json.dumps(message.metadata) if message.metadata else None,
+                    json.dumps(message.metadata.model_dump())
+                    if message.metadata
+                    else None,
                     message.id,
                 )
                 logger.info("SQL: %s | Params: %s", sql.strip(), params)
@@ -153,7 +160,7 @@ class Messages:
                 conn.commit()
                 logger.debug("Message updated successfully: %s", message.id)
         except Exception as e:
-            logger.error("Failed to update message {message.id}: %s", e)
+            logger.error("Failed to update message %s: %s", message.id, e)
             raise
 
     @staticmethod

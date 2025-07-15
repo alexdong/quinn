@@ -18,6 +18,13 @@ dependencies = [
     "pytest-asyncio>=1.0.0",
 ]
 
+[project.scripts]
+quinn = "quinn.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["quinn*"]
+exclude = ["llms*"]
+
 [tool.uv]
 dev-dependencies = [
     "pytest>=7.0.0",

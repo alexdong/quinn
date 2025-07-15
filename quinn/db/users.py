@@ -1,28 +1,20 @@
 import json
 import logging
-import time
-
-from pydantic import BaseModel, Field
+from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
+from quinn.models.user import User
 
 logger = logging.getLogger(__name__)
-
-
-class User(BaseModel):
-    id: str
-    created_at: int = Field(default_factory=lambda: int(time.time()))
-    updated_at: int = Field(default_factory=lambda: int(time.time()))
-    name: str | None = None
-    email_addresses: list[str]
-    settings: dict | None = None
 
 
 class Users:
     @staticmethod
     def create(user: User) -> None:
         """Creates a new user in the database."""
-        logger.info("Creating user: id={user.id}, emails=%s", len(user.email_addresses))
+        logger.info(
+            "Creating user: id=%s, emails=%s", user.id, len(user.email_addresses)
+        )
 
         try:
             with get_db_connection() as conn:
@@ -33,8 +25,8 @@ class Users:
                     """
                 params = (
                     user.id,
-                    user.created_at,
-                    user.updated_at,
+                    int(user.created_at.timestamp()),
+                    int(user.updated_at.timestamp()),
                     user.name,
                     json.dumps(user.email_addresses),
                     json.dumps(user.settings) if user.settings else None,
@@ -44,7 +36,7 @@ class Users:
                 conn.commit()
                 logger.debug("User created successfully: %s", user.id)
         except Exception as e:
-            logger.error("Failed to create user {user.id}: %s", e)
+            logger.error("Failed to create user %s: %s", user.id, e)
             raise
 
     @staticmethod
@@ -64,8 +56,8 @@ class Users:
                     logger.debug("User found: %s", user_id)
                     return User(
                         id=row[0],
-                        created_at=row[1],
-                        updated_at=row[2],
+                        created_at=datetime.fromtimestamp(row[1], UTC),
+                        updated_at=datetime.fromtimestamp(row[2], UTC),
                         name=row[3],
                         email_addresses=json.loads(row[4]),
                         settings=json.loads(row[5]) if row[5] else None,
@@ -73,7 +65,7 @@ class Users:
                 logger.debug("User not found: %s", user_id)
                 return None
         except Exception as e:
-            logger.error("Failed to retrieve user {user_id}: %s", e)
+            logger.error("Failed to retrieve user %s: %s", user_id, e)
             raise
 
     @staticmethod
@@ -91,11 +83,11 @@ class Users:
                 for row in rows:
                     email_addresses = json.loads(row[4])
                     if email in email_addresses:
-                        logger.debug("User found by email {email}: %s", row[0])
+                        logger.debug("User found by email %s: %s", email, row[0])
                         return User(
                             id=row[0],
-                            created_at=row[1],
-                            updated_at=row[2],
+                            created_at=datetime.fromtimestamp(row[1], UTC),
+                            updated_at=datetime.fromtimestamp(row[2], UTC),
                             name=row[3],
                             email_addresses=email_addresses,
                             settings=json.loads(row[5]) if row[5] else None,
@@ -103,13 +95,13 @@ class Users:
                 logger.debug("No user found with email: %s", email)
                 return None
         except Exception as e:
-            logger.error("Failed to retrieve user by email {email}: %s", e)
+            logger.error("Failed to retrieve user by email %s: %s", email, e)
             raise
 
     @staticmethod
     def update(user: User) -> None:
         """Updates an existing user."""
-        user.updated_at = int(time.time())
+        user.updated_at = datetime.now(UTC)
         logger.info("Updating user: %s", user.id)
 
         try:
@@ -121,7 +113,7 @@ class Users:
                     WHERE id = ?
                     """
                 params = (
-                    user.updated_at,
+                    int(user.updated_at.timestamp()),
                     user.name,
                     json.dumps(user.email_addresses),
                     json.dumps(user.settings) if user.settings else None,
@@ -132,7 +124,7 @@ class Users:
                 conn.commit()
                 logger.debug("User updated successfully: %s", user.id)
         except Exception as e:
-            logger.error("Failed to update user {user.id}: %s", e)
+            logger.error("Failed to update user %s: %s", user.id, e)
             raise
 
     @staticmethod
@@ -141,7 +133,7 @@ class Users:
 
         Returns True if email was added, False if user not found or email already exists.
         """
-        logger.info("Adding alternative email {email} to user %s", user_id)
+        logger.info("Adding alternative email %s to user %s", email, user_id)
 
         try:
             user = Users.get_by_id(user_id)
@@ -150,18 +142,18 @@ class Users:
                 return False
 
             if email in user.email_addresses:
-                logger.debug("Email {email} already exists for user %s", user_id)
+                logger.debug("Email %s already exists for user %s", email, user_id)
                 return False  # Email already exists
 
             user.email_addresses.append(email)
             Users.update(user)
             logger.debug(
-                "Alternative email {email} added successfully to user %s", user_id
+                "Alternative email %s added successfully to user %s", email, user_id
             )
             return True
         except Exception as e:
             logger.error(
-                "Failed to add alternative email {email} to user {user_id}: %s", e
+                "Failed to add alternative email %s to user %s: %s", email, user_id, e
             )
             raise
 
@@ -184,5 +176,5 @@ class Users:
                 else:
                     logger.warning("No user found to delete: %s", user_id)
         except Exception as e:
-            logger.error("Failed to delete user {user_id}: %s", e)
+            logger.error("Failed to delete user %s: %s", user_id, e)
             raise

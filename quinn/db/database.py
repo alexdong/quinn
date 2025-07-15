@@ -20,12 +20,15 @@ def get_db_connection() -> Generator[sqlite3.Connection]:
         pragma_sql = "PRAGMA foreign_keys = ON"
         logger.info("SQL: %s", pragma_sql)
         conn.execute(pragma_sql)
-        yield conn
-        logger.debug("Database connection successful")
-    except Exception as e:
-        logger.error("Database connection error: %s", e)
-        if conn:
+        try:
+            yield conn
+            logger.debug("Database connection successful")
+        except Exception as e:
+            logger.error("Database connection error: %s", e)
             conn.rollback()
+            raise
+    except Exception as e:
+        logger.error("Database setup error: %s", e)
         raise
     finally:
         if conn:
