@@ -309,3 +309,41 @@ def test_delete_message(setup_test_data, test_message_data):
         # Verify message is deleted
         retrieved_message = Messages.get_by_id(test_message_data["id"])
         assert retrieved_message is None
+
+def test_message_operations_error_handling(clean_db):
+    """Test error handling in message operations."""
+    from unittest.mock import patch
+    import pytest
+    
+    message_id = str(uuid.uuid4())
+    message = Message(
+        id=message_id,
+        conversation_id="test-conv",
+        user_id="test-user",
+        user_content="Test message"
+    )
+    
+    # Mock database connection to raise an exception
+    with patch("quinn.db.messages.get_db_connection", side_effect=Exception("Database error")):
+        with pytest.raises(Exception, match="Database error"):
+            Messages.create(message)
+        
+        with pytest.raises(Exception, match="Database error"):
+            Messages.get_by_id(message_id)
+        
+        with pytest.raises(Exception, match="Database error"):
+            Messages.get_by_conversation("test-conv")
+        
+        with pytest.raises(Exception, match="Database error"):
+            Messages.update(message)
+        
+        with pytest.raises(Exception, match="Database error"):
+            Messages.delete(message_id)
+
+
+def test_delete_nonexistent_message(clean_db):
+    """Test deleting a message that does not exist."""
+    with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
+        # Should not raise an exception, just log a warning
+        Messages.delete("nonexistent-message-id")
+
