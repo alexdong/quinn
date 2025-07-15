@@ -230,3 +230,30 @@ def test_main_demo_function() -> None:
     assert "Cost Calculation Demo" in output
     assert "Supported models" in output
 
+
+
+def test_demo_functions_cache_savings_and_errors() -> None:
+    """Test demo functions to cover cache savings and error handling."""
+    from unittest.mock import patch
+    from io import StringIO
+    from quinn.agent.cost import _demo_model_costs, _demo_cost_estimation
+    
+    # Test cache savings calculation (lines 188-190)
+    captured_output = StringIO()
+    with patch("sys.stdout", captured_output):
+        # Use a model with cached pricing to trigger savings calculation
+        _demo_model_costs("claude-3-5-sonnet-20241022", 1000, 500, 2000)
+    
+    output = captured_output.getvalue()
+    # Should show cache savings if the model supports it
+    assert "claude-3-5-sonnet-20241022" in output
+    
+    # Test error handling in demo (lines 217-218)
+    captured_output = StringIO()
+    with patch("sys.stdout", captured_output):
+        with patch("quinn.agent.cost.estimate_completion_cost", side_effect=Exception("Test error")):
+            _demo_cost_estimation(["gpt-4o-mini"])
+    
+    output = captured_output.getvalue()
+    assert "Error: Test error" in output
+
