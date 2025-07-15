@@ -214,3 +214,19 @@ if __name__ == "__main__":
     print(f"  Output tokens: {estimate['estimated_output_tokens']}")
     
     print(f"\n🧪 Cost calculation tests completed!")
+
+def test_main_demo_function() -> None:
+    """Test the main demo function for coverage."""
+    from unittest.mock import patch
+    from io import StringIO
+    from quinn.agent.cost import main
+    
+    # Capture stdout to avoid cluttering test output
+    captured_output = StringIO()
+    with patch("sys.stdout", captured_output):
+        main()
+    
+    output = captured_output.getvalue()
+    assert "Cost Calculation Demo" in output
+    assert "Supported models" in output
+
