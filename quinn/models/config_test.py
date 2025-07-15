@@ -210,3 +210,22 @@ def test_agent_config_main_demo() -> None:
         models = AgentConfig.get_all_models()
         assert len(models) > 0
 
+
+
+def test_config_main_block() -> None:
+    """Test the main block execution."""
+    from unittest.mock import patch
+    from io import StringIO
+    import subprocess
+    import sys
+    
+    # Test by running the module as main
+    result = subprocess.run([
+        sys.executable, "-c", 
+        "import quinn.models.config; quinn.models.config.main()"
+    ], capture_output=True, text=True)
+    
+    # Should not error and should produce output
+    assert result.returncode == 0
+    assert len(result.stdout) > 0
+

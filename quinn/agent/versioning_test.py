@@ -63,9 +63,9 @@ def test_save_and_load_prompt_version() -> None:
         original_file = versioning_module.__file__
         
         # Mock the path calculation
-        def mock_save_prompt_version(content: str, version: str) -> None:
-            assert content.strip(), "Prompt content cannot be empty"
+        def mock_save_prompt_version(version: str, content: str) -> None:
             assert version.strip(), "Version cannot be empty"
+            assert content.strip(), "Prompt content cannot be empty"
             
             prompts_dir = temp_project_root / "quinn" / "templates" / "prompts"
             prompts_dir.mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ def test_save_and_load_prompt_version() -> None:
             return prompt_file.read_text().strip()
         
         # Test save
-        mock_save_prompt_version(test_content, test_version)
+        mock_save_prompt_version(test_version, test_content)
         
         # Test load
         loaded_content = mock_load_system_prompt(test_version)
@@ -99,17 +99,17 @@ def test_save_and_load_prompt_version() -> None:
 def test_save_prompt_version_validation() -> None:
     """Test prompt version saving validation."""
     
-    with pytest.raises(AssertionError, match="Prompt content cannot be empty"):
+    with pytest.raises(AssertionError, match="Version cannot be empty"):
         save_prompt_version("", "v1.0")
     
-    with pytest.raises(AssertionError, match="Prompt content cannot be empty"):
+    with pytest.raises(AssertionError, match="Version cannot be empty"):
         save_prompt_version("   ", "v1.0")  # Whitespace only
     
-    with pytest.raises(AssertionError, match="Version cannot be empty"):
-        save_prompt_version("Test content", "")
+    with pytest.raises(AssertionError, match="Prompt content cannot be empty"):
+        save_prompt_version("v1.0", "")
     
-    with pytest.raises(AssertionError, match="Version cannot be empty"):
-        save_prompt_version("Test content", "   ")  # Whitespace only
+    with pytest.raises(AssertionError, match="Prompt content cannot be empty"):
+        save_prompt_version("v1.0", "   ")  # Whitespace only
 
 
 def test_load_system_prompt_validation() -> None:
@@ -193,4 +193,13 @@ def test_save_prompt_version_creates_directories() -> None:
             prompts_dir = temp_path / "quinn" / "templates" / "prompts"
             assert prompts_dir.exists()
             assert prompts_dir.is_dir()
+
+
+
+def test_load_system_prompt_file_reading() -> None:
+    """Test actual file reading in load_system_prompt."""
+    # This test will hit the actual file reading line
+    prompt = load_system_prompt()
+    assert isinstance(prompt, str)
+    assert len(prompt) > 0
 
