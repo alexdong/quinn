@@ -96,5 +96,5 @@ commit:  ## Run all quality checks and create an automated commit
 	@echo "✅ Test coverage check passed!"
 	@echo ""
 	@echo "🤖 Step 5: Creating automated commit..."
-	@claude commit --dangerously-skip-permissions
+	@claude --dangerously-skip-permissions -p "Commit and push changes to the repository. Ensure all changes are committed and pushed to the main branch."
 	@echo "✅ Commit pipeline completed successfully!"
