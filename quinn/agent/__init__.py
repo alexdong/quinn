@@ -2,13 +2,21 @@
 
 from .cache import cache_response, get_cached_response
 from .core import calculate_cost, create_agent, generate_response
-from .cost import estimate_completion_cost, get_cost_per_token, get_model_cost_info
+from .cost import (
+    CompletionCostEstimate,
+    ModelCostInfo,
+    estimate_completion_cost,
+    get_cost_per_token,
+    get_model_cost_info,
+)
 from .metrics import track_response_metrics
 from .retry import retry_with_backoff
 from .validation import validate_message_for_ai
 from .versioning import get_current_prompt_version, load_system_prompt
 
 __all__ = [
+    "CompletionCostEstimate",
+    "ModelCostInfo",
     "cache_response",
     "calculate_cost",
     "create_agent",

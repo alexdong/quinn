@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,15 @@ def _load_pricing_data() -> dict[str, dict[str, Any]]:
 MODEL_PRICING: dict[str, dict[str, float]] = _load_pricing_data()
 
 
-def get_model_cost_info(model: str) -> dict[str, float]:
+class ModelCostInfo(NamedTuple):
+    """Structured cost information for a model."""
+
+    input_cost_per_token: float
+    output_cost_per_token: float
+    cached_input_cost_per_token: float | None
+
+
+def get_model_cost_info(model: str) -> ModelCostInfo:
     """Get cost information for a model using local pricing data."""
     assert model.strip(), "Model name cannot be empty"
     assert model in MODEL_PRICING, f"Model {model} not found in pricing data"
@@ -53,11 +61,11 @@ def get_model_cost_info(model: str) -> dict[str, float]:
         cached_price / 1_000_000 if cached_price is not None else None
     )
 
-    return {
-        "input_cost_per_token": model_info["input_price_per_1m_tokens"] / 1_000_000,
-        "output_cost_per_token": model_info["output_price_per_1m_tokens"] / 1_000_000,
-        "cached_input_cost_per_token": cached_cost_per_token,
-    }
+    return ModelCostInfo(
+        input_cost_per_token=model_info["input_price_per_1m_tokens"] / 1_000_000,
+        output_cost_per_token=model_info["output_price_per_1m_tokens"] / 1_000_000,
+        cached_input_cost_per_token=cached_cost_per_token,
+    )
 
 
 def calculate_cost(
@@ -82,20 +90,20 @@ def calculate_cost(
     cost_info = get_model_cost_info(model)
 
     # Calculate regular input cost
-    input_cost = input_tokens * cost_info["input_cost_per_token"]
+    input_cost = input_tokens * cost_info.input_cost_per_token
 
     # Calculate cached input cost if available
     cached_cost = 0.0
     if cached_input_tokens > 0:
-        cached_cost_per_token = cost_info.get("cached_input_cost_per_token")
+        cached_cost_per_token = cost_info.cached_input_cost_per_token
         if cached_cost_per_token is not None:
             cached_cost = cached_input_tokens * cached_cost_per_token
         else:
             # If no cached pricing available, use regular input pricing
-            cached_cost = cached_input_tokens * cost_info["input_cost_per_token"]
+            cached_cost = cached_input_tokens * cost_info.input_cost_per_token
 
     # Calculate output cost
-    output_cost = output_tokens * cost_info["output_cost_per_token"]
+    output_cost = output_tokens * cost_info.output_cost_per_token
 
     return input_cost + cached_cost + output_cost
 
@@ -112,19 +120,29 @@ def get_cost_per_token(model: str, token_type: str = "input") -> float:
     cost_info = get_model_cost_info(model)
 
     if token_type == "input":
-        return cost_info["input_cost_per_token"]
+        return cost_info.input_cost_per_token
     if token_type == "output":
-        return cost_info["output_cost_per_token"]
+        return cost_info.output_cost_per_token
     # cached_input
-    cached_cost = cost_info.get("cached_input_cost_per_token")
-    return cached_cost if cached_cost is not None else cost_info["input_cost_per_token"]
+    cached_cost = cost_info.cached_input_cost_per_token
+    return cached_cost if cached_cost is not None else cost_info.input_cost_per_token
+
+
+class CompletionCostEstimate(NamedTuple):
+    """Estimated cost information for a completion."""
+
+    estimated_total_cost: float
+    estimated_input_tokens: int
+    estimated_output_tokens: int
+    input_cost_per_token: float
+    output_cost_per_token: float
 
 
 def estimate_completion_cost(
     model: str,
     prompt: str,
     max_tokens: int = 1000,
-) -> dict[str, float]:
+) -> CompletionCostEstimate:
     """Estimate cost for a completion before making the API call."""
     assert model.strip(), "Model name cannot be empty"
     assert prompt.strip(), "Prompt cannot be empty"
@@ -144,13 +162,13 @@ def estimate_completion_cost(
 
     cost_info = get_model_cost_info(model)
 
-    return {
-        "estimated_total_cost": estimated_cost,
-        "estimated_input_tokens": estimated_input_tokens,
-        "estimated_output_tokens": estimated_output_tokens,
-        "input_cost_per_token": cost_info["input_cost_per_token"],
-        "output_cost_per_token": cost_info["output_cost_per_token"],
-    }
+    return CompletionCostEstimate(
+        estimated_total_cost=estimated_cost,
+        estimated_input_tokens=estimated_input_tokens,
+        estimated_output_tokens=estimated_output_tokens,
+        input_cost_per_token=cost_info.input_cost_per_token,
+        output_cost_per_token=cost_info.output_cost_per_token,
+    )
 
 
 def get_supported_models() -> list[str]:
@@ -166,9 +184,9 @@ def _demo_model_costs(
 
     # Get cost info
     cost_info = get_model_cost_info(model)
-    print(f"   Input cost per token: ${cost_info['input_cost_per_token']:.8f}")
-    print(f"   Output cost per token: ${cost_info['output_cost_per_token']:.8f}")
-    cached_cost = cost_info.get("cached_input_cost_per_token")
+    print(f"   Input cost per token: ${cost_info.input_cost_per_token:.8f}")
+    print(f"   Output cost per token: ${cost_info.output_cost_per_token:.8f}")
+    cached_cost = cost_info.cached_input_cost_per_token
     if cached_cost is not None:
         print(f"   Cached input cost per token: ${cached_cost:.8f}")
     else:
@@ -211,9 +229,9 @@ def _demo_cost_estimation(models: list[str]) -> None:
         try:
             estimate = estimate_completion_cost(model, test_prompt, max_tokens)
             print(f"🤖 {model}:")
-            print(f"   Estimated cost: ${estimate['estimated_total_cost']:.6f}")
-            print(f"   Input tokens: {estimate['estimated_input_tokens']}")
-            print(f"   Output tokens: {estimate['estimated_output_tokens']}")
+            print(f"   Estimated cost: ${estimate.estimated_total_cost:.6f}")
+            print(f"   Input tokens: {estimate.estimated_input_tokens}")
+            print(f"   Output tokens: {estimate.estimated_output_tokens}")
         except Exception as e:
             print(f"   ❌ Error: {e}")
         print()

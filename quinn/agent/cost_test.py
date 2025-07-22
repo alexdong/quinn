@@ -7,6 +7,8 @@ from .cost import (
     estimate_completion_cost,
     get_cost_per_token,
     get_model_cost_info,
+    ModelCostInfo,
+    CompletionCostEstimate,
     get_supported_models,
 )
 
@@ -23,11 +25,9 @@ def test_get_model_cost_info() -> None:
     
     for model in test_models:
         cost_info = get_model_cost_info(model)
-        assert isinstance(cost_info, dict)
-        assert "input_cost_per_token" in cost_info
-        assert "output_cost_per_token" in cost_info
-        assert cost_info["input_cost_per_token"] >= 0.0
-        assert cost_info["output_cost_per_token"] >= 0.0
+        assert isinstance(cost_info, ModelCostInfo)
+        assert cost_info.input_cost_per_token >= 0.0
+        assert cost_info.output_cost_per_token >= 0.0
 
 
 def test_calculate_cost() -> None:
@@ -75,19 +75,12 @@ def test_estimate_completion_cost() -> None:
         max_tokens=100,
     )
     
-    assert isinstance(estimate, dict)
-    required_keys = [
-        "estimated_total_cost",
-        "estimated_input_tokens", 
-        "estimated_output_tokens",
-        "input_cost_per_token",
-        "output_cost_per_token",
-    ]
-    
-    for key in required_keys:
-        assert key in estimate
-        assert isinstance(estimate[key], (int, float))
-        assert estimate[key] >= 0.0
+    assert isinstance(estimate, CompletionCostEstimate)
+    assert estimate.estimated_total_cost >= 0.0
+    assert estimate.estimated_input_tokens >= 0
+    assert estimate.estimated_output_tokens >= 0
+    assert estimate.input_cost_per_token >= 0.0
+    assert estimate.output_cost_per_token >= 0.0
 
 
 def test_get_supported_models() -> None:
@@ -121,9 +114,9 @@ def test_free_model_pricing() -> None:
     """Test that free experimental models have zero cost."""
     free_model = "gemini-2.5-flash-exp"
     cost_info = get_model_cost_info(free_model)
-    
-    assert cost_info["input_cost_per_token"] == 0.0
-    assert cost_info["output_cost_per_token"] == 0.0
+
+    assert cost_info.input_cost_per_token == 0.0
+    assert cost_info.output_cost_per_token == 0.0
     
     # Cost calculation should be zero
     cost = calculate_cost(free_model, 1000, 500)
@@ -209,9 +202,9 @@ if __name__ == "__main__":
         max_tokens=200,
     )
     print(f"  Model: {model}")
-    print(f"  Estimated cost: ${estimate['estimated_total_cost']:.6f}")
-    print(f"  Input tokens: {estimate['estimated_input_tokens']}")
-    print(f"  Output tokens: {estimate['estimated_output_tokens']}")
+    print(f"  Estimated cost: ${estimate.estimated_total_cost:.6f}")
+    print(f"  Input tokens: {estimate.estimated_input_tokens}")
+    print(f"  Output tokens: {estimate.estimated_output_tokens}")
     
     print(f"\n🧪 Cost calculation tests completed!")
 
