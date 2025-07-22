@@ -7,7 +7,8 @@
       "Bash(uv sync:*)",
       "Bash(uv search:*)",
       "Bash(make:*)",
-      "Bash(say:*)"
+      "Bash(say:*)",
+      "Bash(uv run:*)"
     ],
     "deny": []
   }

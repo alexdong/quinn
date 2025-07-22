@@ -5,6 +5,10 @@
 # Uses uv for Python package management (following coding standards)
 # Author: Alex Dong <me@alexdong.com>
 #
+# Usage:
+#   ./install_dev_tools.sh          # Default: installs only uv and jq
+#   ./install_dev_tools.sh --full   # Installs all development tools
+#
 # Troubleshooting:
 # - If you get "rustup could not choose a version of cargo": Run `rustup default stable`
 # - If cargo commands fail: Run `source ~/.cargo/env` and try again
@@ -383,9 +387,9 @@ verify_installations() {
     fi
 }
 
-# Main installation function
-main() {
-    log_info "Starting development tools installation..."
+# Minimal installation function for compact mode
+install_minimal() {
+    log_info "Starting minimal tools installation (compact mode)..."
     
     # Detect platform
     PLATFORM=$(detect_platform)
@@ -396,28 +400,95 @@ main() {
         install_homebrew
     fi
     
-    # Install core dependencies
-    install_rust
+    # Install only uv and jq
     install_uv
     
-    # Install tools
-    install_package_manager_tools
-    install_cargo_tools
-    install_mise
-    install_llm
-    
-    # Setup environment
-    setup_shell_environment
-    
-    # Verify everything worked
-    verify_installations
-    
-    log_success "Installation complete!"
-    log_info "Please restart your shell or run:"
+    log_info "Installing jq..."
     if [[ "$PLATFORM" == "macos" ]]; then
-        log_info "  source ~/.zshrc"
+        if brew list jq &>/dev/null; then
+            log_warn "jq already installed via brew"
+        else
+            brew install jq
+        fi
     else
-        log_info "  source ~/.bashrc"
+        if dpkg -l | grep -q "^ii  jq "; then
+            log_warn "jq already installed via apt"
+        else
+            sudo apt update
+            sudo apt install -y jq
+        fi
+    fi
+    
+    # Verify minimal installations
+    log_info "Verifying minimal installations..."
+    local tools=("uv" "jq")
+    local missing=()
+    
+    for tool in "${tools[@]}"; do
+        if command_exists "$tool"; then
+            log_success "✓ $tool"
+        else
+            log_error "✗ $tool"
+            missing+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        log_success "Minimal tools installed successfully!"
+    else
+        log_error "Missing tools: ${missing[*]}"
+        return 1
+    fi
+}
+
+# Main installation function
+main() {
+    # Parse arguments - default is compact mode
+    local full_mode=false
+    for arg in "$@"; do
+        if [[ "$arg" == "--full" ]]; then
+            full_mode=true
+            break
+        fi
+    done
+    
+    if $full_mode; then
+        log_info "Starting full development tools installation..."
+        
+        # Detect platform
+        PLATFORM=$(detect_platform)
+        log_info "Detected platform: $PLATFORM"
+        
+        # Install package managers
+        if [[ "$PLATFORM" == "macos" ]]; then
+            install_homebrew
+        fi
+        
+        # Install core dependencies
+        install_rust
+        install_uv
+        
+        # Install tools
+        install_package_manager_tools
+        install_cargo_tools
+        install_mise
+        install_llm
+        
+        # Setup environment
+        setup_shell_environment
+        
+        # Verify everything worked
+        verify_installations
+        
+        log_success "Installation complete!"
+        log_info "Please restart your shell or run:"
+        if [[ "$PLATFORM" == "macos" ]]; then
+            log_info "  source ~/.zshrc"
+        else
+            log_info "  source ~/.bashrc"
+        fi
+    else
+        install_minimal
     fi
 }
 
