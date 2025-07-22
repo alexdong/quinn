@@ -12,9 +12,9 @@ Quinn is an email-native, AI-powered “rubber duck.” It guides technically‑
 
 ## Implementation Plan
 
-### Phase 0: Implement the Prompts
+### Phase 0: Core Infrastructure and Basic Prompts
 
-By the end of this phase, we will have the initial prompts and follow-up questions ready for user interaction. All prompts will be tested and iterated upon to ensure they are effective in guiding users through their problem-solving process.
+By the end of this phase, we will have the basic infrastructure and initial prompts ready for user interaction. All prompts will be tested and iterated upon to ensure they are effective in guiding users through their problem-solving process.
 
 **Success Criteria:**
 - Quinn consistently asks open-ended questions that guide discovery
@@ -28,7 +28,7 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   3. [x] Document anti-patterns to avoid (being directive, solving problems, leading questions)
 
 2. [x] Implement basic AI response generation using pydantic-ai (API documentation is avaiable at ./llms/pydantic-ai.md)
-  1. [x] Create initial AI agent using pydantic-ai with Claude 4.0 Sonnet
+  1. [x] Create initial AI agent using pydantic-ai with multi-model support (Gemini, Claude, GPT)
   2. [x] Implement basic response generation logic with error handling
   3. [x] Add retry logic for API failures with exponential backoff
   4. [x] Implement cost tracking (tokens, API costs, response time) per interaction
@@ -45,14 +45,14 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   4. [x] Add in-memory SQLite backend for testing purposes
   5. [x] Implement session management with metadata tracking
 
-4. [x] Create a CLI script that allows us to iterate on the prompts quickly
-  1. [x] Implement prompt template variables: {{user_problem}}, {{previous_response}}, {{conversation_history}}
-  2. [x] Receive the response and save the response etc to DB
-  3. [x] Print out the response in a user-friendly format
-  3. [x] Create minimal CLI: `echo "..." | quinn -p <prompt_file>` that takes the user input and prompt file and send it to LLM
+4. [ ] Create prompt iteration and versioning system
+  1. [ ] Implement prompt versioning to track changes over time
+  2. [ ] Create CLI for prompt testing and iteration
+  3. [ ] Add prompt performance metrics and A/B testing capability
+  4. [ ] Build prompt template library for different problem types
 
-6. [ ] Develop core prompts through iterative testing
-  1. [ ] Create initial system prompt enforcing rubber duck methodology
+5. [ ] Develop core prompts through iterative testing
+  1. [x] Create initial system prompt enforcing rubber duck methodology (basic version exists)
   2. [ ] Develop prompt for generating 5-7 clarification questions
   3. [ ] Create follow-up prompt for after user answers questions
   4. [ ] Design email footer with clear instructions and expectations
@@ -60,33 +60,37 @@ By the end of this phase, we will have the initial prompts and follow-up questio
   6. [ ] Document prompt iterations and effectiveness in logs/
 
 
-### Phase 1: End-to-End Functioning Agent using CLI
+### Phase 1: End-to-End Functioning Agent using CLI ✅ COMPLETED
 
 Create Quinn agent using pydantic-ai that can interact with users via a command-line interface (CLI). This will allow us to test the core functionality of the agent without needing a full web application or email processing system in place.
 
-- `echo "User problem statement" | quinn -n` will start a new conversation with the given problem statement.
-- `quinn` will start a new conversation or resume most recent conversation by opening up a temporary file using $EDITOR. 
-- `quinn -l` will list all existing conversations where each conversation is identified by a unique int ID.
-- `quinn -c N` will continue the conversation with ID N.
+**Implemented Commands:**
+- `echo "User problem statement" | quinn -n` - Start a new conversation ✅
+- `quinn` - Start new or resume most recent conversation using $EDITOR ✅
+- `quinn -l` - List all existing conversations with ID, timestamp, and preview ✅
+- `quinn -c N` - Continue conversation with ID N ✅
+- `quinn -p <prompt_file>` - Use custom prompt template ✅
+- `quinn -m <model>` - Select AI model (gemini-2.0-flash-exp, claude-3-5-sonnet, gpt-4, etc.) ✅
+- `quinn --debug` - Show debug output including rendered prompts ✅
 
-A few notes on the CLI:
+**Completed Features:**
+- [x] Implement command-line interface using click
+  - [x] Handle user input and output formatting with rich console
+  - [x] Add basic error handling and logging
+  - [x] Support for piped input and interactive editor mode
+  - [x] Model selection with cost tracking
 
-1. It's critical that we can drop into any step of the conversation and continue from there.
-2.  Keep in mind that we do not want to use the structured output just yet.
+- [x] Implement conversation state tracking
+  - [x] Create session model with conversation_id as primary key
+  - [x] Store conversation history and context in SQLite
+  - [x] Tracking cost at both message and conversation level
+  - [x] Basic session management (create, list, continue)
 
-- [ ] Implement command-line interface using click
-  - [ ] Handle user input and output formatting
-  - [ ] Add basic error handling and logging
-
-- [ ] Implement conversation state tracking
-  - [ ] Create session model with thread_id as primary key
-  - [ ] Store conversation history and context
-  - [ ] Implement session expiration and cleanup
-  - [ ] Response caching for common question patterns
-  - [ ] Add privacy-preserving data retention policies
-  - [ ] Tracking cost at both message and session level
-
-- [ ] Implement basic logging and tracing infrastructure
+**Not Yet Implemented:**
+- [ ] Session expiration and cleanup
+- [ ] Response caching for common question patterns
+- [ ] Privacy-preserving data retention policies
+- [ ] Comprehensive logging and tracing infrastructure with trace_id/span_id
 
 
 ### Phase 2: Email Processing System
@@ -145,8 +149,6 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
   - [ ] Create admin interface for session viewing
   - [ ] Implement rate limiting and abuse prevention
 
-  10. [ ] Implement prompt versioning to track changes over time
-  11. [ ] Implement prompt caching to avoid repeated API calls. The `agent/cache.py` has the wrong idea.
 
 - [ ] Implement Admin Interface
   - [ ] Create admin dashboard for session management
@@ -159,16 +161,9 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
   - [ ] Create audit logging for all interactions
   - [ ] Add an "allowlist" feature for email senders
 
-### Phase 5: Introduce Perspectives
-
-5. [ ] Establish the map-reduce pattern for considering perspectives
-  1. [ ] After the initial questions, Quinn will ask for 3-5 perspectives on the problem
-  2. [ ] Each perspective will be provided a separate prompt to get further clarification questions.
-  3. [ ] Each perspective will be processed independently to generate tailored follow-up questions.
-  4. [ ] The final response will be a summary of all perspectives and their follow-up questions.
 
 
-### Phase 5: Core Infrastructure Setup
+### Phase 5: Advanced Features and Infrastructure
 
 - [ ] Create user configuration system
   - [ ] Each user can have more than one email address
