@@ -75,7 +75,7 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 
 upgrade:  ## Upgrade dependencies to latest versions
 	@echo "🔄 Upgrading dependencies to latest versions..."
-	@uv run pip-compile --upgrade
+	@uv sync --upgrade
 
 commit:  ## Run all quality checks and create an automated commit
 	@echo "🚀 Running complete quality and testing pipeline..."

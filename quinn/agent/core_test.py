@@ -212,7 +212,7 @@ async def test_generate_response_success() -> None:
     assert result.metadata is not None
     assert result.metadata.tokens_used == 18
     assert result.metadata.cost_usd == 0.001
-    assert result.metadata.model_used == "gpt-4o-mini"
+    assert result.metadata.model_used == "gemini-2.5-flash"
 
 
 @pytest.mark.asyncio
