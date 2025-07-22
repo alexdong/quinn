@@ -14,6 +14,7 @@ from quinn.agent.core import (
     _build_conversation_prompt,
     _calculate_usage_metrics,
     _load_system_prompt,
+    SYSTEM_PROMPT,
     create_agent,
     generate_response,
 )
@@ -161,13 +162,13 @@ async def test_create_agent() -> None:
     """Test creating agent with configuration."""
     config = AgentConfig.o4mini()
     
-    with patch("quinn.agent.core._load_system_prompt", return_value="Test prompt"):
+    with patch("quinn.agent.core.SYSTEM_PROMPT", "Test prompt"):
         with patch("quinn.agent.core.Agent") as mock_agent_class:
             mock_agent = MagicMock()
             mock_agent_class.return_value = mock_agent
-            
+
             result = await create_agent(config)
-            
+
             assert result == mock_agent
             mock_agent_class.assert_called_once()
 

@@ -40,6 +40,9 @@ def _load_system_prompt() -> str:
         return "You are Quinn, a helpful AI assistant that guides users to solve their own problems by asking thoughtful questions rather than providing direct solutions."
 
 
+SYSTEM_PROMPT = _load_system_prompt()
+
+
 def _build_conversation_prompt(
     user_message: Message,
     conversation_history: list[Message],
@@ -188,7 +191,7 @@ async def create_agent(config: AgentConfig) -> Agent:
     # Create agent with configuration
     return Agent(
         model=config.model,
-        system_prompt=_load_system_prompt(),
+        system_prompt=SYSTEM_PROMPT,
         model_settings=model_settings,
         retries=config.max_retries,
     )
