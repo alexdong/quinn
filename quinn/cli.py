@@ -1,7 +1,10 @@
 """Command-line interface for Quinn prompt iteration."""
 
 import asyncio
+import os
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,12 +14,14 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.syntax import Syntax
+from rich.table import Table
 
 from quinn.agent.core import generate_response
 from quinn.db.conversations import Conversations, DbConversation
 from quinn.db.database import create_tables
 from quinn.db.messages import Messages
 from quinn.db.users import Users
+from quinn.models.config import AgentConfig
 from quinn.models.message import Message
 from quinn.models.user import User
 
@@ -24,20 +29,23 @@ console = Console()
 
 # Constants
 TITLE_MAX_LENGTH = 50
+TITLE_TRUNCATE_LENGTH = 47
 
 
-def _setup_database() -> None:
-    """Ensure database tables exist and create CLI user if needed."""
+def _create_tables_if_needed() -> None:
+    """Create database tables if they don't exist."""
     try:
-        # Try to create tables, ignore if they already exist
-        try:
-            create_tables()
-        except Exception as e:
-            if "already exists" not in str(e):
-                raise
+        create_tables()
+    except Exception as e:
+        # Silently ignore if tables already exist
+        if "already exists" not in str(e):
+            raise
 
-        # Ensure CLI user exists
-        cli_user_id = "cli-user"
+
+def _create_cli_user_if_needed() -> None:
+    """Create CLI user if it doesn't exist."""
+    cli_user_id = "cli-user"
+    try:
         if not Users.get_by_id(cli_user_id):
             cli_user = User(
                 id=cli_user_id,
@@ -45,7 +53,17 @@ def _setup_database() -> None:
                 email_addresses=["cli@localhost"],
             )
             Users.create(cli_user)
+    except Exception as e:
+        # Silently ignore if user already exists
+        if "already exists" not in str(e):
+            raise
 
+
+def _setup_database() -> None:
+    """Ensure database tables exist and create CLI user if needed."""
+    try:
+        _create_tables_if_needed()
+        _create_cli_user_if_needed()
     except Exception as e:
         console.print(f"[red]Database setup failed: {e}[/red]")
         sys.exit(1)
@@ -91,7 +109,7 @@ def _render_custom_prompt(template_content: str, user_content: str) -> str:
 
 
 async def _generate_and_save_response(
-    user_content: str, custom_prompt: str | None = None
+    user_content: str, custom_prompt: str | None = None, model: str = "gemini-2.5-flash"
 ) -> Message:
     """Generate AI response and save to database."""
     # Create conversation
@@ -104,10 +122,12 @@ async def _generate_and_save_response(
         system_prompt=custom_prompt or "",
     )
 
+    config = _get_model_config(model)
+
     try:
         # Generate response
         with console.status("[bold green]Generating response..."):
-            response_message = await generate_response(user_message)
+            response_message = await generate_response(user_message, config=config)
 
         # Save to database
         with console.status("[bold blue]Saving to database..."):
@@ -165,32 +185,188 @@ def _display_response(message: Message) -> None:
         )
 
 
-@click.command()
-@click.option(
-    "-p",
-    "--prompt-file",
-    type=str,
-    help="Path to custom prompt template file (supports Jinja2 variables: {{user_problem}}, {{user_content}})",
-)
-@click.option(
-    "--debug",
-    is_flag=True,
-    help="Enable debug output",
-)
-def main(prompt_file: str | None, *, debug: bool = False) -> None:
-    """Quinn CLI for prompt iteration.
+def _list_conversations() -> None:
+    """List all conversations for the CLI user."""
+    conversations = Conversations.get_by_user("cli-user")
 
-    Usage:
-        echo "Your problem here" | quinn -p custom_prompt.j2
-        quinn -p custom_prompt.j2  # Interactive mode
-        quinn  # Use default prompt
-    """
-    if debug:
-        console.print("[dim]Debug mode enabled[/dim]")
+    if not conversations:
+        console.print("[yellow]No conversations found.[/yellow]")
+        return
 
-    # Setup database
-    _setup_database()
+    # Sort by updated_at descending (most recent first)
+    conversations.sort(key=lambda x: x.updated_at, reverse=True)
 
+    table = Table(title="Conversations")
+    table.add_column("ID", style="cyan", no_wrap=True)
+    table.add_column("Title", style="magenta")
+    table.add_column("Messages", justify="right", style="green")
+    table.add_column("Total Cost", justify="right", style="yellow")
+    table.add_column("Status", style="blue")
+    table.add_column("Updated", style="dim")
+
+    for i, conv in enumerate(conversations, 1):
+        # Use 1-based indexing for user-friendly display
+        title = conv.title or "Untitled"
+        if len(title) > TITLE_MAX_LENGTH:
+            title = title[:TITLE_TRUNCATE_LENGTH] + "..."
+
+        table.add_row(
+            str(i),
+            title,
+            str(conv.message_count),
+            f"${conv.total_cost:.6f}",
+            conv.status,
+            conv.updated_at.strftime("%Y-%m-%d %H:%M"),
+        )
+
+    console.print(table)
+
+
+def _get_conversation_by_index(index: int) -> DbConversation | None:
+    """Get conversation by 1-based index (as shown in list)."""
+    conversations = Conversations.get_by_user("cli-user")
+    if not conversations:
+        return None
+
+    # Sort by updated_at descending (most recent first)
+    conversations.sort(key=lambda x: x.updated_at, reverse=True)
+
+    if index < 1 or index > len(conversations):
+        return None
+
+    return conversations[index - 1]  # Convert to 0-based index
+
+
+def _get_most_recent_conversation() -> DbConversation | None:
+    """Get the most recently updated conversation."""
+    conversations = Conversations.get_by_user("cli-user")
+    if not conversations:
+        return None
+
+    # Sort by updated_at descending and return the first one
+    conversations.sort(key=lambda x: x.updated_at, reverse=True)
+    return conversations[0]
+
+
+def _read_from_editor(initial_content: str = "") -> str:
+    """Open editor to get user input."""
+    editor = os.environ.get("EDITOR", "vim")
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".txt", delete=False) as f:
+        f.write(initial_content)
+        f.flush()
+        temp_file = f.name
+
+    try:
+        subprocess.run([editor, temp_file], check=True)
+
+        with Path(temp_file).open() as f:
+            return f.read().strip()
+
+    finally:
+        Path(temp_file).unlink()
+
+
+def _get_model_config(model: str) -> AgentConfig:
+    """Get the model configuration for the given model name."""
+    model_configs = {
+        "gemini-2.5-flash": AgentConfig.gemini25flash,
+        "gemini-2.5-flash-thinking": AgentConfig.gemini25flashthinking,
+        "claude-4-sonnet": AgentConfig.sonnet4,
+        "gpt-4o-mini": AgentConfig.o4mini,
+        "gpt-4.1": AgentConfig.gpt41,
+        "gpt-4.1-mini": AgentConfig.gpt41mini,
+    }
+
+    if model not in model_configs:
+        console.print(
+            f"[red]Error: Unsupported model '{model}'. Available models: {', '.join(model_configs.keys())}[/red]"
+        )
+        sys.exit(1)
+
+    return model_configs[model]()
+
+
+def _build_conversation_context(conversation_id: str, user_input: str) -> str:
+    """Build conversation context with previous messages."""
+    # Get existing messages to build conversation history
+    existing_messages = Messages.get_by_conversation(conversation_id)
+
+    # Build conversation history for context
+    conversation_history = []
+    for msg in existing_messages:
+        conversation_history.append(f"User: {msg.user_content}")
+        conversation_history.append(f"Quinn: {msg.assistant_content}")
+
+    # Add conversation history as context
+    if conversation_history:
+        context = "\n\n".join(conversation_history)
+        return f"Previous conversation:\n{context}\n\nNew message: {user_input}"
+
+    return user_input
+
+
+async def _continue_conversation(
+    conversation_id: str, user_input: str, model: str
+) -> Message:
+    """Continue an existing conversation with new user input."""
+    # Create new user message with context
+    user_message = Message(
+        conversation_id=conversation_id,
+        user_content=_build_conversation_context(conversation_id, user_input),
+        system_prompt="",  # Use default system prompt
+    )
+
+    config = _get_model_config(model)
+
+    try:
+        # Generate response
+        with console.status("[bold green]Generating response..."):
+            response_message = await generate_response(user_message, config=config)
+
+        # Update conversation message count and cost
+        conversation = Conversations.get_by_id(conversation_id)
+        if conversation:
+            conversation.message_count += 1
+            if response_message.metadata:
+                conversation.total_cost += response_message.metadata.cost_usd
+            Conversations.update(conversation)
+
+        # Save message to database
+        with console.status("[bold blue]Saving to database..."):
+            Messages.create(response_message, "cli-user")
+
+        return response_message
+
+    except Exception as e:
+        console.print(f"[red]Error generating or saving response: {e}[/red]")
+        sys.exit(1)
+
+
+def _handle_continue_conversation(continue_id: int, model: str) -> None:
+    """Handle continuing a specific conversation."""
+    conversation = _get_conversation_by_index(continue_id)
+    if not conversation:
+        console.print(f"[red]Error: Conversation {continue_id} not found[/red]")
+        sys.exit(1)
+
+    # Get user input for continuation
+    user_content = _read_stdin()
+    if not user_content.strip():
+        console.print("[red]Error: No input provided[/red]")
+        sys.exit(1)
+
+    # Continue the conversation
+    response_message = asyncio.run(
+        _continue_conversation(conversation.id, user_content, model)
+    )
+    _display_response(response_message)
+
+
+def _handle_new_conversation(
+    prompt_file: str | None, model: str, *, debug: bool = False
+) -> None:
+    """Handle starting a new conversation."""
     # Get user input
     user_content = _read_stdin()
     if not user_content.strip():
@@ -215,11 +391,182 @@ def main(prompt_file: str | None, *, debug: bool = False) -> None:
 
     # Generate and save response
     response_message = asyncio.run(
-        _generate_and_save_response(user_content, custom_prompt)
+        _generate_and_save_response(user_content, custom_prompt, model)
     )
-
-    # Display results
     _display_response(response_message)
+
+
+def _handle_continue_recent_conversation(
+    recent_conversation: DbConversation, model: str
+) -> None:
+    """Handle continuing the most recent conversation."""
+    # Use editor to get continuation input
+    user_content = _read_from_editor()
+    if not user_content.strip():
+        console.print("[red]Error: No input provided[/red]")
+        sys.exit(1)
+
+    response_message = asyncio.run(
+        _continue_conversation(recent_conversation.id, user_content, model)
+    )
+    _display_response(response_message)
+
+
+def _handle_new_conversation_with_content(
+    user_content: str, prompt_file: str | None, model: str, *, debug: bool = False
+) -> None:
+    """Handle creating a new conversation with the provided content."""
+    # Read custom prompt if specified
+    custom_prompt = None
+    if prompt_file:
+        template_content = _read_prompt_file(prompt_file)
+        custom_prompt = _render_custom_prompt(template_content, user_content)
+
+        if debug:
+            console.print()
+            console.print(
+                Panel(
+                    Syntax(custom_prompt, "text", theme="monokai"),
+                    title="[bold magenta]Rendered Prompt",
+                    border_style="magenta",
+                )
+            )
+
+    # Generate and save response
+    response_message = asyncio.run(
+        _generate_and_save_response(user_content, custom_prompt, model)
+    )
+    _display_response(response_message)
+
+
+def _get_user_input_for_new_conversation() -> str:
+    """Get user input for a new conversation, either from editor or pipe."""
+    if sys.stdin.isatty():
+        # Start new conversation using editor
+        user_content = _read_from_editor()
+        if not user_content.strip():
+            console.print("[red]Error: No input provided[/red]")
+            sys.exit(1)
+        return user_content
+    # Read from pipe - start new conversation
+    user_content = sys.stdin.read().strip()
+    if not user_content:
+        console.print("[red]Error: No input provided[/red]")
+        sys.exit(1)
+    return user_content
+
+
+def _handle_default_behavior(
+    prompt_file: str | None, model: str, *, debug: bool = False
+) -> None:
+    """Handle default behavior: start new conversation or resume most recent."""
+    if sys.stdin.isatty():
+        # No piped input, check for most recent conversation
+        recent_conversation = _get_most_recent_conversation()
+        if recent_conversation:
+            # Ask if user wants to continue or start new
+            choice = Prompt.ask(
+                f"Continue most recent conversation '{recent_conversation.title}'?",
+                choices=["y", "n"],
+                default="y",
+            )
+            if choice.lower() == "y":
+                _handle_continue_recent_conversation(recent_conversation, model)
+                return
+
+    # Get user input for new conversation
+    user_content = _get_user_input_for_new_conversation()
+    _handle_new_conversation_with_content(user_content, prompt_file, model, debug=debug)
+
+
+@click.command()
+@click.option(
+    "-n",
+    "--new",
+    is_flag=True,
+    help="Start a new conversation",
+)
+@click.option(
+    "-l",
+    "--list",
+    "list_conversations",
+    is_flag=True,
+    help="List all conversations",
+)
+@click.option(
+    "-c",
+    "--continue",
+    "continue_id",
+    type=int,
+    help="Continue conversation with ID N",
+)
+@click.option(
+    "-p",
+    "--prompt-file",
+    type=str,
+    help="Path to custom prompt template file (supports Jinja2 variables: {{user_problem}}, {{user_content}})",
+)
+@click.option(
+    "-m",
+    "--model",
+    type=str,
+    default="gemini-2.5-flash",
+    help="LLM model to use (default: gemini-2.5-flash)",
+)
+@click.option(
+    "--debug",
+    is_flag=True,
+    help="Enable debug output",
+)
+def main(
+    new: bool,  # noqa: FBT001
+    list_conversations: bool,  # noqa: FBT001
+    continue_id: int | None,
+    prompt_file: str | None,
+    model: str,
+    *,
+    debug: bool = False,
+) -> None:
+    """Quinn CLI - AI-powered rubber duck for guided problem-solving.
+
+    Usage:
+        echo "Your problem here" | quinn -n    # Start new conversation
+        quinn                                   # Start new or resume recent conversation (uses $EDITOR)
+        quinn -l                               # List all conversations
+        quinn -c 3                             # Continue conversation with ID 3
+        quinn -p custom_prompt.j2              # Use custom prompt template
+
+    Available models:
+        - gemini-2.5-flash (default)
+        - gemini-2.5-flash-thinking
+        - claude-4-sonnet
+        - gpt-4o-mini
+        - gpt-4.1
+        - gpt-4.1-mini
+    """
+    if debug:
+        console.print("[dim]Debug mode enabled[/dim]")
+
+    # Setup database
+    _setup_database()
+
+    # Handle listing conversations
+    if list_conversations:
+        _list_conversations()
+        return
+
+    # Handle continuing a specific conversation
+    if continue_id:
+        _handle_continue_conversation(continue_id, model)
+        return
+
+    # Handle new conversation flag
+    if new:
+        _handle_new_conversation(prompt_file, model, debug=debug)
+        return
+
+    # Default behavior: start new conversation or resume most recent
+    _handle_default_behavior(prompt_file, model, debug=debug)
 
 
 if __name__ == "__main__":

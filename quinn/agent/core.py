@@ -109,6 +109,7 @@ def _calculate_usage_metrics(
 async def generate_response(
     user_message: Message,
     conversation_history: list[Message] | None = None,
+    config: AgentConfig | None = None,
 ) -> Message:
     """Generate AI response with full error handling and metrics tracking."""
     assert user_message.user_content.strip(), "User message content cannot be empty"
@@ -117,8 +118,9 @@ async def generate_response(
     if conversation_history is None:
         conversation_history = []
 
-    # Create agent with default config for now
-    config = AgentConfig.o4mini()
+    # Use provided config or default to gemini-2.5-flash
+    if config is None:
+        config = AgentConfig.gemini25flash()
     agent = await create_agent(config)
 
     # Build conversation prompt

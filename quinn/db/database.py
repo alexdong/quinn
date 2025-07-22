@@ -9,6 +9,14 @@ logger = logging.getLogger(__name__)
 DATABASE_FILE = "quinn.db"
 
 
+def _log_database_error(error: Exception, context: str) -> None:
+    """Log database errors appropriately based on error type."""
+    if "already exists" in str(error):
+        logger.debug("%s: %s", context, error)
+    else:
+        logger.error("%s: %s", context, error)
+
+
 @contextmanager
 def get_db_connection() -> Generator[sqlite3.Connection]:
     """Context manager to handle database connections."""
@@ -24,11 +32,11 @@ def get_db_connection() -> Generator[sqlite3.Connection]:
             yield conn
             logger.debug("Database connection successful")
         except Exception as e:
-            logger.error("Database connection error: %s", e)
+            _log_database_error(e, "Database connection error")
             conn.rollback()
             raise
     except Exception as e:
-        logger.error("Database setup error: %s", e)
+        _log_database_error(e, "Database setup error")
         raise
     finally:
         if conn:
@@ -51,5 +59,9 @@ def create_tables() -> None:
             conn.executescript(schema_sql)
             logger.info("Database tables created successfully")
     except Exception as e:
-        logger.error("Failed to create database tables: %s", e)
-        raise
+        # Only log as error if it's not a "table already exists" error
+        if "already exists" in str(e):
+            logger.debug("Database tables already exist, skipping creation")
+        else:
+            logger.error("Failed to create database tables: %s", e)
+            raise
