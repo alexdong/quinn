@@ -336,3 +336,90 @@ class UsageMetrics:
 - **NamedTuple**: Simple data containers, immutable, lightweight
 - **Dataclass**: Need methods, default values, or mutable fields
 - **Regular dict**: Only for truly dynamic data where keys aren't known at design time
+
+
+# Database Transaction Safety: Validate Before Commit
+
+**Problem:** Committing transactions before validating success can corrupt data and make errors unrecoverable  
+**Solution:** Always execute operations, validate success, then commit - enabling rollback on failure
+
+**Why this matters:**
+- Maintains data integrity by preventing invalid commits
+- Enables error recovery through transaction rollback
+- Follows fail-fast principle with clear error messages
+- Prevents silent failures that cause downstream issues
+
+## The Pattern: Execute → Validate → Commit
+
+```python
+# Bad: Commit before validation (irreversible damage)
+conn.commit()
+assert cursor.rowcount == 1, (
+    f"Failed to create conversation {conversation.id}"
+)  # Too late - data already committed!
+
+# Good: Validate before commit (safe and recoverable)
+logger.info("SQL: %s | Params: %s", sql.strip(), params)
+cursor.execute(sql, params)
+assert cursor.rowcount == 1, (
+    f"Failed to insert conversation {conversation.id}"
+)  # Check success first
+conn.commit()  # Only commit if validation passes
+```
+
+## Key Benefits
+
+**Transaction Safety**
+- Failed validation can trigger rollback before data corruption
+- Maintains ACID compliance and database consistency
+- Prevents partial operations from being permanently saved
+
+**Fail Fast Principle**
+- Assertions fail immediately with specific error messages
+- Stops execution at the exact point of failure
+- No silent failures or defensive masking of real problems
+
+**Debugging Support**
+- SQL logging helps trace execution flow
+- Clear error messages identify exactly what failed
+- Transaction boundaries are explicit and testable
+
+## Complete Pattern with Assertions
+
+```python
+def insert_conversation(conn, cursor, conversation):
+    """Insert conversation with proper transaction safety."""
+    sql = "INSERT INTO conversations (id, title, created_at) VALUES (?, ?, ?)"
+    params = (conversation.id, conversation.title, conversation.created_at)
+    
+    logger.info("SQL: %s | Params: %s", sql.strip(), params)
+    cursor.execute(sql, params)
+    
+    # Validate success before committing - fail fast with clear message
+    assert cursor.rowcount == 1, (
+        f"Failed to insert conversation {conversation.id}: "
+        f"expected 1 row affected, got {cursor.rowcount}"
+    )
+    
+    conn.commit()
+    logger.info("Successfully inserted conversation %s", conversation.id)
+```
+
+## When to Use This Pattern
+
+**Always use for:**
+- INSERT/UPDATE/DELETE operations where row count matters
+- Multi-step transactions that must complete atomically
+- Operations where data integrity is critical
+
+**Validation techniques:**
+- `cursor.rowcount` for affected row count validation
+- `cursor.lastrowid` for auto-generated ID verification
+- Custom queries to verify expected state changes
+
+**Assertion guidelines:**
+- Use assertions for database operation validation (programmer errors)
+- Let real database exceptions (network, permissions, constraints) bubble up naturally
+- Provide specific, actionable error messages in assertions
+
+This pattern ensures data integrity by validating success before making changes permanent, enabling safe recovery when operations fail.
