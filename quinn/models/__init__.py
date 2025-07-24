@@ -2,6 +2,7 @@
 
 from .config import AgentConfig
 from .conversation import Conversation, ConversationMetrics, Message
+from .email import EmailAttachment, EmailDirection, EmailMessage
 from .message import MessageMetrics
 from .types import PROMPT_VERSION
 
@@ -13,6 +14,9 @@ __all__ = [
     "AgentConfig",
     "Conversation",
     "ConversationMetrics",
+    "EmailAttachment",
+    "EmailDirection",
+    "EmailMessage",
     "Message",
     "MessageMetrics",
 ]

@@ -49,6 +49,7 @@ def clean_db(temp_db: Path) -> Generator[Path]:
         patch("quinn.db.database.DATABASE_FILE", str(temp_db)),
         get_db_connection() as conn,
     ):
+        conn.execute("DELETE FROM emails")
         conn.execute("DELETE FROM messages")
         conn.execute("DELETE FROM conversations")
         conn.execute("DELETE FROM users")

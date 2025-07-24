@@ -24,6 +24,14 @@ class ContextFilter(logging.Filter):
         return True
 
 
+def get_logger(name: str) -> logging.Logger:
+    """Return a logger with context filtering enabled."""
+    logger = logging.getLogger(name)
+    if not any(isinstance(f, ContextFilter) for f in logger.filters):
+        logger.addFilter(ContextFilter())
+    return logger
+
+
 def set_trace_id(mailbox_hash: str, message_id: str) -> str:
     """Set the trace ID using the mailbox hash and message ID."""
     trace_id = f"{mailbox_hash}:{message_id}"
