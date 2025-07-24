@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 # Database representation of a conversation (simple data class for DB operations)
-class DbConversation:
+class ConversationStore:
     """Database representation of a conversation for DB operations only."""
 
     def __init__(
@@ -36,7 +36,7 @@ class DbConversation:
 
 class Conversations:
     @staticmethod
-    def create(conversation: DbConversation) -> None:
+    def create(conversation: ConversationStore) -> None:
         """Creates a new conversation in the database."""
         logger.info(
             "Creating conversation: id=%s, user_id=%s",
@@ -70,7 +70,7 @@ class Conversations:
             logger.debug("Conversation created successfully: %s", conversation.id)
 
     @staticmethod
-    def get_by_id(conversation_id: str) -> DbConversation | None:
+    def get_by_id(conversation_id: str) -> ConversationStore | None:
         """Retrieves a conversation by its ID."""
         logger.debug("Retrieving conversation by ID: %s", conversation_id)
 
@@ -83,7 +83,7 @@ class Conversations:
             row = cursor.fetchone()
             if row:
                 logger.debug("Conversation found: %s", conversation_id)
-                return DbConversation(
+                return ConversationStore(
                     conversation_id=row[0],
                     user_id=row[1],
                     created_at=datetime.fromtimestamp(row[2], UTC),
@@ -98,7 +98,7 @@ class Conversations:
             return None
 
     @staticmethod
-    def get_by_user(user_id: str) -> list[DbConversation]:
+    def get_by_user(user_id: str) -> list[ConversationStore]:
         """Retrieves all conversations for a given user."""
         logger.debug("Retrieving conversations for user: %s", user_id)
 
@@ -110,7 +110,7 @@ class Conversations:
             cursor.execute(sql, params)
             rows = cursor.fetchall()
             conversations = [
-                DbConversation(
+                ConversationStore(
                     conversation_id=row[0],
                     user_id=row[1],
                     created_at=datetime.fromtimestamp(row[2], UTC),
@@ -129,7 +129,7 @@ class Conversations:
             return conversations
 
     @staticmethod
-    def update(conversation: DbConversation) -> None:
+    def update(conversation: ConversationStore) -> None:
         """Updates an existing conversation."""
         conversation.updated_at = datetime.now(UTC)
         logger.info("Updating conversation: %s", conversation.id)

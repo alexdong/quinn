@@ -18,7 +18,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from quinn.agent.core import generate_response
-from quinn.db.conversations import Conversations, DbConversation
+from quinn.db.conversations import Conversations, ConversationStore
 from quinn.db.database import create_tables
 from quinn.db.messages import Messages
 from quinn.db.users import Users
@@ -139,7 +139,7 @@ async def _generate_and_save_response(
                 if len(user_content) > TITLE_MAX_LENGTH
                 else user_content
             )
-            db_conversation = DbConversation(
+            db_conversation = ConversationStore(
                 conversation_id=conversation_id,
                 user_id="cli-user",  # Fixed user for CLI usage
                 title=title,
@@ -224,7 +224,7 @@ def _list_conversations() -> None:
     console.print(table)
 
 
-def _get_conversation_by_index(index: int) -> DbConversation | None:
+def _get_conversation_by_index(index: int) -> ConversationStore | None:
     """Get conversation by 1-based index (as shown in list)."""
     conversations = Conversations.get_by_user("cli-user")
     if not conversations:
@@ -239,7 +239,7 @@ def _get_conversation_by_index(index: int) -> DbConversation | None:
     return conversations[index - 1]  # Convert to 0-based index
 
 
-def _get_most_recent_conversation() -> DbConversation | None:
+def _get_most_recent_conversation() -> ConversationStore | None:
     """Get the most recently updated conversation."""
     conversations = Conversations.get_by_user("cli-user")
     if not conversations:
@@ -400,7 +400,7 @@ def _handle_new_conversation(
 
 
 def _handle_continue_recent_conversation(
-    recent_conversation: DbConversation, model: str
+    recent_conversation: ConversationStore, model: str
 ) -> None:
     """Handle continuing the most recent conversation."""
     # Use editor to get continuation input
