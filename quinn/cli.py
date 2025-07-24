@@ -485,7 +485,9 @@ def _handle_default_behavior(
 @click.command(epilog="""
 GETTING STARTED:
 
-    quinn           # Start a new conversation (opens $EDITOR)
+    quinn           # Continue or start a new conversation  (opens $EDITOR)
+    quinn -n        # Start a new conversation  (opens $EDITOR)
+    quinn -c        # Continue the most recent conversation (opens $EDITOR)
     quinn -l        # List all your conversations with IDs
     quinn -c 1      # Continue conversation #1 (opens $EDITOR)
 
