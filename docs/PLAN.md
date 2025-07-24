@@ -177,9 +177,9 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
 - [ ] Create project configuration system
   - [ ] Convert the `config.py` into config on per user basis
 
-- [ ] Expand logging infrastructure
-  - [ ] Create centralized logging configuration with proper levels
-  - [ ] Implement trace_id/span_id generation for request tracking
-  - [ ] Add debug module filtering support (--debug-modules)
-  - [ ] Create log rotation and management utilities
-  - [ ] Implement @functools.wraps decorators for tracing
+- [x] Expand logging infrastructure
+  - [x] Create centralized logging configuration with proper levels
+  - [x] Implement trace_id/span_id generation for request tracking
+  - [x] Add debug module filtering support (--debug-modules)
+  - [x] Create log rotation and management utilities
+  - [x] Implement @functools.wraps decorators for tracing
