@@ -490,10 +490,12 @@ GETTING STARTED:
     quinn -c        # Continue the most recent conversation (opens $EDITOR)
     quinn -l        # List all your conversations with IDs
     quinn -c 1      # Continue conversation #1 (opens $EDITOR)
+    quinn --reset-all   # Reset all conversations and start fresh
 
 EXAMPLE SESSION:
 
     $ quinn
+    # Equivalent to 'quinn -n' since there is no previous conversation yet.
     # $EDITOR opens, you type:
     # "I'd love to plan out what to watch for 90 minutes rowing session tonight.
     #  I'm working in AI/coding, startup and board level. I fence epee. 
@@ -502,6 +504,7 @@ EXAMPLE SESSION:
     # Quinn responds with clarifying questions
 
     $ quinn
+    # Equivalent to 'quinn -c' since there is a previous conversation.
     # $EDITOR opens, you answer inline between the quoted clarifying questions:
     # "1. in-depth interviews or documentaries are great. 
     #  2. I like a mix of tech, business, and personal growth topics.
