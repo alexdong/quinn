@@ -86,13 +86,6 @@ Create Quinn agent using pydantic-ai that can interact with users via a command-
   - [x] Tracking cost at both message and conversation level
   - [x] Basic session management (create, list, continue)
 
-**Not Yet Implemented:**
-- [ ] Session expiration and cleanup
-- [ ] Response caching for common question patterns
-- [ ] Privacy-preserving data retention policies
-- [ ] Comprehensive logging and tracing infrastructure with trace_id/span_id
-
-
 ### Phase 2: Email Processing System
 
 The email thread reconstruction is achieved through the following steps:
@@ -173,13 +166,3 @@ Note that the web should be as minimum as possible. Think Craigslist-style.
   - [ ] Display the rating prompt in the email response footer
   - [ ] Store ratings in conversation metadata
   - [ ] Implement basic analytics dashboard for ratings
-
-- [ ] Create project configuration system
-  - [ ] Convert the `config.py` into config on per user basis
-
-- [x] Expand logging infrastructure
-  - [x] Create centralized logging configuration with proper levels
-  - [x] Implement trace_id/span_id generation for request tracking
-  - [x] Add debug module filtering support (--debug-modules)
-  - [x] Create log rotation and management utilities
-  - [x] Implement @functools.wraps decorators for tracing
