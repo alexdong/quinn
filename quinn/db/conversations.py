@@ -3,40 +3,14 @@ import logging
 from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
+from quinn.models.conversation import Conversation
 
 logger = logging.getLogger(__name__)
 
 
-# Database representation of a conversation (simple data class for DB operations)
-class DbConversation:
-    """Database representation of a conversation for DB operations only."""
-
-    def __init__(
-        self,
-        conversation_id: str,
-        user_id: str,
-        title: str | None = None,
-        status: str = "active",
-        total_cost: float = 0.0,
-        message_count: int = 0,
-        metadata: dict | None = None,
-        created_at: datetime | None = None,
-        updated_at: datetime | None = None,
-    ) -> None:
-        self.id = conversation_id
-        self.user_id = user_id
-        self.title = title
-        self.status = status
-        self.total_cost = total_cost
-        self.message_count = message_count
-        self.metadata = metadata
-        self.created_at = created_at or datetime.now(UTC)
-        self.updated_at = updated_at or datetime.now(UTC)
-
-
-class Conversations:
+class ConversationStore:
     @staticmethod
-    def create(conversation: DbConversation) -> None:
+    def create(conversation: Conversation) -> None:
         """Creates a new conversation in the database."""
         logger.info(
             "Creating conversation: id=%s, user_id=%s",
@@ -70,7 +44,7 @@ class Conversations:
             logger.debug("Conversation created successfully: %s", conversation.id)
 
     @staticmethod
-    def get_by_id(conversation_id: str) -> DbConversation | None:
+    def get_by_id(conversation_id: str) -> Conversation | None:
         """Retrieves a conversation by its ID."""
         logger.debug("Retrieving conversation by ID: %s", conversation_id)
 
@@ -83,8 +57,8 @@ class Conversations:
             row = cursor.fetchone()
             if row:
                 logger.debug("Conversation found: %s", conversation_id)
-                return DbConversation(
-                    conversation_id=row[0],
+                return Conversation(
+                    id=row[0],
                     user_id=row[1],
                     created_at=datetime.fromtimestamp(row[2], UTC),
                     updated_at=datetime.fromtimestamp(row[3], UTC),
@@ -98,7 +72,7 @@ class Conversations:
             return None
 
     @staticmethod
-    def get_by_user(user_id: str) -> list[DbConversation]:
+    def get_by_user(user_id: str) -> list[Conversation]:
         """Retrieves all conversations for a given user."""
         logger.debug("Retrieving conversations for user: %s", user_id)
 
@@ -110,8 +84,8 @@ class Conversations:
             cursor.execute(sql, params)
             rows = cursor.fetchall()
             conversations = [
-                DbConversation(
-                    conversation_id=row[0],
+                Conversation(
+                    id=row[0],
                     user_id=row[1],
                     created_at=datetime.fromtimestamp(row[2], UTC),
                     updated_at=datetime.fromtimestamp(row[3], UTC),
@@ -129,7 +103,7 @@ class Conversations:
             return conversations
 
     @staticmethod
-    def update(conversation: DbConversation) -> None:
+    def update(conversation: Conversation) -> None:
         """Updates an existing conversation."""
         conversation.updated_at = datetime.now(UTC)
         logger.info("Updating conversation: %s", conversation.id)
