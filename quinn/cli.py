@@ -493,22 +493,20 @@ EXAMPLE SESSION:
 
     $ quinn
     # $EDITOR opens, you type:
-    # "I'm struggling with my microservice architecture. We have 15 services
-    #  and deployment is becoming a nightmare. Help me think through this."
-    
-    # Quinn responds with clarifying questions about your scale, team size,
-    # current pain points, and deployment frequency.
+    # "I'd love to plan out what to watch for 90 minutes rowing session tonight.
+    #  I'm working in AI/coding, startup and board level. I fence epee. 
+    #  I also love learning new things. It can't be too engrossing."
 
-    $ quinn -c 1
-    # $EDITOR opens, you answer:
-    # "Team of 5, deploying daily, main issues: service dependencies breaking,
-    #  hard to test locally, and rollbacks are complex."
-    
-    # Quinn helps you explore solutions: service mesh, better CI/CD,
-    # monorepo vs polyrepo trade-offs, etc.
+    # Quinn responds with clarifying questions
 
-    $ quinn -c 1
-    # Continue the discussion, diving deeper into specific solutions...
+    $ quinn
+    # $EDITOR opens, you answer inline between the quoted clarifying questions:
+    # "1. in-depth interviews or documentaries are great. 
+    #  2. I like a mix of tech, business, and personal growth topics.
+    #  3. I have apple TV+ subscription, and I can access YouTube. Focus on these two."
+    
+    $ quinn
+    # Continue the discussion, explore specific solutions...
 
 CONVERSATION FLOW:
 
@@ -520,7 +518,7 @@ CONVERSATION FLOW:
 
 TIPS:
 
-    - Set EDITOR environment variable: export EDITOR=nano
+    - Set EDITOR environment variable: export EDITOR=vim
     - Quinn saves all conversations locally in SQLite
     - Use 'quinn -l' to see conversation history and costs
     - Each conversation maintains full context
