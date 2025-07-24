@@ -482,7 +482,49 @@ def _handle_default_behavior(
     _handle_new_conversation_with_content(user_content, prompt_file, model, debug=debug)
 
 
-@click.command()
+@click.command(epilog="""
+GETTING STARTED:
+
+    quinn           # Start a new conversation (opens $EDITOR)
+    quinn -l        # List all your conversations with IDs
+    quinn -c 1      # Continue conversation #1 (opens $EDITOR)
+
+EXAMPLE SESSION:
+
+    $ quinn
+    # $EDITOR opens, you type:
+    # "I'm struggling with my microservice architecture. We have 15 services
+    #  and deployment is becoming a nightmare. Help me think through this."
+    
+    # Quinn responds with clarifying questions about your scale, team size,
+    # current pain points, and deployment frequency.
+
+    $ quinn -c 1
+    # $EDITOR opens, you answer:
+    # "Team of 5, deploying daily, main issues: service dependencies breaking,
+    #  hard to test locally, and rollbacks are complex."
+    
+    # Quinn helps you explore solutions: service mesh, better CI/CD,
+    # monorepo vs polyrepo trade-offs, etc.
+
+    $ quinn -c 1
+    # Continue the discussion, diving deeper into specific solutions...
+
+CONVERSATION FLOW:
+
+    1. First message: Describe your problem or challenge
+    2. Quinn asks clarifying questions to understand context
+    3. You provide more details, constraints, and goals
+    4. Quinn guides you through potential solutions
+    5. Continue iterating until you reach clarity
+
+TIPS:
+
+    - Set EDITOR environment variable: export EDITOR=nano
+    - Quinn saves all conversations locally in SQLite
+    - Use 'quinn -l' to see conversation history and costs
+    - Each conversation maintains full context
+""")
 @click.option(
     "-n",
     "--new",
@@ -504,17 +546,11 @@ def _handle_default_behavior(
     help="Continue conversation with ID N",
 )
 @click.option(
-    "-p",
-    "--prompt-file",
-    type=str,
-    help="Path to custom prompt template file (supports Jinja2 variables: {{user_problem}}, {{user_content}})",
-)
-@click.option(
     "-m",
     "--model",
     type=str,
-    default="gemini-2.5-flash",
-    help="LLM model to use (default: gemini-2.5-flash)",
+    default="claude-4-sonnet",
+    help="LLM model to use (default: claude-4-sonnet)",
 )
 @click.option(
     "--debug",
@@ -538,20 +574,11 @@ def main(
 ) -> None:
     """Quinn CLI - AI-powered rubber duck for guided problem-solving.
 
-    Usage:
-        echo "Your problem here" | quinn -n    # Start new conversation
-        quinn                                   # Start new or resume recent conversation (uses $EDITOR)
-        quinn -l                               # List all conversations
-        quinn -c 3                             # Continue conversation with ID 3
-        quinn -p custom_prompt.j2              # Use custom prompt template
+    Quinn helps you think through problems via back-and-forth discussion. All input
+    is provided through your $EDITOR (vim, nano, etc).
 
-    Available models:
-        - gemini-2.5-flash (default)
-        - gemini-2.5-flash-thinking
-        - claude-4-sonnet
-        - gpt-4o-mini
-        - gpt-4.1
-        - gpt-4.1-mini
+    Available models: claude-4-sonnet (default), gemini-2.5-flash, gemini-2.5-flash-thinking,
+    gpt-4o-mini, gpt-4.1, gpt-4.1-mini
     """
     if debug:
         console.print("[dim]Debug mode enabled[/dim]")
