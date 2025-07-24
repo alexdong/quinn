@@ -1,6 +1,7 @@
 """Command-line interface for Quinn prompt iteration."""
 
 import asyncio
+import logging
 import os
 import subprocess
 import sys
@@ -24,6 +25,7 @@ from quinn.db.users import Users
 from quinn.models.config import AgentConfig
 from quinn.models.message import Message
 from quinn.models.user import User
+from quinn.utils.logging import setup_logging
 
 console = Console()
 
@@ -349,6 +351,7 @@ def _handle_continue_conversation(continue_id: int, model: str) -> None:
     if not conversation:
         console.print(f"[red]Error: Conversation {continue_id} not found[/red]")
         sys.exit(1)
+    assert conversation is not None
 
     # Get user input for continuation
     user_content = _read_stdin()
@@ -518,6 +521,11 @@ def _handle_default_behavior(
     is_flag=True,
     help="Enable debug output",
 )
+@click.option(
+    "--debug-modules",
+    type=str,
+    help="Comma-separated modules for debug logging",
+)
 def main(
     new: bool,  # noqa: FBT001
     list_conversations: bool,  # noqa: FBT001
@@ -526,6 +534,7 @@ def main(
     model: str,
     *,
     debug: bool = False,
+    debug_modules: str | None = None,
 ) -> None:
     """Quinn CLI - AI-powered rubber duck for guided problem-solving.
 
@@ -546,6 +555,13 @@ def main(
     """
     if debug:
         console.print("[dim]Debug mode enabled[/dim]")
+
+    modules = (
+        [m.strip() for m in debug_modules.split(",") if m.strip()]
+        if debug_modules
+        else None
+    )
+    setup_logging(level=logging.DEBUG if debug else logging.INFO, debug_modules=modules)
 
     # Setup database
     _setup_database()
