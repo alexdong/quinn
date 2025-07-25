@@ -482,7 +482,8 @@ def _handle_default_behavior(
     _handle_new_conversation_with_content(user_content, prompt_file, model, debug=debug)
 
 
-@click.command(epilog="""
+@click.command(
+    epilog="""
 GETTING STARTED:
 
     quinn           # Continue or start a new conversation  (opens $EDITOR)
@@ -498,7 +499,7 @@ EXAMPLE SESSION:
     # Equivalent to 'quinn -n' since there is no previous conversation yet.
     # $EDITOR opens, you type:
     # "I'd love to plan out what to watch for 90 minutes rowing session tonight.
-    #  I'm working in AI/coding, startup and board level. I fence epee. 
+    #  I'm working in AI/coding, startup and board level. I fence epee.
     #  I also love learning new things. It can't be too engrossing."
 
     # Quinn responds with clarifying questions
@@ -506,7 +507,7 @@ EXAMPLE SESSION:
     $ quinn
     # Equivalent to 'quinn -c' since there is a previous conversation.
     # $EDITOR opens, you answer inline between the quoted clarifying questions:
-    # "1. in-depth interviews or documentaries are great. 
+    # "1. in-depth interviews or documentaries are great.
     #  2. I like a mix of tech, business, and personal growth topics.
     #  3. I have apple TV+ subscription, and I can access YouTube. Focus on these two."
     
@@ -527,7 +528,8 @@ TIPS:
     - Quinn saves all conversations locally in SQLite
     - Use 'quinn -l' to see conversation history and costs
     - Each conversation maintains full context
-""")
+"""
+)
 @click.option(
     "-n",
     "--new",

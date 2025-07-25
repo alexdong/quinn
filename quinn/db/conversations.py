@@ -1,10 +1,10 @@
 import json
-import logging
 from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
+from quinn.utils.logging import get_logger, span_for_db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 # Database representation of a conversation (simple data class for DB operations)
@@ -38,6 +38,7 @@ class Conversations:
     @staticmethod
     def create(conversation: ConversationStore) -> None:
         """Creates a new conversation in the database."""
+        span_for_db("conversations", conversation.id)
         logger.info(
             "Creating conversation: id=%s, user_id=%s",
             conversation.id,
@@ -72,6 +73,7 @@ class Conversations:
     @staticmethod
     def get_by_id(conversation_id: str) -> ConversationStore | None:
         """Retrieves a conversation by its ID."""
+        span_for_db("conversations", conversation_id)
         logger.debug("Retrieving conversation by ID: %s", conversation_id)
 
         with get_db_connection() as conn:
@@ -100,6 +102,7 @@ class Conversations:
     @staticmethod
     def get_by_user(user_id: str) -> list[ConversationStore]:
         """Retrieves all conversations for a given user."""
+        span_for_db("users", user_id)
         logger.debug("Retrieving conversations for user: %s", user_id)
 
         with get_db_connection() as conn:
@@ -131,6 +134,7 @@ class Conversations:
     @staticmethod
     def update(conversation: ConversationStore) -> None:
         """Updates an existing conversation."""
+        span_for_db("conversations", conversation.id)
         conversation.updated_at = datetime.now(UTC)
         logger.info("Updating conversation: %s", conversation.id)
 
@@ -161,6 +165,7 @@ class Conversations:
     @staticmethod
     def delete(conversation_id: str) -> None:
         """Deletes a conversation from the database."""
+        span_for_db("conversations", conversation_id)
         logger.info("Deleting conversation: %s", conversation_id)
 
         with get_db_connection() as conn:

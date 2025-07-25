@@ -7,6 +7,7 @@ from quinn.models.email import EmailMessage
 def test_parse_postmark_webhook_basic() -> None:
     payload = {
         "MessageID": "<msg1@pm>",
+        "MailboxHash": "conv1",
         "From": "Alice <alice@example.com>",
         "To": "quinn@example.com",
         "Subject": "Test",

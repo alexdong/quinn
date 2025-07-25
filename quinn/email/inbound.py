@@ -7,7 +7,7 @@ from typing import Any
 
 from quinn.db.emails import EmailStore
 from quinn.models.email import EmailAttachment, EmailDirection, EmailMessage
-from quinn.utils.logging import get_logger
+from quinn.utils.logging import get_logger, set_trace_id
 
 logger = get_logger(__name__)
 
@@ -29,6 +29,10 @@ def parse_postmark_webhook(
 ) -> EmailMessage:
     """Parse Postmark inbound webhook JSON to an :class:`EmailMessage`."""
     message_id = payload.get("MessageID", "")
+    mailbox_hash = payload.get("MailboxHash", "")
+    assert message_id, "MessageID is required"
+    assert mailbox_hash, "MailboxHash is required"
+    set_trace_id(mailbox_hash, message_id)
     subject = payload.get("Subject", "")
     text_body = payload.get("TextBody", "")
     html_body = payload.get("HtmlBody", "")

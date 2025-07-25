@@ -1,17 +1,18 @@
 import json
-import logging
 from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
 from quinn.models.user import User
+from quinn.utils.logging import get_logger, span_for_db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Users:
     @staticmethod
     def create(user: User) -> None:
         """Creates a new user in the database."""
+        span_for_db("users", user.id)
         logger.info(
             "Creating user: id=%s, emails=%s", user.id, len(user.email_addresses)
         )
@@ -39,6 +40,7 @@ class Users:
     @staticmethod
     def get_by_id(user_id: str) -> User | None:
         """Retrieves a user by their ID."""
+        span_for_db("users", user_id)
         logger.debug("Retrieving user by ID: %s", user_id)
 
         with get_db_connection() as conn:
@@ -64,6 +66,7 @@ class Users:
     @staticmethod
     def get_by_email(email: str) -> User | None:
         """Retrieves a user by any of their email addresses."""
+        span_for_db("users", email)
         logger.debug("Retrieving user by email: %s", email)
 
         with get_db_connection() as conn:
@@ -90,6 +93,7 @@ class Users:
     @staticmethod
     def update(user: User) -> None:
         """Updates an existing user."""
+        span_for_db("users", user.id)
         user.updated_at = datetime.now(UTC)
         logger.info("Updating user: %s", user.id)
 
@@ -119,6 +123,7 @@ class Users:
 
         Returns True if email was added, False if user not found or email already exists.
         """
+        span_for_db("users", user_id)
         logger.info("Adding alternative email %s to user %s", email, user_id)
 
         user = Users.get_by_id(user_id)
@@ -140,6 +145,7 @@ class Users:
     @staticmethod
     def delete(user_id: str) -> None:
         """Deletes a user from the database."""
+        span_for_db("users", user_id)
         logger.info("Deleting user: %s", user_id)
 
         with get_db_connection() as conn:

@@ -1,10 +1,11 @@
-import logging
 import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from quinn.utils.logging import get_logger, span_for_db
+
+logger = get_logger(__name__)
 
 DATABASE_FILE = "quinn.db"
 
@@ -12,6 +13,7 @@ DATABASE_FILE = "quinn.db"
 @contextmanager
 def get_db_connection() -> Generator[sqlite3.Connection]:
     """Context manager to handle database connections."""
+    span_for_db("connection", DATABASE_FILE)
     logger.debug("Opening database connection to %s", DATABASE_FILE)
     conn = sqlite3.connect(DATABASE_FILE)
     assert conn is not None, f"Failed to connect to {DATABASE_FILE}"
@@ -33,6 +35,7 @@ def create_tables() -> None:
     """Create database tables based on the schema.sql file."""
     schema_path = Path("quinn/db/schema.sql")
     logger.info("Creating database tables from schema: %s", schema_path)
+    span_for_db("schema", str(schema_path))
 
     assert schema_path.exists(), f"Missing schema file at {schema_path}"
 
