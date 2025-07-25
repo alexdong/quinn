@@ -3,6 +3,7 @@
 import argparse
 import logging
 import traceback
+from typing import Any
 
 from fasthtml.common import (
     FT,
@@ -33,7 +34,6 @@ from fasthtml.common import (
     fast_app,
     serve,
 )
-from starlette.responses import HTMLResponse
 
 from quinn.core.conversation_manager import ConversationManager
 from quinn.core.database_manager import DatabaseManager
@@ -284,7 +284,7 @@ def render_model_selector(selected_model: str = DEFAULT_MODEL) -> FT:
 
 
 @rt("/")
-def get_home() -> FT | HTMLResponse:
+def get_home() -> Any:  # noqa: ANN401
     """Home page with new conversation form."""
     try:
         # Get recent conversation for continue option
@@ -371,15 +371,15 @@ def get_home() -> FT | HTMLResponse:
     except Exception as e:
         logger.error("Error in home page: %s", e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Internal Server Error", status_code=500)
+        return "Internal Server Error"
 
 
 @rt("/start", methods=["POST"])
-async def post_start(user_input: str, model: str = DEFAULT_MODEL) -> HTMLResponse:
+async def post_start(user_input: str, model: str = DEFAULT_MODEL) -> str:
     """Start a new conversation."""
     try:
         if not user_input.strip():
-            return HTMLResponse("User input is required", status_code=400)
+            return "User input is required"
 
         # Create new conversation
         response = await ConversationManager.create_new_conversation(
@@ -387,19 +387,16 @@ async def post_start(user_input: str, model: str = DEFAULT_MODEL) -> HTMLRespons
         )
 
         # Redirect to conversation view
-        return HTMLResponse(
-            f'<script>window.location.href="/conversation/{response.conversation.id}";</script>',
-            status_code=200,
-        )
+        return f'<script>window.location.href="/conversation/{response.conversation.id}";</script>'
 
     except Exception as e:
         logger.error("Error starting conversation: %s", e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Failed to start conversation", status_code=500)
+        return "Failed to start conversation"
 
 
 @rt("/conversations")
-def get_conversations() -> FT | HTMLResponse:
+def get_conversations() -> Any:  # noqa: ANN401
     """List all conversations."""
     try:
         conversations = ConversationManager.list_conversations(WEB_USER_ID)
@@ -477,11 +474,11 @@ def get_conversations() -> FT | HTMLResponse:
     except Exception as e:
         logger.error("Error listing conversations: %s", e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Failed to load conversations", status_code=500)
+        return "Failed to load conversations"
 
 
 @rt("/conversation/{conversation_id}")
-def get_conversation(conversation_id: str) -> FT | HTMLResponse:
+def get_conversation(conversation_id: str) -> Any:  # noqa: ANN401
     """View a specific conversation."""
     try:
         # Get conversation
@@ -489,7 +486,7 @@ def get_conversation(conversation_id: str) -> FT | HTMLResponse:
         conversation = next((c for c in conversations if c.id == conversation_id), None)
 
         if not conversation:
-            return HTMLResponse("Conversation not found", status_code=404)
+            return "Conversation not found"
 
         # Get messages
         messages = ConversationManager.get_conversation_messages(conversation_id)
@@ -564,24 +561,24 @@ def get_conversation(conversation_id: str) -> FT | HTMLResponse:
     except Exception as e:
         logger.error("Error viewing conversation %s: %s", conversation_id, e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Failed to load conversation", status_code=500)
+        return "Failed to load conversation"
 
 
 @rt("/conversation/{conversation_id}/continue", methods=["POST"])
 async def post_continue_conversation(
     conversation_id: str, user_input: str, model: str = DEFAULT_MODEL
-) -> HTMLResponse:
+) -> str:
     """Continue a conversation."""
     try:
         if not user_input.strip():
-            return HTMLResponse("User input is required", status_code=400)
+            return "User input is required"
 
         # Check if conversation exists
         conversations = ConversationManager.list_conversations(WEB_USER_ID)
         conversation = next((c for c in conversations if c.id == conversation_id), None)
 
         if not conversation:
-            return HTMLResponse("Conversation not found", status_code=404)
+            return "Conversation not found"
 
         # Continue conversation
         await ConversationManager.continue_conversation(
@@ -589,19 +586,18 @@ async def post_continue_conversation(
         )
 
         # Redirect back to conversation view
-        return HTMLResponse(
-            f'<script>window.location.href="/conversation/{conversation_id}";</script>',
-            status_code=200,
+        return (
+            f'<script>window.location.href="/conversation/{conversation_id}";</script>'
         )
 
     except Exception as e:
         logger.error("Error continuing conversation %s: %s", conversation_id, e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Failed to continue conversation", status_code=500)
+        return "Failed to continue conversation"
 
 
 @rt("/reset")
-def get_reset() -> FT:
+def get_reset() -> Any:  # noqa: ANN401
     """Reset all conversations (confirmation page)."""
     return Html(
         Head(Title("Reset All Conversations - Quinn")),
@@ -646,21 +642,18 @@ def get_reset() -> FT:
 
 
 @rt("/reset", methods=["POST"])
-def post_reset() -> HTMLResponse:
+def post_reset() -> str:
     """Reset all conversations."""
     try:
         DatabaseManager.reset_all()
         DatabaseManager.ensure_web_user()
 
-        return HTMLResponse(
-            '<script>alert("All conversations have been reset."); window.location.href="/";</script>',
-            status_code=200,
-        )
+        return '<script>alert("All conversations have been reset."); window.location.href="/";</script>'
 
     except Exception as e:
         logger.error("Error resetting conversations: %s", e)
         logger.error("Traceback: %s", traceback.format_exc())
-        return HTMLResponse("Failed to reset conversations", status_code=500)
+        return "Failed to reset conversations"
 
 
 def run_server(
