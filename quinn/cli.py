@@ -259,7 +259,7 @@ def _get_model_config(model: str) -> AgentConfig:
     model_configs = {
         "gemini-2.5-flash": AgentConfig.gemini25flash,
         "gemini-2.5-flash-thinking": AgentConfig.gemini25flashthinking,
-        "claude-4-sonnet": AgentConfig.sonnet4,
+        "claude-sonnet-4": AgentConfig.sonnet4,
         "gpt-4o-mini": AgentConfig.o4mini,
         "gpt-4.1": AgentConfig.gpt41,
         "gpt-4.1-mini": AgentConfig.gpt41mini,
@@ -489,8 +489,8 @@ def _handle_default_behavior(model: str) -> None:
     "-m",
     "--model",
     type=str,
-    default="claude-4-sonnet",
-    help="LLM model to use (default: claude-4-sonnet)",
+    default="claude-sonnet-4",
+    help="LLM model to use (default: claude-sonnet-4)",
 )
 @click.option(
     "--debug",
@@ -522,7 +522,7 @@ def main(
     Quinn helps you think through problems via back-and-forth discussion. All input
     is provided through your $EDITOR (vim, nano, etc).
 
-    Available models: claude-4-sonnet (default), gemini-2.5-flash, gemini-2.5-flash-thinking,
+    Available models: claude-sonnet-4 (default), gemini-2.5-flash, gemini-2.5-flash-thinking,
     gpt-4o-mini, gpt-4.1, gpt-4.1-mini
     """
     level = logging.INFO

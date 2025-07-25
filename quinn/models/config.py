@@ -110,7 +110,7 @@ class AgentConfig(BaseModel):
     def opus4(cls) -> "AgentConfig":
         """Claude Opus 4 configuration for most complex tasks."""
         return cls(
-            model="claude-opus-4-20250514",
+            model="claude-4-opus-20250514",
             temperature=0.5,
             max_tokens=8000,
             timeout_seconds=900,
@@ -123,7 +123,7 @@ class AgentConfig(BaseModel):
     def sonnet4(cls) -> "AgentConfig":
         """Claude Sonnet 4 configuration for balanced reasoning."""
         return cls(
-            model="claude-sonnet-4",
+            model="claude-sonnet-4-20250514",
             temperature=0.6,
             max_tokens=6000,
             timeout_seconds=600,

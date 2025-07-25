@@ -157,7 +157,7 @@ def test_agent_config_opus4() -> None:
 def test_agent_config_sonnet4() -> None:
     """Test AgentConfig.sonnet4() class method."""
     config = AgentConfig.sonnet4()
-    assert config.model == "claude-sonnet-4"
+    assert config.model == "claude-sonnet-4-20250514"
     assert isinstance(config, AgentConfig)
 
 
@@ -188,7 +188,7 @@ def test_agent_config_get_all_models() -> None:
     assert isinstance(models, list)
     assert len(models) > 0
     assert "gpt-4o-mini" in models
-    assert "claude-sonnet-4" in models
+    assert "claude-sonnet-4-20250514" in models
 
 
 def test_agent_config_main_demo() -> None:
