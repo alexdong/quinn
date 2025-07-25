@@ -29,5 +29,5 @@ def test_reset_all(tmp_path: Path) -> None:
 
         assert ConversationStore.get_by_id("c1") is None
         assert MessageStore.get_by_id("m1") is None
-        assert UserStore.get_by_email("cli-user") is not None
+        assert UserStore.get_by_email("cli@localhost") is not None
         assert db_file.exists()

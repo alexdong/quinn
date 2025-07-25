@@ -44,7 +44,6 @@ class ConversationStore:
             conn.commit()
             logger.debug("Conversation created successfully: %s", conversation.id)
 
-
     @staticmethod
     def get_by_id(conversation_id: str) -> Conversation | None:
         """Retrieves a conversation by its ID."""
@@ -108,7 +107,6 @@ class ConversationStore:
 
     @staticmethod
     def update(conversation: Conversation) -> None:
-
         """Updates an existing conversation."""
         span_for_db("conversations", conversation.id)
         conversation.updated_at = datetime.now(UTC)
