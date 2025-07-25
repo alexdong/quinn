@@ -203,8 +203,10 @@ def _demo_model_costs(
     else:
         print("   Cached input cost per token: Not supported")
 
-    # Calculate total cost without caching
-    total_cost = calculate_cost(model, input_tokens, output_tokens)
+    # Calculate total cost without caching. This assumes the cached tokens would
+    # otherwise be billed as regular input tokens. Using the combined total
+    # provides a meaningful comparison for the cache savings printout below.
+    total_cost = calculate_cost(model, input_tokens + cached_tokens, output_tokens)
     print(f"   Total cost (no cache): ${total_cost:.6f}")
 
     # Calculate total cost with caching

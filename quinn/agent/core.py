@@ -99,7 +99,6 @@ def _calculate_usage_metrics(
     total_tokens = usage.total_tokens or (input_tokens + output_tokens)
 
     # Calculate cost
-    cost_usd = 0.0
     assert input_tokens >= 0, "Input tokens must be non-negative"
     assert output_tokens >= 0, "Output tokens must be non-negative"
     cost_usd = calculate_cost(

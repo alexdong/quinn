@@ -6,17 +6,14 @@ import hmac
 import json
 import os
 from http import HTTPStatus
-from typing import TYPE_CHECKING
-from unittest.mock import patch
 
+import pytest
 from fasthtml.core import Client
-
-if TYPE_CHECKING:
-    import pytest
+from typing import Any, cast
+from unittest.mock import patch
 
 from quinn.email import web
 from quinn.email.web import app
-
 
 def _signature(token: str, body: bytes) -> str:
     digest = hmac.new(token.encode(), body, hashlib.sha256).digest()
@@ -31,9 +28,9 @@ def test_postmark_webhook_route() -> None:
     sig = _signature(token, body)
     with patch("quinn.email.web.parse_postmark_webhook") as parse:
         client = Client(app)
-        resp = client.post(  # type: ignore[attr-defined]
+        resp = cast("Any", client).post(
             "/webhook/postmark",
-            data=body,
+            content=body,
             headers={"x-postmark-signature": sig},
         )
         assert resp.status_code == HTTPStatus.OK

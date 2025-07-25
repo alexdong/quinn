@@ -133,6 +133,7 @@ When code fails (and it will), we need to quickly understand what happened and w
 - When debugging, use `--debug-modules module1,module2` for selective debug logging
 - Include "trace_id" and "span_id" in log messages for multi-component requests
 - Use `@functools.wraps` decorators to separate tracing from functional code
+- Use `pytest.capsys` and `capsys.readouterr()` to capture stdout/stderr in tests
 
 ### Code Organization
 
