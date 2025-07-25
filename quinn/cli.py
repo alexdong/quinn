@@ -364,12 +364,37 @@ def _handle_new_conversation(model: str) -> None:
     _display_response(response_message)
 
 
+def _get_last_assistant_message(conversation_id: str) -> str | None:
+    """Get the last assistant message from a conversation."""
+    messages = MessageStore.get_by_conversation(conversation_id)
+    if not messages:
+        return None
+
+    # Get the most recent message's assistant content
+    last_message = messages[-1]
+    return last_message.assistant_content if last_message.assistant_content else None
+
+
+def _format_message_for_editor(content: str) -> str:
+    """Format message content with '> ' prefix for each line."""
+    lines = content.split("\n")
+    formatted_lines = [f"> {line}" for line in lines]
+    return "\n".join(formatted_lines)
+
+
 def _handle_continue_recent_conversation(
     recent_conversation: Conversation, model: str
 ) -> None:
     """Handle continuing the most recent conversation."""
-    # Use editor to get continuation input
-    user_content = _read_from_editor()
+    # Get the last assistant message and format it for the editor
+    last_assistant_message = _get_last_assistant_message(recent_conversation.id)
+
+    initial_content = ""
+    if last_assistant_message:
+        initial_content = _format_message_for_editor(last_assistant_message) + "\n\n"
+
+    # Use editor to get continuation input with the formatted last message
+    user_content = _read_from_editor(initial_content)
     if not user_content.strip():
         console.print("[red]Error: No input provided[/red]")
         sys.exit(1)
