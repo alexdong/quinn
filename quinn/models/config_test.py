@@ -226,3 +226,43 @@ def test_config_main_block() -> None:
         config_module.main()
 
     assert len(buf.getvalue()) > 0
+
+
+def test_get_all_models_branch_paths() -> None:
+    """Exercise branch conditions in get_all_models()."""
+
+    class Other:
+        @classmethod
+        def extraneous(cls) -> AgentConfig:
+            return AgentConfig(model="ignored")
+
+    class NeedsParam:
+        @classmethod
+        def with_param(cls, value: int) -> AgentConfig:
+            return AgentConfig(model=f"param-{value}")
+
+    # Patch additional methods onto AgentConfig
+    AgentConfig.extraneous = Other.extraneous  # type: ignore[attr-defined]
+    AgentConfig.with_param = NeedsParam.with_param  # type: ignore[attr-defined]
+
+    try:
+        models = AgentConfig.get_all_models()
+    finally:
+        delattr(AgentConfig, "extraneous")
+        delattr(AgentConfig, "with_param")
+
+    assert "ignored" not in models
+    assert not any(m.startswith("param-") for m in models)
+
+
+def test_module_run_as_script() -> None:
+    """Ensure __main__ block executes when module is run directly."""
+    from io import StringIO
+    from unittest.mock import patch
+    import runpy
+
+    buf = StringIO()
+    with patch("sys.stdout", buf):
+        runpy.run_module("quinn.models.config", run_name="__main__")
+
+    assert "AgentConfig demonstration:" in buf.getvalue()
