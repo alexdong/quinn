@@ -26,23 +26,6 @@ Quinn follows this philosophy - the solution must come from you. Quinn simply he
 2. **Answer Clarifying Questions**: Quinn responds with structured questions to understand your situation
 3. **Discover Your Solution**: Through the exchange, you'll clarify your thinking and identify the best path forward
 
-## Example Session
-
-Here's a real example of Quinn helping someone navigate a business partnership decision:
-
-**User's Initial Problem:**
-- Potential partnership opportunity with domain expert "Jonno"
-- Strong business case but concerns about partner's reliability
-- Need help deciding whether to proceed
-
-**Quinn's Approach:**
-1. Asked 7 categories of clarifying questions about partnership expectations, risk tolerance, decision-making, etc.
-2. Analyzed responses to identify core issue: execution risk concentrated in unreliable partner
-3. Proposed concrete 90-day proof-of-commitment sprint with specific deliverables
-4. Provided templates for partnership agreements and kill criteria
-5. Helped draft professional exit communications to preserve relationships
-
-The entire exchange helped the user move from uncertainty to a clear action plan with defined success metrics.
 
 ## Core Principles
 
