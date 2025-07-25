@@ -84,6 +84,7 @@ def test_agent_config_empty_model_validation() -> None:
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
 
+
 def test_agent_config_sonnet4() -> None:
     """Test AgentConfig.sonnet4() class method."""
     config = AgentConfig.sonnet4()
@@ -181,7 +182,6 @@ def test_agent_config_o4mini() -> None:
     assert isinstance(config, AgentConfig)
 
 
-
 def test_agent_config_get_all_models() -> None:
     """Test AgentConfig.get_all_models() class method."""
     models = AgentConfig.get_all_models()
@@ -196,36 +196,33 @@ def test_agent_config_main_demo() -> None:
     from unittest.mock import patch
     from io import StringIO
     import sys
-    
+
     # Capture stdout to avoid cluttering test output
     captured_output = StringIO()
     with patch("sys.stdout", captured_output):
         # Import and run the main function
         import quinn.models.config
-        if hasattr(quinn.models.config, "__name__") and quinn.models.config.__name__ == "__main__":
+
+        if (
+            hasattr(quinn.models.config, "__name__")
+            and quinn.models.config.__name__ == "__main__"
+        ):
             # This would run the main block, but we need to trigger it manually
             pass
-        
+
         # Test the get_all_models method which is used in main
         models = AgentConfig.get_all_models()
         assert len(models) > 0
 
 
-
 def test_config_main_block() -> None:
-    """Test the main block execution."""
-    from unittest.mock import patch
+    """Test the main function directly."""
     from io import StringIO
-    import subprocess
-    import sys
-    
-    # Test by running the module as main
-    result = subprocess.run([
-        sys.executable, "-c", 
-        "import quinn.models.config; quinn.models.config.main()"
-    ], capture_output=True, text=True)
-    
-    # Should not error and should produce output
-    assert result.returncode == 0
-    assert len(result.stdout) > 0
+    from unittest.mock import patch
+    import quinn.models.config as config_module
 
+    buf = StringIO()
+    with patch("sys.stdout", buf):
+        config_module.main()
+
+    assert len(buf.getvalue()) > 0
