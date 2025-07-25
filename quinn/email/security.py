@@ -8,6 +8,8 @@ from quinn.utils.logging import get_logger
 
 logger = get_logger(__name__)
 
+__all__ = ["main", "verify_postmark_signature"]
+
 
 def verify_postmark_signature(token: str, body: bytes, signature: str) -> bool:
     """Return ``True`` if signature matches ``body`` using the given token."""
