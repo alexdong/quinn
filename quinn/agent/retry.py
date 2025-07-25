@@ -34,18 +34,21 @@ async def retry_with_backoff[T](
         except Exception as e:
             last_exception = e
 
-            if attempt == max_retries:
-                logger.error("Failed after %d attempts: %s", max_retries + 1, e)
-                break
-
-            delay = backoff_factor**attempt
-            logger.warning(
-                "Attempt %d failed: %s. Retrying in %ss",
-                attempt + 1,
-                e,
-                delay,
-            )
-            await asyncio.sleep(delay)
+            if attempt < max_retries:
+                delay = backoff_factor**attempt
+                logger.warning(
+                    "Attempt %d failed: %s. Retrying in %ss",
+                    attempt + 1,
+                    e,
+                    delay,
+                )
+                await asyncio.sleep(delay)
+            else:
+                logger.error(
+                    "Failed after %d attempts: %s",
+                    max_retries + 1,
+                    e,
+                )
 
     assert last_exception is not None, "Should have an exception if we reach here"
     raise last_exception
