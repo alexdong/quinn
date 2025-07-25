@@ -21,6 +21,7 @@ dependencies = [
 
 [project.scripts]
 quinn = "quinn.cli:main"
+quinn-web = "quinn.web:main"
 
 [tool.setuptools.packages.find]
 include = ["quinn*"]

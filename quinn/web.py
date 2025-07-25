@@ -682,7 +682,7 @@ def main(
         )
 
         # Run the server
-        serve(host=host, port=port)
+        serve(app=app, host=host, port=port)
 
     except Exception as e:
         logger.error("Failed to start web interface: %s", e)
