@@ -1,9 +1,11 @@
 """Web-based interface for Quinn using FastHTML."""
 
+import argparse
 import logging
 import traceback
 
 from fasthtml.common import (
+    FT,
     H1,
     H2,
     H3,
@@ -132,8 +134,11 @@ app, rt = fast_app(
     ),
 )
 
+# Expose app at module level for ASGI compatibility
+__all__ = ["app", "main", "run_server"]
 
-def render_page_header():  # noqa: ANN201
+
+def render_page_header() -> FT:
     """Render the page header with navigation."""
     return Div(
         # Navigation
@@ -162,7 +167,7 @@ def render_page_header():  # noqa: ANN201
     )
 
 
-def render_hero_section():  # noqa: ANN201
+def render_hero_section() -> FT:
     """Render the hero section for the home page."""
     return Div(
         Div(
@@ -184,7 +189,7 @@ def render_hero_section():  # noqa: ANN201
     )
 
 
-def render_features():  # noqa: ANN201
+def render_features() -> FT:
     """Render feature cards."""
     return Div(
         H2("How Quinn Works", cls="text-center mb-4"),
@@ -231,7 +236,7 @@ def render_features():  # noqa: ANN201
     )
 
 
-def render_message_display(message: Message):  # noqa: ANN201
+def render_message_display(message: Message) -> FT:
     """Render a message with proper formatting."""
     content_divs = []
 
@@ -268,7 +273,7 @@ def render_message_display(message: Message):  # noqa: ANN201
     return Div(*content_divs, cls="conversation-card p-3")
 
 
-def render_model_selector(selected_model: str = DEFAULT_MODEL):  # noqa: ANN201
+def render_model_selector(selected_model: str = DEFAULT_MODEL) -> FT:
     """Render model selection dropdown."""
     available_models = ConversationManager.get_available_models()
     options = [
@@ -279,7 +284,7 @@ def render_model_selector(selected_model: str = DEFAULT_MODEL):  # noqa: ANN201
 
 
 @rt("/")
-def get_home():  # noqa: ANN201
+def get_home() -> FT | HTMLResponse:
     """Home page with new conversation form."""
     try:
         # Get recent conversation for continue option
@@ -394,7 +399,7 @@ async def post_start(user_input: str, model: str = DEFAULT_MODEL) -> HTMLRespons
 
 
 @rt("/conversations")
-def get_conversations():  # noqa: ANN201
+def get_conversations() -> FT | HTMLResponse:
     """List all conversations."""
     try:
         conversations = ConversationManager.list_conversations(WEB_USER_ID)
@@ -476,7 +481,7 @@ def get_conversations():  # noqa: ANN201
 
 
 @rt("/conversation/{conversation_id}")
-def get_conversation(conversation_id: str):  # noqa: ANN201
+def get_conversation(conversation_id: str) -> FT | HTMLResponse:
     """View a specific conversation."""
     try:
         # Get conversation
@@ -596,7 +601,7 @@ async def post_continue_conversation(
 
 
 @rt("/reset")
-def get_reset():  # noqa: ANN201
+def get_reset() -> FT:
     """Reset all conversations (confirmation page)."""
     return Html(
         Head(Title("Reset All Conversations - Quinn")),
@@ -658,14 +663,14 @@ def post_reset() -> HTMLResponse:
         return HTMLResponse("Failed to reset conversations", status_code=500)
 
 
-def main(
+def run_server(
     host: str = "localhost",
     port: int = 8000,
     *,
     debug: bool = True,
     debug_modules: list[str] | None = None,
 ) -> None:
-    """Run the Quinn web interface."""
+    """Run the Quinn web interface server."""
     # Setup logging
     level = logging.DEBUG if debug else logging.INFO
     setup_logging(level=level, debug_modules=debug_modules)
@@ -682,12 +687,33 @@ def main(
         )
 
         # Run the server
-        serve(app=app, host=host, port=port)
+        serve(appname="quinn.web", host=host, port=port)
 
     except Exception as e:
         logger.error("Failed to start web interface: %s", e)
         logger.error("Traceback: %s", traceback.format_exc())
         raise
+
+
+def main() -> None:
+    """Main entry point for Quinn web interface with CLI argument handling."""
+    parser = argparse.ArgumentParser(description="Quinn Web Interface")
+    parser.add_argument("--host", default="localhost", help="Host to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    parser.add_argument(
+        "--debug", action="store_true", default=True, help="Enable debug mode"
+    )
+    parser.add_argument(
+        "--debug-modules", nargs="+", help="Modules to enable debug logging for"
+    )
+
+    args = parser.parse_args()
+    run_server(
+        host=args.host,
+        port=args.port,
+        debug=args.debug,
+        debug_modules=args.debug_modules,
+    )
 
 
 if __name__ == "__main__":
