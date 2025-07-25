@@ -504,48 +504,42 @@ def _handle_default_behavior(
     epilog="""
 GETTING STARTED:
 
-    quinn           # Continue or start a new conversation  (opens $EDITOR)
-    quinn -n        # Start a new conversation  (opens $EDITOR)
-    quinn -c        # Continue the most recent conversation (opens $EDITOR)
-    quinn -l        # List all your conversations with IDs
-    quinn -c 1      # Continue conversation #1 (opens $EDITOR)
-    quinn --reset-all   # Reset all conversations and start fresh
+  quinn           # Continue or start new
+  quinn -n        # Start a new conversation
+  quinn -c        # Continue most recent
+  quinn -l        # List all conversations
+  quinn -c 1      # Continue conversation #1
+  quinn --reset-all   # Reset all
 
 EXAMPLE SESSION:
 
-    $ quinn
-    # Equivalent to 'quinn -n' since there is no previous conversation yet.
-    # $EDITOR opens, you type:
-    # "I'd love to plan out what to watch for 90 minutes rowing session tonight.
-    #  I'm working in AI/coding, startup and board level. I fence epee.
-    #  I also love learning new things. It can't be too engrossing."
+  $ quinn
+  # Opens $EDITOR since no previous conversation
+  # Type your problem
 
-    # Quinn responds with clarifying questions
+  # Quinn responds with clarifying questions
 
-    $ quinn
-    # Equivalent to 'quinn -c' since there is a previous conversation.
-    # $EDITOR opens, you answer inline between the quoted clarifying questions:
-    # "1. in-depth interviews or documentaries are great.
-    #  2. I like a mix of tech, business, and personal growth topics.
-    #  3. I have apple TV+ subscription, and I can access YouTube. Focus on these two."
-    
-    $ quinn
-    # Continue the discussion, explore specific solutions...
+  $ quinn
+  # Opens $EDITOR to continue
+  # Answer the clarifying questions
+
+  $ quinn
+  # Continue until you reach a solution
 
 CONVERSATION FLOW:
 
-    1. First message: Describe your problem or challenge
-    2. Quinn asks clarifying questions to understand context
-    3. You provide more details, constraints, and goals
-    4. Quinn guides you through potential solutions
-    5. Continue iterating until you reach clarity
+  1. Describe your problem or challenge
+  2. Quinn asks clarifying questions
+  3. Provide more details and constraints
+  4. Quinn guides you through solutions
+  5. Continue iterating until clarity
 
 TIPS:
 
-    - Set EDITOR environment variable: export EDITOR=vim
-    - Quinn saves all conversations locally in SQLite
-    - Use 'quinn -l' to see conversation history and costs
-    - Each conversation maintains full context
+  - Set EDITOR: export EDITOR=vim
+  - Conversations saved locally in SQLite
+  - Use 'quinn -l' to see history
+  - Each conversation maintains context
 """
 )
 @click.option(
