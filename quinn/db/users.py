@@ -8,7 +8,7 @@ from quinn.utils.logging import get_logger, span_for_db
 logger = get_logger(__name__)
 
 
-class Users:
+class UserStore:
     @staticmethod
     def create(user: User) -> None:
         """Creates a new user in the database."""
@@ -126,7 +126,7 @@ class Users:
         span_for_db("users", user_id)
         logger.info("Adding alternative email %s to user %s", email, user_id)
 
-        user = Users.get_by_id(user_id)
+        user = UserStore.get_by_id(user_id)
         if not user:
             logger.warning("User not found for adding email: %s", user_id)
             return False
@@ -136,7 +136,7 @@ class Users:
             return False  # Email already exists
 
         user.email_addresses.append(email)
-        Users.update(user)
+        UserStore.update(user)
         logger.debug(
             "Alternative email %s added successfully to user %s", email, user_id
         )

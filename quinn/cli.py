@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 import click
@@ -18,11 +19,12 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from quinn.agent.core import generate_response
-from quinn.db.conversations import Conversations, ConversationStore
+from quinn.db.conversations import ConversationStore
 from quinn.db.database import create_tables
-from quinn.db.messages import Messages
-from quinn.db.users import Users
+from quinn.db.messages import MessageStore
+from quinn.db.users import UserStore
 from quinn.models.config import AgentConfig
+from quinn.models.conversation import Conversation
 from quinn.models.message import Message
 from quinn.models.user import User
 from quinn.utils.logging import setup_logging
@@ -48,17 +50,22 @@ def _create_cli_user_if_needed() -> None:
     """Create CLI user if it doesn't exist."""
     cli_user_id = "cli-user"
     try:
-        if not Users.get_by_id(cli_user_id):
+        if not UserStore.get_by_id(cli_user_id):
             cli_user = User(
                 id=cli_user_id,
                 name="CLI User",
                 email_addresses=["cli@localhost"],
             )
-            Users.create(cli_user)
+            UserStore.create(cli_user)
     except Exception as e:
         # Silently ignore if user already exists
         if "already exists" not in str(e):
             raise
+
+
+def _parse_debug_modules(mods: str | None) -> list[str] | None:
+    """Parse comma-separated debug module names."""
+    return [m.strip() for m in mods.split(",") if m.strip()] if mods else None
 
 
 def _setup_database() -> None:
@@ -68,6 +75,17 @@ def _setup_database() -> None:
         _create_cli_user_if_needed()
     except Exception as e:
         console.print(f"[red]Database setup failed: {e}[/red]")
+        sys.exit(1)
+
+
+def _reset_all() -> None:
+    """Remove all conversations and recreate a fresh database."""
+    try:
+        Path(DATABASE_FILE).unlink(missing_ok=True)
+        _setup_database()
+        console.print("[green]All conversations reset.[/green]")
+    except Exception as e:  # pragma: no cover - rare failure
+        console.print(f"[red]Failed to reset conversations: {e}[/red]")
         sys.exit(1)
 
 
@@ -139,15 +157,15 @@ async def _generate_and_save_response(
                 if len(user_content) > TITLE_MAX_LENGTH
                 else user_content
             )
-            db_conversation = ConversationStore(
-                conversation_id=conversation_id,
+            db_conversation = Conversation(
+                id=conversation_id,
                 user_id="cli-user",  # Fixed user for CLI usage
                 title=title,
             )
-            Conversations.create(db_conversation)
+            ConversationStore.create(db_conversation)
 
             # Save message to database
-            Messages.create(response_message, "cli-user")
+            MessageStore.create(response_message, "cli-user")
 
         return response_message
 
@@ -189,7 +207,7 @@ def _display_response(message: Message) -> None:
 
 def _list_conversations() -> None:
     """List all conversations for the CLI user."""
-    conversations = Conversations.get_by_user("cli-user")
+    conversations = ConversationStore.get_by_user("cli-user")
 
     if not conversations:
         console.print("[yellow]No conversations found.[/yellow]")
@@ -224,9 +242,9 @@ def _list_conversations() -> None:
     console.print(table)
 
 
-def _get_conversation_by_index(index: int) -> ConversationStore | None:
+def _get_conversation_by_index(index: int) -> Conversation | None:
     """Get conversation by 1-based index (as shown in list)."""
-    conversations = Conversations.get_by_user("cli-user")
+    conversations = ConversationStore.get_by_user("cli-user")
     if not conversations:
         return None
 
@@ -239,9 +257,9 @@ def _get_conversation_by_index(index: int) -> ConversationStore | None:
     return conversations[index - 1]  # Convert to 0-based index
 
 
-def _get_most_recent_conversation() -> ConversationStore | None:
+def _get_most_recent_conversation() -> Conversation | None:
     """Get the most recently updated conversation."""
-    conversations = Conversations.get_by_user("cli-user")
+    conversations = ConversationStore.get_by_user("cli-user")
     if not conversations:
         return None
 
@@ -292,7 +310,7 @@ def _get_model_config(model: str) -> AgentConfig:
 def _build_conversation_context(conversation_id: str, user_input: str) -> str:
     """Build conversation context with previous messages."""
     # Get existing messages to build conversation history
-    existing_messages = Messages.get_by_conversation(conversation_id)
+    existing_messages = MessageStore.get_by_conversation(conversation_id)
 
     # Build conversation history for context
     conversation_history = []
@@ -327,16 +345,16 @@ async def _continue_conversation(
             response_message = await generate_response(user_message, config=config)
 
         # Update conversation message count and cost
-        conversation = Conversations.get_by_id(conversation_id)
+        conversation = ConversationStore.get_by_id(conversation_id)
         if conversation:
             conversation.message_count += 1
             if response_message.metadata:
                 conversation.total_cost += response_message.metadata.cost_usd
-            Conversations.update(conversation)
+            ConversationStore.update(conversation)
 
         # Save message to database
         with console.status("[bold blue]Saving to database..."):
-            Messages.create(response_message, "cli-user")
+            MessageStore.create(response_message, "cli-user")
 
         return response_message
 
@@ -400,7 +418,7 @@ def _handle_new_conversation(
 
 
 def _handle_continue_recent_conversation(
-    recent_conversation: ConversationStore, model: str
+    recent_conversation: Conversation, model: str
 ) -> None:
     """Handle continuing the most recent conversation."""
     # Use editor to get continuation input
@@ -567,6 +585,11 @@ TIPS:
     type=str,
     help="Comma-separated modules for debug logging",
 )
+@click.option(
+    "--reset-all",
+    is_flag=True,
+    help="Delete all conversations and start fresh",
+)
 def main(
     new: bool,  # noqa: FBT001
     list_conversations: bool,  # noqa: FBT001
@@ -576,6 +599,7 @@ def main(
     *,
     debug: bool = False,
     debug_modules: str | None = None,
+    reset_all: bool = False,
 ) -> None:
     """Quinn CLI - AI-powered rubber duck for guided problem-solving.
 
@@ -585,36 +609,35 @@ def main(
     Available models: claude-4-sonnet (default), gemini-2.5-flash, gemini-2.5-flash-thinking,
     gpt-4o-mini, gpt-4.1, gpt-4.1-mini
     """
+    level = logging.INFO
     if debug:
         console.print("[dim]Debug mode enabled[/dim]")
+        level = logging.DEBUG
 
-    modules = (
-        [m.strip() for m in debug_modules.split(",") if m.strip()]
-        if debug_modules
-        else None
-    )
-    setup_logging(level=logging.DEBUG if debug else logging.INFO, debug_modules=modules)
+    modules = _parse_debug_modules(debug_modules)
+    setup_logging(level=level, debug_modules=modules)
 
-    # Setup database
+    # Setup database or reset if requested
+    if reset_all:
+        _reset_all()
+        return
+
     _setup_database()
 
-    # Handle listing conversations
-    if list_conversations:
-        _list_conversations()
-        return
-
-    # Handle continuing a specific conversation
-    if continue_id:
-        _handle_continue_conversation(continue_id, model)
-        return
-
-    # Handle new conversation flag
-    if new:
-        _handle_new_conversation(prompt_file, model, debug=debug)
-        return
-
-    # Default behavior: start new conversation or resume most recent
-    _handle_default_behavior(prompt_file, model, debug=debug)
+    actions = [
+        (list_conversations, lambda: _list_conversations()),
+        (
+            continue_id is not None,
+            lambda: _handle_continue_conversation(cast("int", continue_id), model),
+        ),
+        (new, lambda: _handle_new_conversation(prompt_file, model, debug=debug)),
+    ]
+    for condition, action in actions:
+        if condition:
+            action()
+            break
+    else:
+        _handle_default_behavior(prompt_file, model, debug=debug)
 
 
 if __name__ == "__main__":

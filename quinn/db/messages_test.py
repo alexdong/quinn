@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from quinn.db.messages import Messages
+from quinn.db.messages import MessageStore
 from quinn.models.message import Message, MessageMetrics
 
 
@@ -89,10 +89,10 @@ def test_messages_create(setup_test_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, user_id)
+        MessageStore.create(message, user_id)
         
         # Verify message was created
-        retrieved_message = Messages.get_by_id(new_message_id)
+        retrieved_message = MessageStore.get_by_id(new_message_id)
         assert retrieved_message is not None
         assert retrieved_message.id == new_message_id
         assert retrieved_message.conversation_id == conversation_id
@@ -117,9 +117,9 @@ def test_messages_get_by_id(setup_test_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, user_id)
+        MessageStore.create(message, user_id)
         
-        retrieved_message = Messages.get_by_id(new_message_id)
+        retrieved_message = MessageStore.get_by_id(new_message_id)
         assert retrieved_message is not None
         assert retrieved_message.id == new_message_id
         assert retrieved_message.conversation_id == conversation_id
@@ -154,12 +154,12 @@ def test_messages_get_by_conversation(setup_test_data):
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
         # Create messages in random order
-        Messages.create(message2, user_id)
-        Messages.create(message1, user_id)
-        Messages.create(message3, user_id)
+        MessageStore.create(message2, user_id)
+        MessageStore.create(message1, user_id)
+        MessageStore.create(message3, user_id)
         
         # Retrieve messages
-        retrieved_messages = Messages.get_by_conversation(conversation_id)
+        retrieved_messages = MessageStore.get_by_conversation(conversation_id)
         
         # Should be ordered by created_at ASC
         assert len(retrieved_messages) == 3
@@ -186,10 +186,10 @@ def test_messages_update(setup_test_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, user_id)
+        MessageStore.create(message, user_id)
         
         # Get the original timestamp from database (to avoid precision issues)
-        original_message = Messages.get_by_id(new_message_id)
+        original_message = MessageStore.get_by_id(new_message_id)
         assert original_message is not None
         original_updated_at = original_message.last_updated_at
         
@@ -201,10 +201,10 @@ def test_messages_update(setup_test_data):
         message.user_content = "Updated user content"
         message.assistant_content = "Updated assistant content"
         
-        Messages.update(message)
+        MessageStore.update(message)
         
         # Verify the update
-        retrieved_message = Messages.get_by_id(new_message_id)
+        retrieved_message = MessageStore.get_by_id(new_message_id)
         assert retrieved_message is not None
         assert retrieved_message.system_prompt == "Updated system prompt"
         assert retrieved_message.user_content == "Updated user content"
@@ -229,17 +229,17 @@ def test_messages_delete(setup_test_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(setup_test_data["db_file"])):
-        Messages.create(message, user_id)
+        MessageStore.create(message, user_id)
         
         # Verify message exists
-        retrieved_message = Messages.get_by_id(new_message_id)
+        retrieved_message = MessageStore.get_by_id(new_message_id)
         assert retrieved_message is not None
         
         # Delete the message
-        Messages.delete(new_message_id)
+        MessageStore.delete(new_message_id)
         
         # Verify deletion
-        deleted_message = Messages.get_by_id(new_message_id)
+        deleted_message = MessageStore.get_by_id(new_message_id)
         assert deleted_message is None
 
 
@@ -256,16 +256,16 @@ def test_messages_error_handling():
     # Test database connection error
     with patch("quinn.db.messages.get_db_connection", side_effect=Exception("Database error")):
         with pytest.raises(Exception, match="Database error"):
-            Messages.create(message, "test-user")
+            MessageStore.create(message, "test-user")
         
         with pytest.raises(Exception, match="Database error"):
-            Messages.get_by_id(message_id)
+            MessageStore.get_by_id(message_id)
         
         with pytest.raises(Exception, match="Database error"):
-            Messages.get_by_conversation("test-conv")
+            MessageStore.get_by_conversation("test-conv")
         
         with pytest.raises(Exception, match="Database error"):
-            Messages.update(message)
+            MessageStore.update(message)
         
         with pytest.raises(Exception, match="Database error"):
-            Messages.delete(message_id)
+            MessageStore.delete(message_id)

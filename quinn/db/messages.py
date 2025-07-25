@@ -8,7 +8,7 @@ from quinn.utils.logging import get_logger, span_for_db
 logger = get_logger(__name__)
 
 
-class Messages:
+class MessageStore:
     @staticmethod
     def create(message: Message, user_id: str) -> None:
         """Creates a new message in the database."""

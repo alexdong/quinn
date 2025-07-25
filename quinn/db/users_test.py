@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from quinn.db.users import Users
+from quinn.db.users import UserStore
 from quinn.models.user import User
 
 
@@ -138,10 +138,10 @@ def test_create_user(clean_db):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Verify user was created
-        retrieved_user = Users.get_by_id(user_id)
+        retrieved_user = UserStore.get_by_id(user_id)
         assert retrieved_user is not None
         assert retrieved_user.id == user_id
         assert retrieved_user.email_addresses == email_addresses
@@ -159,9 +159,9 @@ def test_get_user_by_id(clean_db, test_user_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
-        retrieved_user = Users.get_by_id(test_user_data["id"])
+        retrieved_user = UserStore.get_by_id(test_user_data["id"])
         assert retrieved_user is not None
         assert retrieved_user.id == test_user_data["id"]
         assert retrieved_user.email_addresses == test_user_data["email_addresses"]
@@ -172,7 +172,7 @@ def test_get_user_by_id(clean_db, test_user_data):
 def test_get_user_by_id_not_found(clean_db):
     """Test retrieving a non-existent user."""
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        retrieved_user = Users.get_by_id("non-existent-id")
+        retrieved_user = UserStore.get_by_id("non-existent-id")
         assert retrieved_user is None
 
 
@@ -188,7 +188,7 @@ def test_update_user(clean_db, test_user_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Wait a moment to ensure different timestamp
         time.sleep(0.001)
@@ -198,10 +198,10 @@ def test_update_user(clean_db, test_user_data):
         user.email_addresses = ["updated@example.com", "new@example.com"]
         user.settings = {"theme": "light", "notifications": False}
         
-        Users.update(user)
+        UserStore.update(user)
         
         # Verify updates
-        retrieved_user = Users.get_by_id(test_user_data["id"])
+        retrieved_user = UserStore.get_by_id(test_user_data["id"])
         assert retrieved_user is not None
         assert retrieved_user.name == "Updated Name"
         assert retrieved_user.email_addresses == ["updated@example.com", "new@example.com"]
@@ -219,17 +219,17 @@ def test_delete_user(clean_db, test_user_data):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Verify user exists
-        retrieved_user = Users.get_by_id(test_user_data["id"])
+        retrieved_user = UserStore.get_by_id(test_user_data["id"])
         assert retrieved_user is not None
         
         # Delete user
-        Users.delete(test_user_data["id"])
-        
+        UserStore.delete(test_user_data["id"])
+
         # Verify user is deleted
-        retrieved_user = Users.get_by_id(test_user_data["id"])
+        retrieved_user = UserStore.get_by_id(test_user_data["id"])
         assert retrieved_user is None
 
 def test_get_by_email(clean_db):
@@ -245,21 +245,21 @@ def test_get_by_email(clean_db):
     )
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Test finding by primary email
-        retrieved_user = Users.get_by_email("primary@example.com")
+        retrieved_user = UserStore.get_by_email("primary@example.com")
         assert retrieved_user is not None
         assert retrieved_user.id == user_id
         assert retrieved_user.name == name
         
         # Test finding by secondary email
-        retrieved_user = Users.get_by_email("secondary@example.com")
+        retrieved_user = UserStore.get_by_email("secondary@example.com")
         assert retrieved_user is not None
         assert retrieved_user.id == user_id
         
         # Test with non-existent email
-        retrieved_user = Users.get_by_email("nonexistent@example.com")
+        retrieved_user = UserStore.get_by_email("nonexistent@example.com")
         assert retrieved_user is None
 
 
@@ -271,14 +271,14 @@ def test_add_alternative_email(clean_db):
     user = User(id=user_id, email_addresses=email_addresses)
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Add new email
-        result = Users.add_alternative_email(user_id, "new@example.com")
+        result = UserStore.add_alternative_email(user_id, "new@example.com")
         assert result is True
         
         # Verify email was added
-        retrieved_user = Users.get_by_id(user_id)
+        retrieved_user = UserStore.get_by_id(user_id)
         assert retrieved_user is not None
         assert "original@example.com" in retrieved_user.email_addresses
         assert "new@example.com" in retrieved_user.email_addresses
@@ -293,14 +293,14 @@ def test_add_alternative_email_duplicate(clean_db):
     user = User(id=user_id, email_addresses=email_addresses)
     
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        Users.create(user)
+        UserStore.create(user)
         
         # Try to add existing email
-        result = Users.add_alternative_email(user_id, "test@example.com")
+        result = UserStore.add_alternative_email(user_id, "test@example.com")
         assert result is False
         
         # Verify no duplicate was added
-        retrieved_user = Users.get_by_id(user_id)
+        retrieved_user = UserStore.get_by_id(user_id)
         assert retrieved_user is not None
         assert len(retrieved_user.email_addresses) == 1
 
@@ -308,7 +308,7 @@ def test_add_alternative_email_duplicate(clean_db):
 def test_add_alternative_email_user_not_found(clean_db):
     """Test adding email to non-existent user."""
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
-        result = Users.add_alternative_email("nonexistent-user", "test@example.com")
+        result = UserStore.add_alternative_email("nonexistent-user", "test@example.com")
         assert result is False
 
 
@@ -316,7 +316,7 @@ def test_delete_nonexistent_user(clean_db):
     """Test deleting a user that does not exist."""
     with patch("quinn.db.database.DATABASE_FILE", str(clean_db)):
         # Should not raise an exception
-        Users.delete("nonexistent-user-id")
+        UserStore.delete("nonexistent-user-id")
 
 
 def test_user_operations_error_handling(clean_db):
@@ -327,20 +327,20 @@ def test_user_operations_error_handling(clean_db):
     # Mock database connection to raise an exception
     with patch("quinn.db.users.get_db_connection", side_effect=Exception("Database error")):
         with pytest.raises(Exception, match="Database error"):
-            Users.create(user)
+            UserStore.create(user)
         
         with pytest.raises(Exception, match="Database error"):
-            Users.get_by_id(user_id)
+            UserStore.get_by_id(user_id)
         
         with pytest.raises(Exception, match="Database error"):
-            Users.get_by_email("test@example.com")
+            UserStore.get_by_email("test@example.com")
         
         with pytest.raises(Exception, match="Database error"):
-            Users.update(user)
+            UserStore.update(user)
         
         with pytest.raises(Exception, match="Database error"):
-            Users.delete(user_id)
+            UserStore.delete(user_id)
         
         with pytest.raises(Exception, match="Database error"):
-            Users.add_alternative_email(user_id, "new@example.com")
+            UserStore.add_alternative_email(user_id, "new@example.com")
 
