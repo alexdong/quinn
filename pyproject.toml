@@ -97,14 +97,24 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.run]
+branch = true
 source = ["src"]
 omit = ["*_test.py", "*/tests/*"]
 
 [tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if __name__ == .__main__.:",
+exclude_also = [
+    # Don't complain about missing debug-only code
+    "if self\\.debug:",
+    "if DEBUG:",
+    "if __debug__:",
+    
+    # Don't complain if tests don't hit defensive assertion code
     "raise AssertionError",
     "raise NotImplementedError",
+    
+    # Don't complain if non-runnable code isn't run
+    "if __name__ == .__main__.:",
+    
+    # Don't complain about abstract methods
+    "@(abc\\.)?abstractmethod",
 ]
