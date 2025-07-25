@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 class ConversationStore:
     @staticmethod
     def create(conversation: Conversation) -> None:
+
         """Creates a new conversation in the database."""
         logger.info(
             "Creating conversation: id=%s, user_id=%s",
@@ -43,8 +44,9 @@ class ConversationStore:
             conn.commit()
             logger.debug("Conversation created successfully: %s", conversation.id)
 
-    @staticmethod
+
     def get_by_id(conversation_id: str) -> Conversation | None:
+
         """Retrieves a conversation by its ID."""
         logger.debug("Retrieving conversation by ID: %s", conversation_id)
 
@@ -73,6 +75,7 @@ class ConversationStore:
 
     @staticmethod
     def get_by_user(user_id: str) -> list[Conversation]:
+
         """Retrieves all conversations for a given user."""
         logger.debug("Retrieving conversations for user: %s", user_id)
 
@@ -104,6 +107,7 @@ class ConversationStore:
 
     @staticmethod
     def update(conversation: Conversation) -> None:
+
         """Updates an existing conversation."""
         conversation.updated_at = datetime.now(UTC)
         logger.info("Updating conversation: %s", conversation.id)

@@ -1,11 +1,13 @@
 """Command-line interface for Quinn prompt iteration."""
 
 import asyncio
+import logging
 import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import cast
 from uuid import uuid4
 
 import click
@@ -25,6 +27,7 @@ from quinn.models.config import AgentConfig
 from quinn.models.conversation import Conversation
 from quinn.models.message import Message
 from quinn.models.user import User
+from quinn.utils.logging import setup_logging
 
 console = Console()
 
@@ -60,6 +63,11 @@ def _create_cli_user_if_needed() -> None:
             raise
 
 
+def _parse_debug_modules(mods: str | None) -> list[str] | None:
+    """Parse comma-separated debug module names."""
+    return [m.strip() for m in mods.split(",") if m.strip()] if mods else None
+
+
 def _setup_database() -> None:
     """Ensure database tables exist and create CLI user if needed."""
     try:
@@ -67,6 +75,17 @@ def _setup_database() -> None:
         _create_cli_user_if_needed()
     except Exception as e:
         console.print(f"[red]Database setup failed: {e}[/red]")
+        sys.exit(1)
+
+
+def _reset_all() -> None:
+    """Remove all conversations and recreate a fresh database."""
+    try:
+        Path(DATABASE_FILE).unlink(missing_ok=True)
+        _setup_database()
+        console.print("[green]All conversations reset.[/green]")
+    except Exception as e:  # pragma: no cover - rare failure
+        console.print(f"[red]Failed to reset conversations: {e}[/red]")
         sys.exit(1)
 
 
@@ -350,6 +369,7 @@ def _handle_continue_conversation(continue_id: int, model: str) -> None:
     if not conversation:
         console.print(f"[red]Error: Conversation {continue_id} not found[/red]")
         sys.exit(1)
+    assert conversation is not None
 
     # Get user input for continuation
     user_content = _read_stdin()
@@ -480,7 +500,54 @@ def _handle_default_behavior(
     _handle_new_conversation_with_content(user_content, prompt_file, model, debug=debug)
 
 
-@click.command()
+@click.command(
+    epilog="""
+GETTING STARTED:
+
+    quinn           # Continue or start a new conversation  (opens $EDITOR)
+    quinn -n        # Start a new conversation  (opens $EDITOR)
+    quinn -c        # Continue the most recent conversation (opens $EDITOR)
+    quinn -l        # List all your conversations with IDs
+    quinn -c 1      # Continue conversation #1 (opens $EDITOR)
+    quinn --reset-all   # Reset all conversations and start fresh
+
+EXAMPLE SESSION:
+
+    $ quinn
+    # Equivalent to 'quinn -n' since there is no previous conversation yet.
+    # $EDITOR opens, you type:
+    # "I'd love to plan out what to watch for 90 minutes rowing session tonight."
+    # "I'm working in AI/coding, startup and board level. I fence epee."
+    # "I also love learning new things. It can't be too engrossing."
+
+    # Quinn responds with clarifying questions
+
+    $ quinn
+    # Equivalent to 'quinn -c' since there is a previous conversation.
+    # $EDITOR opens, you answer inline between the quoted clarifying questions:
+    # "1. in-depth interviews or documentaries are great.
+    #  2. I like a mix of tech, business, and personal growth topics.
+    #  3. I have apple TV+ subscription, and I can access YouTube. Focus on these two."
+    
+    $ quinn
+    # Continue the discussion, explore specific solutions...
+
+CONVERSATION FLOW:
+
+    1. First message: Describe your problem or challenge
+    2. Quinn asks clarifying questions to understand context
+    3. You provide more details, constraints, and goals
+    4. Quinn guides you through potential solutions
+    5. Continue iterating until you reach clarity
+
+TIPS:
+
+    - Set EDITOR environment variable: export EDITOR=vim
+    - Quinn saves all conversations locally in SQLite
+    - Use 'quinn -l' to see conversation history and costs
+    - Each conversation maintains full context
+"""
+)
 @click.option(
     "-n",
     "--new",
@@ -502,22 +569,26 @@ def _handle_default_behavior(
     help="Continue conversation with ID N",
 )
 @click.option(
-    "-p",
-    "--prompt-file",
-    type=str,
-    help="Path to custom prompt template file (supports Jinja2 variables: {{user_problem}}, {{user_content}})",
-)
-@click.option(
     "-m",
     "--model",
     type=str,
-    default="gemini-2.5-flash",
-    help="LLM model to use (default: gemini-2.5-flash)",
+    default="claude-4-sonnet",
+    help="LLM model to use (default: claude-4-sonnet)",
 )
 @click.option(
     "--debug",
     is_flag=True,
     help="Enable debug output",
+)
+@click.option(
+    "--debug-modules",
+    type=str,
+    help="Comma-separated modules for debug logging",
+)
+@click.option(
+    "--reset-all",
+    is_flag=True,
+    help="Delete all conversations and start fresh",
 )
 def main(
     new: bool,  # noqa: FBT001
@@ -527,47 +598,46 @@ def main(
     model: str,
     *,
     debug: bool = False,
+    debug_modules: str | None = None,
+    reset_all: bool = False,
 ) -> None:
     """Quinn CLI - AI-powered rubber duck for guided problem-solving.
 
-    Usage:
-        echo "Your problem here" | quinn -n    # Start new conversation
-        quinn                                   # Start new or resume recent conversation (uses $EDITOR)
-        quinn -l                               # List all conversations
-        quinn -c 3                             # Continue conversation with ID 3
-        quinn -p custom_prompt.j2              # Use custom prompt template
+    Quinn helps you think through problems via back-and-forth discussion. All input
+    is provided through your $EDITOR (vim, nano, etc).
 
-    Available models:
-        - gemini-2.5-flash (default)
-        - gemini-2.5-flash-thinking
-        - claude-4-sonnet
-        - gpt-4o-mini
-        - gpt-4.1
-        - gpt-4.1-mini
+    Available models: claude-4-sonnet (default), gemini-2.5-flash, gemini-2.5-flash-thinking,
+    gpt-4o-mini, gpt-4.1, gpt-4.1-mini
     """
+    level = logging.INFO
     if debug:
         console.print("[dim]Debug mode enabled[/dim]")
+        level = logging.DEBUG
 
-    # Setup database
+    modules = _parse_debug_modules(debug_modules)
+    setup_logging(level=level, debug_modules=modules)
+
+    # Setup database or reset if requested
+    if reset_all:
+        _reset_all()
+        return
+
     _setup_database()
 
-    # Handle listing conversations
-    if list_conversations:
-        _list_conversations()
-        return
-
-    # Handle continuing a specific conversation
-    if continue_id:
-        _handle_continue_conversation(continue_id, model)
-        return
-
-    # Handle new conversation flag
-    if new:
-        _handle_new_conversation(prompt_file, model, debug=debug)
-        return
-
-    # Default behavior: start new conversation or resume most recent
-    _handle_default_behavior(prompt_file, model, debug=debug)
+    actions = [
+        (list_conversations, lambda: _list_conversations()),
+        (
+            continue_id is not None,
+            lambda: _handle_continue_conversation(cast("int", continue_id), model),
+        ),
+        (new, lambda: _handle_new_conversation(prompt_file, model, debug=debug)),
+    ]
+    for condition, action in actions:
+        if condition:
+            action()
+            break
+    else:
+        _handle_default_behavior(prompt_file, model, debug=debug)
 
 
 if __name__ == "__main__":

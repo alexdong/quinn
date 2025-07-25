@@ -32,7 +32,7 @@ After you generate code, don't stop at the first pass. Instead, iteratively impr
 ## Development Environment
 
 ### Core Tools
-- **Python**: 3.12+
+- **Python**: 3.13+
 - **Package Management**: `uv` (not pip or requirements.txt)
 - **Code Quality**: 
   - `ruff` (formatting and linting), 
@@ -121,6 +121,7 @@ Every additional abstraction layer increases cognitive load. Functions are easie
 
 - Prefer functions over classes
 - Write docstrings only when function intention is unclear from name/implementation
+- Avoid backward compatibility features or codes like `from future import __annotation__` since the behaviour is already default in python 3.13+ .
 
 ### Traceability and Debugging
 

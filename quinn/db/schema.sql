@@ -36,3 +36,22 @@
       FOREIGN KEY (conversation_id) REFERENCES conversations (id),
       FOREIGN KEY (user_id) REFERENCES users (id)
   );
+
+  -- Emails table
+  CREATE TABLE emails (
+      id TEXT PRIMARY KEY,
+      conversation_id TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      direction TEXT NOT NULL,
+      from_email TEXT NOT NULL,
+      to_addrs TEXT NOT NULL,
+      cc_addrs TEXT NOT NULL,
+      bcc_addrs TEXT NOT NULL,
+      subject TEXT,
+      text TEXT,
+      html TEXT,
+      headers TEXT,
+      FOREIGN KEY (conversation_id) REFERENCES conversations (id)
+  );
+  CREATE INDEX idx_emails_conversation_created_at
+      ON emails (conversation_id, created_at);

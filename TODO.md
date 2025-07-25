@@ -1,3 +1,4 @@
+- Include attached files in the prompt to provide context.
 - Prompt version should be set to the last commit hash of the prompt file used.
 - `_build_conversation_prompt` should compact the conversation history
 - Summarise the discussion and set `conversations.title`

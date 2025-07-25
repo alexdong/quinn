@@ -34,7 +34,7 @@ class TestDatabase(unittest.TestCase):
                 cursor = conn.cursor()
                 cursor.execute("INSERT INTO test (id) VALUES (1)")
                 conn.commit()
-                
+
                 cursor.execute("SELECT COUNT(*) FROM test")
                 count = cursor.fetchone()[0]
                 assert count == 1
@@ -75,7 +75,7 @@ class TestDatabase(unittest.TestCase):
         # Verify tables were created
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
-            
+
             # Check that all expected tables exist
             cursor.execute("""
                 SELECT name FROM sqlite_master 
@@ -83,8 +83,8 @@ class TestDatabase(unittest.TestCase):
                 ORDER BY name
             """)
             tables = [row[0] for row in cursor.fetchall()]
-            
-            expected_tables = ["conversations", "messages", "users"]
+
+            expected_tables = ["conversations", "emails", "messages", "users"]
             assert set(tables) == set(expected_tables)
 
     def test_create_tables_schema_structure(self) -> None:
@@ -94,20 +94,20 @@ class TestDatabase(unittest.TestCase):
 
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
-            
+
             # Test users table structure
             cursor.execute("PRAGMA table_info(users)")
             users_columns = {row[1]: row[2] for row in cursor.fetchall()}
             expected_users_columns = {
                 "id": "TEXT",
                 "created_at": "INTEGER",
-                "updated_at": "INTEGER", 
+                "updated_at": "INTEGER",
                 "name": "TEXT",
                 "email_addresses": "TEXT",
-                "settings": "TEXT"
+                "settings": "TEXT",
             }
             assert users_columns == expected_users_columns
-            
+
             # Test conversations table structure
             cursor.execute("PRAGMA table_info(conversations)")
             conversations_columns = {row[1]: row[2] for row in cursor.fetchall()}
@@ -120,10 +120,10 @@ class TestDatabase(unittest.TestCase):
                 "status": "TEXT",
                 "total_cost": "REAL",
                 "message_count": "INTEGER",
-                "metadata": "TEXT"
+                "metadata": "TEXT",
             }
             assert conversations_columns == expected_conversations_columns
-            
+
             # Test messages table structure
             cursor.execute("PRAGMA table_info(messages)")
             messages_columns = {row[1]: row[2] for row in cursor.fetchall()}
@@ -136,7 +136,7 @@ class TestDatabase(unittest.TestCase):
                 "system_prompt": "TEXT",
                 "user_content": "TEXT",
                 "assistant_content": "TEXT",
-                "metadata": "TEXT"
+                "metadata": "TEXT",
             }
             assert messages_columns == expected_messages_columns
 
@@ -147,7 +147,7 @@ class TestDatabase(unittest.TestCase):
 
         with sqlite3.connect(self.db_file) as conn:
             cursor = conn.cursor()
-            
+
             # Test conversations foreign key to users
             cursor.execute("PRAGMA foreign_key_list(conversations)")
             conv_fks = cursor.fetchall()
@@ -155,20 +155,20 @@ class TestDatabase(unittest.TestCase):
             assert conv_fks[0][2] == "users"  # Referenced table
             assert conv_fks[0][3] == "user_id"  # From column
             assert conv_fks[0][4] == "id"  # To column
-            
+
             # Test messages foreign keys
             cursor.execute("PRAGMA foreign_key_list(messages)")
             msg_fks = cursor.fetchall()
             assert len(msg_fks) == 2
-            
+
             # Sort by referenced table for consistent testing
             msg_fks_sorted = sorted(msg_fks, key=lambda x: x[2])
-            
+
             # First FK should be to conversations
             assert msg_fks_sorted[0][2] == "conversations"
             assert msg_fks_sorted[0][3] == "conversation_id"
             assert msg_fks_sorted[0][4] == "id"
-            
+
             # Second FK should be to users
             assert msg_fks_sorted[1][2] == "users"
             assert msg_fks_sorted[1][3] == "user_id"
@@ -177,6 +177,7 @@ class TestDatabase(unittest.TestCase):
     def test_database_file_constant(self) -> None:
         """Test that DATABASE_FILE constant is set correctly."""
         from quinn.db.database import DATABASE_FILE
+
         assert DATABASE_FILE == "quinn.db"
 
 
@@ -187,95 +188,104 @@ if __name__ == "__main__":
         """Test error handling in get_db_connection."""
         from unittest.mock import patch, MagicMock
         import pytest
-        
+
         # Test connection error
-        with patch("quinn.db.database.sqlite3.connect", side_effect=Exception("Connection failed")):
+        with patch(
+            "quinn.db.database.sqlite3.connect",
+            side_effect=Exception("Connection failed"),
+        ):
             with pytest.raises(Exception, match="Connection failed"):
                 with get_db_connection():
                     pass
-    
+
     def test_get_db_connection_rollback_on_error(self):
         """Test rollback is called when an error occurs."""
         from unittest.mock import patch, MagicMock
         import pytest
-        
+
         mock_conn = MagicMock()
         with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
             with pytest.raises(Exception, match="Test error"):
                 with get_db_connection() as conn:
                     raise Exception("Test error")
-            
+
             # Verify rollback was called
             mock_conn.rollback.assert_called_once()
-    
+
     def test_get_db_connection_close_error(self):
         """Test handling of close errors."""
         from unittest.mock import patch, MagicMock
-        
+
         mock_conn = MagicMock()
         mock_conn.close.side_effect = Exception("Close failed")
-        
+
         with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
             # Should not raise exception even if close fails
             with get_db_connection():
                 pass
-            
+
             # Verify close was attempted
             mock_conn.close.assert_called_once()
-    
+
     def test_create_tables_error_handling(self):
         """Test error handling in create_tables."""
         from unittest.mock import patch
         import pytest
-        
+
         # Test when get_db_connection fails
-        with patch("quinn.db.database.get_db_connection", side_effect=Exception("DB error")):
+        with patch(
+            "quinn.db.database.get_db_connection", side_effect=Exception("DB error")
+        ):
             with pytest.raises(Exception, match="DB error"):
                 create_tables()
-        
+
         # Test when schema file cannot be read
-        with patch("pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")):
+        with patch(
+            "pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")
+        ):
             with pytest.raises(FileNotFoundError, match="Schema not found"):
                 create_tables()
-
 
     def test_get_db_connection_error_handling(self):
         """Test error handling in get_db_connection."""
         from unittest.mock import patch
         import pytest
-        
+
         # Test connection error
-        with patch("quinn.db.database.sqlite3.connect", side_effect=Exception("Connection failed")):
+        with patch(
+            "quinn.db.database.sqlite3.connect",
+            side_effect=Exception("Connection failed"),
+        ):
             with pytest.raises(Exception, match="Connection failed"):
                 with get_db_connection():
                     pass
-    
+
     def test_get_db_connection_rollback_on_error(self):
         """Test rollback is called when an error occurs."""
         from unittest.mock import patch, MagicMock
         import pytest
-        
+
         mock_conn = MagicMock()
         with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
             with pytest.raises(Exception, match="Test error"):
                 with get_db_connection() as conn:
                     raise Exception("Test error")
-            
+
             # Verify rollback was called
             mock_conn.rollback.assert_called_once()
-    
+
     def test_get_db_connection_close_error(self):
         """Test handling of close errors."""
         from unittest.mock import patch, MagicMock
-        
+
         mock_conn = MagicMock()
         mock_conn.close.side_effect = Exception("Close failed")
-        
+
         with patch("quinn.db.database.sqlite3.connect", return_value=mock_conn):
             # Should not raise exception even if close fails
             with get_db_connection():
                 pass
-            
+
             # Verify close was attempted
             mock_conn.close.assert_called_once()
 
@@ -283,14 +293,17 @@ if __name__ == "__main__":
         """Test error handling in create_tables."""
         from unittest.mock import patch
         import pytest
-        
+
         # Test when get_db_connection fails
-        with patch("quinn.db.database.get_db_connection", side_effect=Exception("DB error")):
+        with patch(
+            "quinn.db.database.get_db_connection", side_effect=Exception("DB error")
+        ):
             with pytest.raises(Exception, match="DB error"):
                 create_tables()
-        
+
         # Test when schema file cannot be read
-        with patch("pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")):
+        with patch(
+            "pathlib.Path.open", side_effect=FileNotFoundError("Schema not found")
+        ):
             with pytest.raises(FileNotFoundError, match="Schema not found"):
                 create_tables()
-
