@@ -24,9 +24,12 @@ class TestDatabase(unittest.TestCase):
     def test_get_db_connection_context_manager(self) -> None:
         """Test database connection context manager."""
         # Create a simple database
-        with sqlite3.connect(self.db_file) as conn:
+        conn = sqlite3.connect(self.db_file)
+        try:
             conn.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)")
             conn.commit()
+        finally:
+            conn.close()
 
         # Test our context manager
         with unittest.mock.patch("quinn.db.database.DATABASE_FILE", str(self.db_file)):
@@ -42,9 +45,12 @@ class TestDatabase(unittest.TestCase):
     def test_get_db_connection_closes_properly(self) -> None:
         """Test that database connection closes properly."""
         # Create a simple database
-        with sqlite3.connect(self.db_file) as conn:
+        conn = sqlite3.connect(self.db_file)
+        try:
             conn.execute("CREATE TABLE test (id INTEGER PRIMARY KEY)")
             conn.commit()
+        finally:
+            conn.close()
 
         connection_ref = None
         with unittest.mock.patch("quinn.db.database.DATABASE_FILE", str(self.db_file)):
@@ -73,7 +79,8 @@ class TestDatabase(unittest.TestCase):
             create_tables()
 
         # Verify tables were created
-        with sqlite3.connect(self.db_file) as conn:
+        conn = sqlite3.connect(self.db_file)
+        try:
             cursor = conn.cursor()
 
             # Check that all expected tables exist
@@ -86,13 +93,16 @@ class TestDatabase(unittest.TestCase):
 
             expected_tables = ["conversations", "emails", "messages", "users"]
             assert set(tables) == set(expected_tables)
+        finally:
+            conn.close()
 
     def test_create_tables_schema_structure(self) -> None:
         """Test that created tables have the correct structure."""
         with unittest.mock.patch("quinn.db.database.DATABASE_FILE", str(self.db_file)):
             create_tables()
 
-        with sqlite3.connect(self.db_file) as conn:
+        conn = sqlite3.connect(self.db_file)
+        try:
             cursor = conn.cursor()
 
             # Test users table structure
@@ -139,13 +149,16 @@ class TestDatabase(unittest.TestCase):
                 "metadata": "TEXT",
             }
             assert messages_columns == expected_messages_columns
+        finally:
+            conn.close()
 
     def test_create_tables_foreign_keys(self) -> None:
         """Test that foreign key constraints are properly set up."""
         with unittest.mock.patch("quinn.db.database.DATABASE_FILE", str(self.db_file)):
             create_tables()
 
-        with sqlite3.connect(self.db_file) as conn:
+        conn = sqlite3.connect(self.db_file)
+        try:
             cursor = conn.cursor()
 
             # Test conversations foreign key to users
@@ -173,6 +186,8 @@ class TestDatabase(unittest.TestCase):
             assert msg_fks_sorted[1][2] == "users"
             assert msg_fks_sorted[1][3] == "user_id"
             assert msg_fks_sorted[1][4] == "id"
+        finally:
+            conn.close()
 
     def test_database_file_constant(self) -> None:
         """Test that DATABASE_FILE constant is set correctly."""
