@@ -11,7 +11,6 @@ logger = get_logger(__name__)
 class ConversationStore:
     @staticmethod
     def create(conversation: Conversation) -> None:
-
         """Creates a new conversation in the database."""
         span_for_db("conversations", conversation.id)
         logger.info(
@@ -46,8 +45,8 @@ class ConversationStore:
             logger.debug("Conversation created successfully: %s", conversation.id)
 
 
+    @staticmethod
     def get_by_id(conversation_id: str) -> Conversation | None:
-
         """Retrieves a conversation by its ID."""
         span_for_db("conversations", conversation_id)
         logger.debug("Retrieving conversation by ID: %s", conversation_id)
@@ -77,7 +76,6 @@ class ConversationStore:
 
     @staticmethod
     def get_by_user(user_id: str) -> list[Conversation]:
-
         """Retrieves all conversations for a given user."""
         span_for_db("users", user_id)
         logger.debug("Retrieving conversations for user: %s", user_id)

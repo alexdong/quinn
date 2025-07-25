@@ -1,17 +1,18 @@
 from pathlib import Path
 
-from quinn.db.conversations import Conversations, ConversationStore
+from quinn.db.conversations import ConversationStore
 from quinn.db.emails import EmailStore
-from quinn.db.users import Users
+from quinn.db.users import UserStore
 from quinn.models.email import EmailDirection, EmailMessage
+from quinn.models.conversation import Conversation
 from quinn.models.user import User
 
 
 def test_emails_create_and_get(clean_db: Path) -> None:
     user = User(id="u1", email_addresses=["a@example.com"])
-    Users.create(user)
-    conv = ConversationStore(conversation_id="conv1", user_id="u1")
-    Conversations.create(conv)
+    UserStore.create(user)
+    conv = Conversation(id="conv1", user_id="u1")
+    ConversationStore.create(conv)
     email = EmailMessage(
         id="<e1>",
         conversation_id="conv1",

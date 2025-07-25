@@ -20,7 +20,7 @@ from rich.table import Table
 
 from quinn.agent.core import generate_response
 from quinn.db.conversations import ConversationStore
-from quinn.db.database import create_tables
+from quinn.db.database import DATABASE_FILE, create_tables
 from quinn.db.messages import MessageStore
 from quinn.db.users import UserStore
 from quinn.models.config import AgentConfig
