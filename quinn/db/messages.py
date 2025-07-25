@@ -1,17 +1,18 @@
 import json
-import logging
 from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
 from quinn.models.message import Message, MessageMetrics
+from quinn.utils.logging import get_logger, span_for_db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class MessageStore:
     @staticmethod
     def create(message: Message, user_id: str) -> None:
         """Creates a new message in the database."""
+        span_for_db("messages", message.id)
         logger.info(
             "Creating message: id=%s, conversation_id=%s",
             message.id,
@@ -44,6 +45,7 @@ class MessageStore:
     @staticmethod
     def get_by_id(message_id: str) -> Message | None:
         """Retrieves a message by its ID."""
+        span_for_db("messages", message_id)
         logger.debug("Retrieving message by ID: %s", message_id)
 
         with get_db_connection() as conn:
@@ -76,6 +78,7 @@ class MessageStore:
     @staticmethod
     def get_by_conversation(conversation_id: str) -> list[Message]:
         """Retrieves all messages for a given conversation."""
+        span_for_db("conversations", conversation_id)
         logger.debug("Retrieving messages for conversation: %s", conversation_id)
 
         with get_db_connection() as conn:
@@ -114,6 +117,7 @@ class MessageStore:
     @staticmethod
     def update(message: Message) -> None:
         """Updates an existing message."""
+        span_for_db("messages", message.id)
         # Update the last_updated_at timestamp
         message.last_updated_at = datetime.now(UTC)
         logger.info("Updating message: %s", message.id)
@@ -142,6 +146,7 @@ class MessageStore:
     @staticmethod
     def delete(message_id: str) -> None:
         """Deletes a message from the database."""
+        span_for_db("messages", message_id)
         logger.info("Deleting message: %s", message_id)
 
         with get_db_connection() as conn:

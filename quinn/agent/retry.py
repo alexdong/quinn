@@ -1,13 +1,14 @@
 """Retry logic with exponential backoff."""
 
 import asyncio
-import logging
 from collections.abc import Callable
 from typing import TypeVar
 
+from quinn.utils.logging import get_logger
+
 T = TypeVar("T")
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def retry_with_backoff[T](
@@ -18,6 +19,8 @@ async def retry_with_backoff[T](
     """Generic retry logic with exponential backoff."""
     assert max_retries >= 0, "Max retries must be non-negative"
     assert backoff_factor > 1.0, "Backoff factor must be > 1.0"
+
+    logger.debug("Starting retry loop max_retries=%s", max_retries)
 
     last_exception = None
 

@@ -516,9 +516,9 @@ EXAMPLE SESSION:
     $ quinn
     # Equivalent to 'quinn -n' since there is no previous conversation yet.
     # $EDITOR opens, you type:
-    # "I'd love to plan out what to watch for 90 minutes rowing session tonight."
-    # "I'm working in AI/coding, startup and board level. I fence epee."
-    # "I also love learning new things. It can't be too engrossing."
+    # "I'd love to plan out what to watch for 90 minutes rowing session tonight.
+    #  I'm working in AI/coding, startup and board level. I fence epee.
+    #  I also love learning new things. It can't be too engrossing."
 
     # Quinn responds with clarifying questions
 

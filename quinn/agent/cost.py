@@ -1,11 +1,12 @@
 """Cost calculation using local pricing data."""
 
 import json
-import logging
 from pathlib import Path
 from typing import Any, NamedTuple
 
-logger = logging.getLogger(__name__)
+from quinn.utils.logging import get_logger
+
+logger = get_logger(__name__)
 
 # Path to pricing data directory
 PRICING_DIR = Path(__file__).parent / "pricing"
@@ -14,6 +15,8 @@ PRICING_DIR = Path(__file__).parent / "pricing"
 def _load_pricing_data() -> dict[str, dict[str, Any]]:
     """Load all pricing data from JSON files."""
     pricing_data = {}
+
+    logger.debug("Loading pricing data from %s", PRICING_DIR)
 
     pricing_files = [f.name for f in PRICING_DIR.glob("*.json")]
     for filename in pricing_files:
@@ -31,6 +34,7 @@ def _load_pricing_data() -> dict[str, dict[str, Any]]:
             }
             pricing_data.update(data)
 
+    logger.debug("Loaded pricing for %d models", len(pricing_data))
     return pricing_data
 
 
@@ -88,6 +92,13 @@ def calculate_cost(
     assert cached_input_tokens >= 0, "Cached input tokens must be non-negative"
 
     cost_info = get_model_cost_info(model)
+    logger.info(
+        "Calculating cost model=%s input=%s output=%s cached=%s",
+        model,
+        input_tokens,
+        output_tokens,
+        cached_input_tokens,
+    )
 
     # Calculate regular input cost
     input_cost = input_tokens * cost_info.input_cost_per_token

@@ -10,8 +10,16 @@ from pydantic_ai.settings import ModelSettings
 
 from quinn.models import AgentConfig, Message
 from quinn.models.message import MessageMetrics
+from quinn.utils.logging import (
+    get_logger,
+    set_trace_id,
+    span_for_llm,
+    trace,
+)
 
 from .cost import calculate_cost
+
+logger = get_logger(__name__)
 
 
 class UsageMetrics(NamedTuple):
@@ -109,6 +117,7 @@ def _calculate_usage_metrics(
     )
 
 
+@trace
 async def generate_response(
     user_message: Message,
     conversation_history: list[Message] | None = None,
@@ -117,6 +126,8 @@ async def generate_response(
     """Generate AI response with full error handling and metrics tracking."""
     assert user_message.user_content.strip(), "User message content cannot be empty"
     assert user_message.conversation_id.strip(), "Conversation ID cannot be empty"
+    set_trace_id(user_message.conversation_id, user_message.id)
+    logger.info("Generating response for conversation %s", user_message.conversation_id)
 
     if conversation_history is None:
         conversation_history = []
@@ -131,6 +142,8 @@ async def generate_response(
 
     try:
         # Generate response using pydantic-ai
+        span_for_llm(config.model, user_message.id)
+        logger.debug("Calling LLM model %s", config.model)
         start_time = datetime.now(UTC)
         result = await agent.run(prompt)
         end_time = datetime.now(UTC)
@@ -163,6 +176,7 @@ async def generate_response(
 
     except Exception as e:
         # Create error response message
+        logger.exception("LLM call failed: %s", e)
         error_time = datetime.now(UTC)
         return Message(
             user_content=user_message.user_content,
@@ -174,6 +188,7 @@ async def generate_response(
         )
 
 
+@trace
 async def create_agent(config: AgentConfig) -> Agent:
     """Create configured pydantic-ai agent instance."""
     assert isinstance(config, AgentConfig), "Config must be AgentConfig instance"
@@ -188,6 +203,7 @@ async def create_agent(config: AgentConfig) -> Agent:
         retry_backoff_factor=config.retry_backoff_factor,
     )
 
+    logger.debug("Creating agent for model %s", config.model)
     # Create agent with configuration
     return Agent(
         model=config.model,

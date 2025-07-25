@@ -1,13 +1,13 @@
 """Database access for storing email messages."""
 
 import json
-import logging
 from datetime import UTC, datetime
 
 from quinn.db.database import get_db_connection
 from quinn.models.email import EmailDirection, EmailMessage
+from quinn.utils.logging import get_logger, span_for_db
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class EmailStore:
@@ -16,6 +16,7 @@ class EmailStore:
     @staticmethod
     def create(email: EmailMessage) -> None:
         """Insert an email into the database."""
+        span_for_db("emails", email.id)
         logger.info(
             "Storing email: id=%s conversation_id=%s direction=%s",
             email.id,
@@ -55,6 +56,7 @@ class EmailStore:
     @staticmethod
     def get_by_conversation(conversation_id: str) -> list[EmailMessage]:
         """Retrieve all emails for a conversation."""
+        span_for_db("conversations", conversation_id)
         logger.debug("Loading emails for conversation %s", conversation_id)
         with get_db_connection() as conn:
             cursor = conn.cursor()

@@ -9,7 +9,7 @@ import httpx
 
 from quinn.db.emails import EmailStore
 from quinn.models.email import EmailDirection, EmailMessage
-from quinn.utils.logging import get_logger
+from quinn.utils.logging import get_logger, set_trace_id, span_for_db
 
 logger = get_logger(__name__)
 
@@ -22,6 +22,7 @@ async def send_email(
     retries: int = 3,
 ) -> httpx.Response:
     """Send an email using the Postmark API."""
+    set_trace_id(email.conversation_id, email.id)
     payload: dict[str, Any] = {
         "From": email.from_email,
         "To": ",".join(email.to),
@@ -46,6 +47,7 @@ async def send_email(
                     json=payload,
                 )
             resp.raise_for_status()
+            span_for_db("emails", email.id)
             EmailStore.create(email)
             return resp
         except Exception:  # pragma: no cover - network failure scenario
