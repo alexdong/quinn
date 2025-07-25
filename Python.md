@@ -104,6 +104,7 @@ Code is read far more often than it's written. After months away from code, we n
 - Use one-liners (lambda, list comprehensions) to reduce line count
 - Prefer simple code over clever hacks
 - Use latest Python facilities: dictionary operators (`|`, `|=`), walrus operator (`:=`), structural pattern matching
+- If you observe a `ruff` warning, understand why the rule exists and fix it accordingly, rather than suppressing it using `# noqa: <rule>`.
 
 ### Fail Early and Fast
 
