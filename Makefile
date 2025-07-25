@@ -12,8 +12,8 @@ dev:  ## Run code quality checks (ruff, format, type check)
 test:  ## Run tests with last-failed first
 	uv run pytest
 
-test-coverage:  ## Run tests with coverage reporting
-	uv run pytest --cov=. --cov-report=html --cov-report=term --durations=5 
+test-coverage:  ## Run tests with coverage reporting and fail on warnings
+	uv run pytest -W error --cov=. --cov-report=html --cov-report=term --durations=5
 
 type-coverage:  ## Check type annotation coverage and quality
 	@echo "🔍 Checking type annotation coverage..."
