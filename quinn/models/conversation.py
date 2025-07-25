@@ -33,6 +33,12 @@ class Conversation(BaseModel):
     """A conversation containing multiple messages."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str = ""
+    title: str | None = None
+    status: str = "active"
+    total_cost: float = 0.0
+    message_count: int = 0
+    metadata: dict | None = None
     messages: list[Message] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

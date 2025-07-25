@@ -8,7 +8,7 @@ from quinn.models.message import Message, MessageMetrics
 logger = logging.getLogger(__name__)
 
 
-class Messages:
+class MessageStore:
     @staticmethod
     def create(message: Message, user_id: str) -> None:
         """Creates a new message in the database."""
