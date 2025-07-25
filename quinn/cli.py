@@ -376,9 +376,20 @@ def _get_last_assistant_message(conversation_id: str) -> str | None:
 
 
 def _format_message_for_editor(content: str) -> str:
-    """Format message content with '> ' prefix for each line."""
-    lines = content.split("\n")
-    formatted_lines = [f"> {line}" for line in lines]
+    """Format message content with line breaks at column 88 and '> ' prefix for each line."""
+    # Split content into paragraphs (preserve intentional line breaks)
+    paragraphs = content.split("\n")
+
+    formatted_lines = []
+    for paragraph in paragraphs:
+        if paragraph.strip():
+            # Wrap each paragraph at 88 characters, accounting for "> " prefix (86 chars actual)
+            wrapped_lines = textwrap.wrap(paragraph, width=86)
+            formatted_lines.extend(f"> {line}" for line in wrapped_lines)
+        else:
+            # Preserve empty lines
+            formatted_lines.append("> ")
+
     return "\n".join(formatted_lines)
 
 

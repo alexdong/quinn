@@ -85,19 +85,19 @@ def test_get_last_assistant_message(tmp_path: Path) -> None:
 
 
 def test_format_message_for_editor() -> None:
-    """Test formatting message content with '> ' prefix."""
-    # Test single line
+    """Test formatting message content with line breaks at column 88 and '> ' prefix."""
+    # Test single line (short)
     single_line = "This is a single line message"
     result = _format_message_for_editor(single_line)
     assert result == "> This is a single line message"
     
-    # Test multiple lines
+    # Test multiple paragraphs
     multi_line = "Line 1\nLine 2\nLine 3"
     expected = "> Line 1\n> Line 2\n> Line 3"
     result = _format_message_for_editor(multi_line)
     assert result == expected
     
-    # Test empty lines
+    # Test empty lines (preserved as empty paragraphs)
     with_empty = "Line 1\n\nLine 3"
     expected_empty = "> Line 1\n> \n> Line 3"
     result = _format_message_for_editor(with_empty)
@@ -107,3 +107,33 @@ def test_format_message_for_editor() -> None:
     empty = ""
     result = _format_message_for_editor(empty)
     assert result == "> "
+    
+    # Test long line that needs wrapping (> 86 chars after prefix)
+    long_line = "This is a very long line that should be wrapped at column 88 when prefixed with '> ' so that the total line length does not exceed 88 characters per line"
+    result = _format_message_for_editor(long_line)
+    lines = result.split('\n')
+    
+    # Check that all lines start with "> "
+    for line in lines:
+        assert line.startswith("> ")
+    
+    # Check that no line exceeds 88 characters total
+    for line in lines:
+        assert len(line) <= 88, f"Line too long: {len(line)} chars: {line}"
+    
+    # Check that the content is preserved when we remove prefixes and join
+    content_only = '\n'.join(line[2:] for line in lines)
+    reconstructed = ' '.join(content_only.split())  # Join wrapped lines
+    original_normalized = ' '.join(long_line.split())  # Normalize spaces
+    assert reconstructed == original_normalized
+    
+    # Test paragraph with multiple sentences
+    paragraph = "First sentence here. Second sentence follows. Third sentence concludes the paragraph with some additional text to make it long enough for wrapping."
+    result = _format_message_for_editor(paragraph)
+    lines = result.split('\n')
+    
+    # Should be wrapped into multiple lines
+    assert len(lines) > 1
+    for line in lines:
+        assert line.startswith("> ")
+        assert len(line) <= 88
