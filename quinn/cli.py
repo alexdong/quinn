@@ -12,11 +12,9 @@ from typing import cast
 from uuid import uuid4
 
 import click
-import jinja2
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.syntax import Syntax
 from rich.table import Table
 
 from quinn.agent.core import generate_response
@@ -99,39 +97,7 @@ def _read_stdin() -> str:
     return sys.stdin.read().strip()
 
 
-def _read_prompt_file(prompt_file: str) -> str:
-    """Read custom prompt template from file."""
-    prompt_path = Path(prompt_file)
-    if not prompt_path.exists():
-        console.print(f"[red]Prompt file not found: {prompt_file}[/red]")
-        sys.exit(1)
-
-    try:
-        return prompt_path.read_text(encoding="utf-8")
-    except Exception as e:
-        console.print(f"[red]Error reading prompt file: {e}[/red]")
-        sys.exit(1)
-
-
-def _render_custom_prompt(template_content: str, user_content: str) -> str:
-    """Render custom prompt template with user content."""
-    try:
-        template = jinja2.Template(template_content)
-        return template.render(
-            user_problem=user_content,
-            user_content=user_content,
-            # Add other common variables for backward compatibility
-            previous_response="",
-            conversation_history="",
-        )
-    except Exception as e:
-        console.print(f"[red]Error rendering template: {e}[/red]")
-        sys.exit(1)
-
-
-async def _generate_and_save_response(
-    user_content: str, custom_prompt: str | None = None, model: str = "gemini-2.5-flash"
-) -> Message:
+async def _generate_and_save_response(user_content: str, model: str) -> Message:
     """Generate AI response and save to database."""
     # Create conversation
     conversation_id = str(uuid4())
@@ -140,7 +106,7 @@ async def _generate_and_save_response(
     user_message = Message(
         conversation_id=conversation_id,
         user_content=user_content,
-        system_prompt=custom_prompt or "",
+        system_prompt="",
     )
 
     config = _get_model_config(model)
@@ -385,9 +351,7 @@ def _handle_continue_conversation(continue_id: int, model: str) -> None:
     _display_response(response_message)
 
 
-def _handle_new_conversation(
-    prompt_file: str | None, model: str, *, debug: bool = False
-) -> None:
+def _handle_new_conversation(model: str) -> None:
     """Handle starting a new conversation."""
     # Get user input
     user_content = _read_stdin()
@@ -395,26 +359,8 @@ def _handle_new_conversation(
         console.print("[red]Error: No input provided[/red]")
         sys.exit(1)
 
-    # Read custom prompt if specified
-    custom_prompt = None
-    if prompt_file:
-        template_content = _read_prompt_file(prompt_file)
-        custom_prompt = _render_custom_prompt(template_content, user_content)
-
-        if debug:
-            console.print()
-            console.print(
-                Panel(
-                    Syntax(custom_prompt, "text", theme="monokai"),
-                    title="[bold magenta]Rendered Prompt",
-                    border_style="magenta",
-                )
-            )
-
     # Generate and save response
-    response_message = asyncio.run(
-        _generate_and_save_response(user_content, custom_prompt, model)
-    )
+    response_message = asyncio.run(_generate_and_save_response(user_content, model))
     _display_response(response_message)
 
 
@@ -430,33 +376,6 @@ def _handle_continue_recent_conversation(
 
     response_message = asyncio.run(
         _continue_conversation(recent_conversation.id, user_content, model)
-    )
-    _display_response(response_message)
-
-
-def _handle_new_conversation_with_content(
-    user_content: str, prompt_file: str | None, model: str, *, debug: bool = False
-) -> None:
-    """Handle creating a new conversation with the provided content."""
-    # Read custom prompt if specified
-    custom_prompt = None
-    if prompt_file:
-        template_content = _read_prompt_file(prompt_file)
-        custom_prompt = _render_custom_prompt(template_content, user_content)
-
-        if debug:
-            console.print()
-            console.print(
-                Panel(
-                    Syntax(custom_prompt, "text", theme="monokai"),
-                    title="[bold magenta]Rendered Prompt",
-                    border_style="magenta",
-                )
-            )
-
-    # Generate and save response
-    response_message = asyncio.run(
-        _generate_and_save_response(user_content, custom_prompt, model)
     )
     _display_response(response_message)
 
@@ -478,9 +397,7 @@ def _get_user_input_for_new_conversation() -> str:
     return user_content
 
 
-def _handle_default_behavior(
-    prompt_file: str | None, model: str, *, debug: bool = False
-) -> None:
+def _handle_default_behavior(model: str) -> None:
     """Handle default behavior: start new conversation or resume most recent."""
     if sys.stdin.isatty():
         # No piped input, check for most recent conversation
@@ -497,14 +414,13 @@ def _handle_default_behavior(
                 return
 
     # Get user input for new conversation
-    user_content = _get_user_input_for_new_conversation()
-    _handle_new_conversation_with_content(user_content, prompt_file, model, debug=debug)
+    _handle_new_conversation(model)
 
 
 @click.command(
     epilog=textwrap.dedent(
         """
-        GETTING STARTED:
+        Getting started:
 
         \b
           \bquinn           # Continue or start new
@@ -514,7 +430,7 @@ def _handle_default_behavior(
           \bquinn -c 1      # Continue conversation #1
           \bquinn --reset-all   # Reset all
 
-        EXAMPLE SESSION:
+        Example session:
 
         \b
           \b$ quinn
@@ -530,7 +446,7 @@ def _handle_default_behavior(
           \b$ quinn
           \b# Continue until you reach a solution
 
-        CONVERSATION FLOW:
+        Conversation flow:
 
         \b
           \b1. Describe your problem or challenge
@@ -595,7 +511,6 @@ def main(
     new: bool,  # noqa: FBT001
     list_conversations: bool,  # noqa: FBT001
     continue_id: int | None,
-    prompt_file: str | None,
     model: str,
     *,
     debug: bool = False,
@@ -631,14 +546,14 @@ def main(
             continue_id is not None,
             lambda: _handle_continue_conversation(cast("int", continue_id), model),
         ),
-        (new, lambda: _handle_new_conversation(prompt_file, model, debug=debug)),
+        (new, lambda: _handle_new_conversation(model)),
     ]
     for condition, action in actions:
         if condition:
             action()
             break
     else:
-        _handle_default_behavior(prompt_file, model, debug=debug)
+        _handle_default_behavior(model)
 
 
 if __name__ == "__main__":
