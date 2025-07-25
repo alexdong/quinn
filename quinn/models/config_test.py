@@ -257,12 +257,16 @@ def test_get_all_models_branch_paths() -> None:
 
 def test_module_run_as_script() -> None:
     """Ensure __main__ block executes when module is run directly."""
-    from io import StringIO
-    from unittest.mock import patch
-    import runpy
+    import subprocess
+    import sys
 
-    buf = StringIO()
-    with patch("sys.stdout", buf):
-        runpy.run_module("quinn.models.config", run_name="__main__")
-
-    assert "AgentConfig demonstration:" in buf.getvalue()
+    # Run the module as a script in a subprocess to avoid import conflicts
+    result = subprocess.run(
+        [sys.executable, "-m", "quinn.models.config"],
+        capture_output=True,
+        text=True,
+        timeout=10
+    )
+    
+    assert result.returncode == 0, f"Module execution failed: {result.stderr}"
+    assert "AgentConfig demonstration:" in result.stdout

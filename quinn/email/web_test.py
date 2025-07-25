@@ -51,7 +51,7 @@ def test_postmark_webhook_allowed_senders(monkeypatch: pytest.MonkeyPatch) -> No
         patch("quinn.email.web.verify_postmark_signature") as verify,
     ):
         client = Client(app)
-        resp = client.post("/webhook/postmark", data=body)  # type: ignore[attr-defined]
+        resp = client.post("/webhook/postmark", content=body)  # type: ignore[attr-defined]
         assert resp.status_code == HTTPStatus.OK
         parse.assert_called_once_with(payload, ["alice@example.com", "bob@example.com"])
         verify.assert_not_called()
