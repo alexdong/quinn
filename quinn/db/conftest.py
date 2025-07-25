@@ -20,10 +20,13 @@ def temp_db() -> Generator[Path]:
 
     # Create tables in test database
     try:
-        with sqlite3.connect(db_file) as conn:
+        conn = sqlite3.connect(db_file)
+        try:
             with Path("quinn/db/schema.sql").open() as f:
                 conn.executescript(f.read())
             conn.commit()
+        finally:
+            conn.close()
     except Exception:
         # Clean up the file if database setup fails
         if db_file.exists():

@@ -1,11 +1,13 @@
-import asyncio
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from quinn.email.outbound import format_reply, send_email
 from quinn.models.email import EmailDirection, EmailMessage
 
 
-async def _run_send() -> None:
+@pytest.mark.asyncio
+async def test_send_email() -> None:
     email = EmailMessage(
         id="<id1@pm>",
         from_email="q@example.com",
@@ -22,10 +24,6 @@ async def _run_send() -> None:
         mock_post.return_value.raise_for_status = lambda: None
         await send_email(email, "token")
         assert mock_post.call_args is not None
-
-
-def test_send_email() -> None:
-    asyncio.run(_run_send())
 
 
 def test_format_reply() -> None:
