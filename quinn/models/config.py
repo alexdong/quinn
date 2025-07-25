@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 class AgentConfig(BaseModel):
     """Configuration for AI agent behavior."""
 
-    model: str = "gemini/gemini-2.5-flash-exp"
+    model: str = "gemini-2.5-flash-exp"
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=4000, gt=0)
     timeout_seconds: int = Field(default=300, gt=0)
@@ -110,7 +110,7 @@ class AgentConfig(BaseModel):
     def opus4(cls) -> "AgentConfig":
         """Claude Opus 4 configuration for most complex tasks."""
         return cls(
-            model="claude-4-opus-20250514",
+            model="claude-opus-4-20250514",
             temperature=0.5,
             max_tokens=8000,
             timeout_seconds=900,

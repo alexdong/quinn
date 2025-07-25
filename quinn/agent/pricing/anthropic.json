@@ -14,7 +14,7 @@
       "cached_input_price_per_1m_tokens": 1.50,
       "notes": "Cache write costs $18.75/MTok, cache read costs $1.50/MTok"
     },
-    "claude-sonnet-4": {
+    "claude-sonnet-4-20250514": {
       "input_price_per_1m_tokens": 3.00,
       "output_price_per_1m_tokens": 15.00,
       "cached_input_price_per_1m_tokens": 0.30,

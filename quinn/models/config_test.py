@@ -8,7 +8,7 @@ from .config import AgentConfig
 def test_agent_config_default_values() -> None:
     """Test AgentConfig model with default values."""
     config = AgentConfig()
-    assert config.model == "gemini/gemini-2.5-flash-exp"
+    assert config.model == "gemini-2.5-flash-exp"
     assert config.temperature == 0.7
     assert config.max_tokens == 4000
     assert config.timeout_seconds == 300
