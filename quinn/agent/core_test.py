@@ -146,6 +146,44 @@ def test_calculate_usage_metrics_with_cached_tokens() -> None:
     assert metrics.cached_tokens == 25
 
 
+def test_calculate_usage_metrics_cache_keys_not_first() -> None:
+    """Handle cached token key that is not first in the list."""
+    mock_usage = MagicMock()
+    mock_usage.request_tokens = 1
+    mock_usage.response_tokens = 1
+    mock_usage.total_tokens = 2
+    mock_usage.details = {"foo": 0, "cached_tokens": 3}
+
+    mock_result = MagicMock()
+    mock_result.usage.return_value = mock_usage
+
+    config = AgentConfig.o4mini()
+
+    with patch("quinn.agent.core.calculate_cost", return_value=0.001):
+        metrics = _calculate_usage_metrics(mock_result, config)
+
+    assert metrics.cached_tokens == 3
+
+
+def test_calculate_usage_metrics_no_cache_keys_found() -> None:
+    """No recognised cache key leaves cached tokens at zero."""
+    mock_usage = MagicMock()
+    mock_usage.request_tokens = 5
+    mock_usage.response_tokens = 5
+    mock_usage.total_tokens = 10
+    mock_usage.details = {"foo": 1}
+
+    mock_result = MagicMock()
+    mock_result.usage.return_value = mock_usage
+
+    config = AgentConfig.o4mini()
+
+    with patch("quinn.agent.core.calculate_cost", return_value=0.002):
+        metrics = _calculate_usage_metrics(mock_result, config)
+
+    assert metrics.cached_tokens == 0
+
+
 def test_calculate_usage_metrics_no_usage() -> None:
     """Test usage metrics calculation when no usage info available."""
     mock_result = MagicMock()
@@ -234,6 +272,36 @@ async def test_generate_response_error_handling() -> None:
     assert result.conversation_id == message.conversation_id
     assert result.system_prompt == "Error occurred during response generation"
     assert result.metadata is None
+
+
+@pytest.mark.asyncio
+async def test_generate_response_with_config_and_history() -> None:
+    """Ensure non-default branches execute correctly."""
+    history = [Message(user_content="hi", assistant_content="hello")]
+    custom_config = AgentConfig.o4mini()
+
+    mock_run_result = MagicMock()
+    mock_run_result.output = "fine"
+
+    mock_agent = AsyncMock()
+    mock_agent.run.return_value = mock_run_result
+
+    with patch("quinn.agent.core.create_agent", return_value=mock_agent) as create:
+        with patch("quinn.agent.core._build_conversation_prompt", return_value="p") as build:
+            with patch(
+                "quinn.agent.core._calculate_usage_metrics",
+                return_value=UsageMetrics(1, 1, 0, 2, 0.0),
+            ):
+                result = await generate_response(
+                    Message(user_content="next", conversation_id=str(uuid4())),
+                    history,
+                    config=custom_config,
+                )
+
+    create.assert_called_once_with(custom_config)
+    build.assert_called_once()
+    assert result.assistant_content == "fine"
+    assert result.system_prompt == "p"
 
 
 def test_max_prompt_length_constant() -> None:
