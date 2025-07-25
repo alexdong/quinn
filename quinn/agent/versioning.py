@@ -12,12 +12,27 @@ def get_current_prompt_version() -> PROMPT_VERSION:
     return f"v{now.strftime('%y%m%d-%H%M%S')}"
 
 
-def load_system_prompt(version: str | PROMPT_VERSION = "latest") -> str:
-    """Load system prompt by version."""
+def load_system_prompt(
+    version: str | PROMPT_VERSION = "latest",
+    project_root: Path | None = None,
+) -> str:
+    """Load system prompt by version.
+
+    Parameters
+    ----------
+    version:
+        The prompt version identifier. ``"latest"`` loads the default prompt.
+    project_root:
+        Optional base directory for locating the prompt files. When ``None`` the
+        path is derived from ``__file__`` which points to the installed
+        location of the package. This parameter exists primarily for testing and
+        does not change the public behaviour of the function.
+    """
     assert version.strip(), "Version cannot be empty"
 
     # Look for prompt files in templates directory
-    project_root = Path(__file__).parent.parent.parent
+    if project_root is None:
+        project_root = Path(__file__).parent.parent.parent
     prompts_dir = project_root / "quinn" / "templates" / "prompts"
 
     if version == "latest":
@@ -43,12 +58,22 @@ Key principles:
     return prompt_file.read_text().strip()
 
 
-def save_prompt_version(version: PROMPT_VERSION, content: str) -> None:
-    """Save a new prompt version."""
+def save_prompt_version(
+    version: PROMPT_VERSION,
+    content: str,
+    project_root: Path | None = None,
+) -> None:
+    """Save a new prompt version.
+
+    This helper writes ``content`` to a versioned prompt file. ``project_root``
+    mirrors the argument of :func:`load_system_prompt` and allows tests to
+    operate without touching the real filesystem.
+    """
     assert version.strip(), "Version cannot be empty"
     assert content.strip(), "Prompt content cannot be empty"
 
-    project_root = Path(__file__).parent.parent.parent
+    if project_root is None:
+        project_root = Path(__file__).parent.parent.parent
     prompts_dir = project_root / "quinn" / "templates" / "prompts"
     prompts_dir.mkdir(parents=True, exist_ok=True)
 
