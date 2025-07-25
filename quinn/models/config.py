@@ -199,7 +199,8 @@ class AgentConfig(BaseModel):
             # Check if it's a classmethod that returns AgentConfig
             if hasattr(method, "__self__") and method.__self__ is cls:
                 sig = inspect.signature(method)
-                if len(sig.parameters) > 0:  # Only cls parameter
+                # Skip methods that expect additional arguments
+                if len(sig.parameters) > 0:
                     continue
 
                 config_instance = method()
