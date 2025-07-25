@@ -27,11 +27,12 @@ include = ["quinn*"]
 exclude = ["llms*"]
 
 [tool.uv]
+package = true
 dev-dependencies = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
-    "ruff>=0.11.6",
-    "ty>=0.0.1a14",
+    "ruff>=0.12.5",
+    "ty>=0.0.1a15",
 ]
 
 
