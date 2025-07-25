@@ -76,6 +76,10 @@ code-smell:  ## Scan for code smells. Usage: make code-smell [PATTERN=glob*] [DI
 upgrade:  ## Upgrade dependencies to latest versions
 	@echo "🔄 Upgrading dependencies to latest versions..."
 	@uv sync --upgrade --dev
+	@echo "📝 Committing dependency updates..."
+	@git add pyproject.toml uv.lock
+	@git commit -m "chore: upgrade dependencies to latest versions" || echo "ℹ️  No changes to commit"
+	@echo "✅ Dependencies upgraded and committed!"
 
 commit:  ## Run all quality checks and create an automated commit
 	@echo "🚀 Running complete quality and testing pipeline..."
