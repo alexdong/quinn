@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import textwrap
 from pathlib import Path
 from typing import cast
 from uuid import uuid4
@@ -501,46 +502,52 @@ def _handle_default_behavior(
 
 
 @click.command(
-    epilog="""
-GETTING STARTED:
+    epilog=textwrap.dedent(
+        """
+        GETTING STARTED:
 
-  quinn           # Continue or start new
-  quinn -n        # Start a new conversation
-  quinn -c        # Continue most recent
-  quinn -l        # List all conversations
-  quinn -c 1      # Continue conversation #1
-  quinn --reset-all   # Reset all
+        \b
+          \bquinn           # Continue or start new
+          \bquinn -n        # Start a new conversation
+          \bquinn -c        # Continue most recent
+          \bquinn -l        # List all conversations
+          \bquinn -c 1      # Continue conversation #1
+          \bquinn --reset-all   # Reset all
 
-EXAMPLE SESSION:
+        EXAMPLE SESSION:
 
-  $ quinn
-  # Opens $EDITOR since no previous conversation
-  # Type your problem
+        \b
+          \b$ quinn
+          \b# Opens $EDITOR since no previous conversation
+          \b# Type your problem
 
-  # Quinn responds with clarifying questions
+          \b# Quinn responds with clarifying questions
 
-  $ quinn
-  # Opens $EDITOR to continue
-  # Answer the clarifying questions
+          \b$ quinn
+          \b# Opens $EDITOR to continue
+          \b# Answer the clarifying questions
 
-  $ quinn
-  # Continue until you reach a solution
+          \b$ quinn
+          \b# Continue until you reach a solution
 
-CONVERSATION FLOW:
+        CONVERSATION FLOW:
 
-  1. Describe your problem or challenge
-  2. Quinn asks clarifying questions
-  3. Provide more details and constraints
-  4. Quinn guides you through solutions
-  5. Continue iterating until clarity
+        \b
+          \b1. Describe your problem or challenge
+          \b2. Quinn asks clarifying questions
+          \b3. Provide more details and constraints
+          \b4. Quinn guides you through solutions
+          \b5. Continue iterating until clarity
 
-TIPS:
+        TIPS:
 
-  - Set EDITOR: export EDITOR=vim
-  - Conversations saved locally in SQLite
-  - Use 'quinn -l' to see history
-  - Each conversation maintains context
-"""
+        \b
+          \b- Set EDITOR: export EDITOR=vim
+          \b- Conversations saved locally in SQLite
+          \b- Use 'quinn -l' to see history
+          \b- Each conversation maintains context
+        """
+    )
 )
 @click.option(
     "-n",
