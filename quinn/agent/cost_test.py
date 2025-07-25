@@ -1,15 +1,21 @@
 """Test cost calculation functions."""
 
+from io import StringIO
+from unittest.mock import patch
+
 import pytest
 
-from .cost import (
+from quinn.agent.cost import (
+    CompletionCostEstimate,
+    ModelCostInfo,
+    _demo_cost_estimation,
+    _demo_model_costs,
     calculate_cost,
     estimate_completion_cost,
     get_cost_per_token,
     get_model_cost_info,
-    ModelCostInfo,
-    CompletionCostEstimate,
     get_supported_models,
+    main,
 )
 
 
@@ -18,11 +24,11 @@ def test_get_model_cost_info() -> None:
     # Test with known models from our pricing data
     test_models = [
         "gemini-2.5-flash-exp",
-        "gemini-2.0-flash", 
+        "gemini-2.0-flash",
         "gpt-4o-mini",
-        "claude-3-5-sonnet-20241022"
+        "claude-3-5-sonnet-20241022",
     ]
-    
+
     for model in test_models:
         cost_info = get_model_cost_info(model)
         assert isinstance(cost_info, ModelCostInfo)
@@ -39,13 +45,13 @@ def test_calculate_cost() -> None:
         input_tokens=1000,
         output_tokens=500,
     )
-    
+
     assert isinstance(cost, float)
     assert cost >= 0.0
-    
+
     # Cost should be proportional to token usage
     higher_cost = calculate_cost(
-        model=model, 
+        model=model,
         input_tokens=2000,
         output_tokens=1000,
     )
@@ -58,7 +64,7 @@ def test_get_cost_per_token() -> None:
     input_cost = get_cost_per_token(model, "input")
     output_cost = get_cost_per_token(model, "output")
     cached_input_cost = get_cost_per_token(model, "cached_input")
-    
+
     assert isinstance(input_cost, float)
     assert isinstance(output_cost, float)
     assert isinstance(cached_input_cost, float)
@@ -74,7 +80,7 @@ def test_estimate_completion_cost() -> None:
         prompt="This is a test prompt for cost estimation.",
         max_tokens=100,
     )
-    
+
     assert isinstance(estimate, CompletionCostEstimate)
     assert estimate.estimated_total_cost >= 0.0
     assert estimate.estimated_input_tokens >= 0
@@ -88,15 +94,15 @@ def test_get_supported_models() -> None:
     models = get_supported_models()
     assert isinstance(models, list)
     assert len(models) > 0
-    
+
     # Should include our known models
     expected_models = [
         "gpt-4o-mini",
         "claude-3-5-sonnet-20241022",
         "gemini-2.0-flash",
-        "gemini-2.5-flash-exp"
+        "gemini-2.5-flash-exp",
     ]
-    
+
     for model in expected_models:
         assert model in models
 
@@ -104,7 +110,7 @@ def test_get_supported_models() -> None:
 def test_fallback_pricing() -> None:
     """Test fallback pricing for unknown models."""
     unknown_model = "unknown-test-model"
-    
+
     # Should raise assertion error for unknown model
     with pytest.raises(AssertionError, match="not found in pricing data"):
         get_model_cost_info(unknown_model)
@@ -117,7 +123,7 @@ def test_free_model_pricing() -> None:
 
     assert cost_info.input_cost_per_token == 0.0
     assert cost_info.output_cost_per_token == 0.0
-    
+
     # Cost calculation should be zero
     cost = calculate_cost(free_model, 1000, 500)
     assert cost == 0.0
@@ -126,7 +132,7 @@ def test_free_model_pricing() -> None:
 def test_cached_input_cost() -> None:
     """Test cost calculation with cached input tokens."""
     model = "gpt-4o-mini"
-    
+
     # Test with cached input tokens
     cost_with_cache = calculate_cost(
         model=model,
@@ -134,14 +140,14 @@ def test_cached_input_cost() -> None:
         output_tokens=300,
         cached_input_tokens=1000,
     )
-    
+
     # Test without cached input tokens
     cost_without_cache = calculate_cost(
         model=model,
         input_tokens=1500,  # 500 + 1000
         output_tokens=300,
     )
-    
+
     assert isinstance(cost_with_cache, float)
     assert cost_with_cache >= 0.0
     # Cached cost should typically be less than or equal to regular cost
@@ -152,49 +158,56 @@ def test_calculate_cost_validation() -> None:
     """Test cost calculation input validation."""
     with pytest.raises(AssertionError, match="Model name cannot be empty"):
         calculate_cost("", 100, 50)
-        
+
     with pytest.raises(AssertionError, match="Input tokens must be non-negative"):
         calculate_cost("gemini-2.5-flash-exp", -1, 50)
-        
+
     with pytest.raises(AssertionError, match="Output tokens must be non-negative"):
         calculate_cost("gemini-2.5-flash-exp", 100, -1)
-    
-    with pytest.raises(AssertionError, match="Cached input tokens must be non-negative"):
+
+    with pytest.raises(
+        AssertionError, match="Cached input tokens must be non-negative"
+    ):
         calculate_cost("gpt-4o-mini", 100, 50, -1)
 
 
 if __name__ == "__main__":
     # Run all tests
     print("🧪 Running cost calculation tests...")
-    
+
     test_get_model_cost_info()
     test_calculate_cost()
-    test_get_cost_per_token() 
+    test_get_cost_per_token()
     test_estimate_completion_cost()
     test_get_supported_models()
     test_fallback_pricing()
     test_free_model_pricing()
     test_cached_input_cost()
     test_calculate_cost_validation()
-    
+
     print("✅ All cost calculation tests passed!")
-    
+
     # Show supported models
     models = get_supported_models()
     print(f"\n📋 Supported models ({len(models)}):")
     for model in models:
         print(f"  - {model}")
-    
+
     # Compare costs across models
-    print(f"\n💰 Cost comparison for 1000 input + 500 output tokens:")
-    test_models = ["gpt-4o-mini", "claude-3-5-sonnet-20241022", "gemini-2.0-flash", "gemini-2.5-flash-exp"]
-    
+    print("\n💰 Cost comparison for 1000 input + 500 output tokens:")
+    test_models = [
+        "gpt-4o-mini",
+        "claude-3-5-sonnet-20241022",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash-exp",
+    ]
+
     for model in test_models:
         cost = calculate_cost(model, 1000, 500)
         print(f"  {model}: ${cost:.6f}")
-    
+
     # Example estimation
-    print(f"\n🔮 Cost estimation example:")
+    print("\n🔮 Cost estimation example:")
     model = "gpt-4o-mini"
     estimate = estimate_completion_cost(
         model,
@@ -205,48 +218,47 @@ if __name__ == "__main__":
     print(f"  Estimated cost: ${estimate.estimated_total_cost:.6f}")
     print(f"  Input tokens: {estimate.estimated_input_tokens}")
     print(f"  Output tokens: {estimate.estimated_output_tokens}")
-    
-    print(f"\n🧪 Cost calculation tests completed!")
+
+    print("\n🧪 Cost calculation tests completed!")
+
 
 def test_main_demo_function() -> None:
     """Test the main demo function for coverage."""
-    from unittest.mock import patch
-    from io import StringIO
-    from quinn.agent.cost import main
-    
+
     # Capture stdout to avoid cluttering test output
     captured_output = StringIO()
     with patch("sys.stdout", captured_output):
         main()
-    
+
     output = captured_output.getvalue()
     assert "Cost Calculation Demo" in output
     assert "Supported models" in output
 
 
-
 def test_demo_functions_cache_savings_and_errors() -> None:
     """Test demo functions to cover cache savings and error handling."""
-    from unittest.mock import patch
-    from io import StringIO
-    from quinn.agent.cost import _demo_model_costs, _demo_cost_estimation
-    
-    # Test cache savings calculation (lines 188-190)
+
+    # Test cache savings calculation
     captured_output = StringIO()
     with patch("sys.stdout", captured_output):
         # Use a model with cached pricing to trigger savings calculation
         _demo_model_costs("claude-3-5-sonnet-20241022", 1000, 500, 2000)
-    
+
     output = captured_output.getvalue()
-    # Should show cache savings if the model supports it
+    # Should show cache savings message when caching reduces cost
     assert "claude-3-5-sonnet-20241022" in output
-    
-    # Test error handling in demo (lines 217-218)
+    assert "Cache savings" in output
+
+    # Test error handling in demo estimation function
     captured_output = StringIO()
-    with patch("sys.stdout", captured_output):
-        with patch("quinn.agent.cost.estimate_completion_cost", side_effect=Exception("Test error")):
-            _demo_cost_estimation(["gpt-4o-mini"])
-    
+    with (
+        patch("sys.stdout", captured_output),
+        patch(
+            "quinn.agent.cost.estimate_completion_cost",
+            side_effect=Exception("Test error"),
+        ),
+    ):
+        _demo_cost_estimation(["gpt-4o-mini"])
+
     output = captured_output.getvalue()
     assert "Error: Test error" in output
-
