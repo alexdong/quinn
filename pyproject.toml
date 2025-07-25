@@ -36,7 +36,7 @@ dev-dependencies = [
 
 
 [tool.ruff]
-exclude = [".venv", "**/*_test.py"]
+exclude = [".venv", "**/*_test.py", ".git", "docs"]
 
 [tool.ruff.lint]
 extend-select = [
